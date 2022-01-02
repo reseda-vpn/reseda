@@ -18,8 +18,9 @@ if (isProd) {
     height: 600,
   });
 
-  mainWindow.setMenuBarVisibility(false)
-
+  mainWindow.setMenuBarVisibility(false);
+  app.setUserTasks([])
+  
   if (isProd) {
     await mainWindow.loadURL('app://./home.html');
   } else {

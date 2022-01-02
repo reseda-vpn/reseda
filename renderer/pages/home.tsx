@@ -1,7 +1,9 @@
 import type { NextPage } from 'next'
 import { useState } from 'react'
+import { Settings } from 'react-feather'
 import { exec } from 'sudo-prompt'
 import { supabase } from '../client'
+import TabView from '../components/tabview'
 import { connect, disconnect } from '../reseda-api'
 import styles from '../styles/Home.module.css'
 
@@ -17,26 +19,55 @@ type Packet = {
 }
 
 const Home: NextPage = () => {
-	const [ status, setStatus ] = useState<"disconnected" | "connected">("disconnected");
+	const [ status, setStatus ] = useState<"disconnected" | "connected">("connected"); // ETS: change to disconnected when done
 	const [ actionTime, setActionTime ] = useState<number>();
 	const [ connectionId, setConnectionId ] = useState<number>();
 
 	return (
 		<div className={styles.container}>
-			<title>reseda</title>
-			<h1>{status}</h1>
+			<div className={styles.resedaCenter}>
+				<div className={styles.resedaHeader}>
+					{/* Header - Title */}
+					<div className={styles.title}>Reseda</div>
 
-			<button onClick={() => {
+					<div>
+						{/* <Settings size={18} /> */}
+					</div>
+				</div>
+
+				<div>
+					{/* Body */}
+					<TabView />
+				</div>
+			</div>
+
+			<div className={styles.resedaBottom}>
+				{/* Bottom Viewport (Small) */}
+
+				<div>
+					<div className={styles.connection}>
+						<div className={styles.connectionStatus}></div>
+						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
+					</div>
+					
+					<p>Singapore</p>
+					<h6>singapore-1</h6>
+				</div>
+
+				<div>
+					<a href="">Disconnect</a>
+				</div>
+			</div>
+
+			{/* <button onClick={() => {
 				switch(status) {
 					case "disconnected": 
 						const conn_start = new Date().getTime();
 						connect("singapore-1").then(res => {
-							console.log(res);
-
-							// const { connection_id, connected } = res;
+							const { connection_id, connected } = res;
 							const end = new Date().getTime();
 
-							// setConnectionId(connection_id);
+							setConnectionId(connection_id);
 							setActionTime(end - conn_start);
 		
 							// if(connected) 
@@ -55,6 +86,7 @@ const Home: NextPage = () => {
 		
 							// if(!connected) 
 							setStatus("disconnected");
+							supabase.removeAllSubscriptions();
 						});
 						break;
 					
@@ -64,7 +96,7 @@ const Home: NextPage = () => {
 				
 			}}>{status == "connected" ? "Disconnect" : "Connect"}</button>
 
-			<p>Action performed in {(actionTime ?? 0) / 1000}s</p>
+			<p>Action performed in {(actionTime ?? 0) / 1000}s</p> */}
 		</div>
 	)
 }

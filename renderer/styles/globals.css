@@ -2,8 +2,12 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: "Public Sans", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+body {
+  margin: 0;
 }
 
 a {
@@ -13,4 +17,14 @@ a {
 
 * {
   box-sizing: border-box;
+  color: var(--text-primary);
+}
+
+:root {
+  --text-primary: #121829;
+  --text-secondary: #7A7F8B;
+
+  --accent-blue: #579CFB;
+  --off-accent: #ACBBE1;
+  --off-white: #FBFBFB;
 }

@@ -49,7 +49,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 	const key = puckey.toString();
 	
 	// Set the public key omitting /n and /t after '='.
-	client_config.publicKey = key.substring(0, key.indexOf('=')+1);
+	client_config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
 	console.log(client_config.publicKey);
 
 	// Client Event Id
@@ -72,7 +72,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 				endpoint: `${data.server_endpoint}:51820`
 			});
 		
-			client_config.wgInterface.address = [`192.168.69.${data.client_number+1 ?? '2'}/24`]
+			client_config.wgInterface.address = [`192.168.69.${data.client_number}/24`]
 			client_config.writeToFile();
 
 			console.log(`EXECUTING "${`wireguard /installtunnelservice ${filePath}`}" as sudo (or equiv.)`);
@@ -84,8 +84,9 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 			});
 
 			console.log("[CONN] >> Received! Connecting...");
-			await supabase.removeAllSubscriptions();
 			connected = true;
+
+			console.log(client_config);
 
 			return {
 				protocol: "wireguard",
@@ -101,13 +102,22 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 		.from('open_connections')
 		.insert({
 			server: location,
-			client_pub_key: client_config.publicKey?.substring(1),
+			client_pub_key: client_config.publicKey,
 			author: supabase.auth.user()?.id
 		}).then(e => {
 			EVT_ID = e?.data?.[0]?.id;
-		})
+		});
 
 	console.log("[CONN] >> Published Configuration, Awaiting Response");
+
+	return {
+		protocol: "wireguard",
+		connected: false,
+		connection: 2,
+		config: {},
+		as_string: "",
+		connection_id: EVT_ID,
+	}
 }
 
 const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any> => {

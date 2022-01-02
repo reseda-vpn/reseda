@@ -18,6 +18,7 @@
     "electron-serve": "^1.1.0",
     "electron-store": "^8.0.1",
     "path": "^0.12.7",
+    "react-feather": "^2.0.9",
     "sudo-prompt": "^9.2.1",
     "wireguard-tools": "^0.1.0"
   },
