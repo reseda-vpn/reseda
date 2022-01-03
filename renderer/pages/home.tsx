@@ -6,6 +6,7 @@ import { supabase } from '../client'
 import TabView from '../components/tabview'
 import { connect, disconnect } from '../reseda-api'
 import styles from '../styles/Home.module.css'
+import Button from '../components/un-ui/button'
 
 type Packet = {
 	id: number,
@@ -46,7 +47,7 @@ const Home: NextPage = () => {
 
 				<div>
 					<div className={styles.connection}>
-						<div className={styles.connectionStatus}></div>
+						{/* <div className={styles.connectionStatus}></div> */}
 						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
 					</div>
 					
@@ -55,7 +56,7 @@ const Home: NextPage = () => {
 				</div>
 
 				<div>
-					<a href="">Disconnect</a>
+					<Button>Disconnect</Button>
 				</div>
 			</div>
 

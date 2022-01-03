@@ -1,0 +1,61 @@
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    /* height: 32px; */
+
+    height: auto;
+    padding: .5rem 1rem;
+    /* padding: 0px 12px; */
+
+    border: 0px;
+    border-radius: 5px;
+
+    cursor: pointer;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    background: transparent;
+    color: var(--text-primary);
+
+    outline: none;
+    transition: color 100ms ease-in 0s;
+
+    gap: .5rem;
+
+    font-family: inherit;
+}
+
+.button:hover {
+    outline: none;
+    box-shadow: rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(58 151 212 / 36%) 0px 0px 0px 4px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(60 66 87 / 16%) 0px 0px 0px 1px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px;
+}
+
+.button:focus {
+    outline: none;
+    box-shadow: rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(58 151 212 / 36%) 0px 0px 0px 4px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(60 66 87 / 16%) 0px 0px 0px 1px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px;
+}
+
+.input {
+    min-width: 320px;
+    display: flex;
+    align-items: center;
+
+    height: 36px;
+    padding: 0px 10px;
+
+    box-shadow: rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 12%) 0px 1px 1px 0px, rgb(60 66 87 / 16%) 0px 0px 0px 1px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(60 66 87 / 8%) 0px 2px 5px 0px;
+    border: 0px;
+    border-radius: 5px;
+
+    background-color: rgb(255, 255, 255);
+    outline: none;
+}
+
+.input:focus {
+    outline: none;
+    box-shadow: rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(58 151 212 / 36%) 0px 0px 0px 4px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(60 66 87 / 16%) 0px 0px 0px 1px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px;
+}

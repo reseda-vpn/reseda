@@ -57,16 +57,24 @@
 
   /* background-color: rgb(226, 223, 223); */
   /* border-color: var(--off-blue); */
-  border: var(--off-accent) solid 2px;
+  /* border: var(--off-accent) solid 2px; */
+  background-color: var(--accent);
+  color: var(--off-white-blue);
+
   padding: .4rem .8rem;
   border-radius: 7px;
+}
+
+.connection h4 {
+  color: var(--off-white-blue);
+  font-weight: 400;
 }
 
 .connectionStatus {
   height: 10px;
   width: 10px;
   border-radius: 50%;
-  background-color: var(--off-accent);
+  /* background-color: var(--off-accent); */
   margin: 0;
 }
 
@@ -80,7 +88,7 @@
 
 .resedaBottom h4 {
   font-size: .8rem;
-  font-weight: 800 !important;
+  font-weight: 600 !important;
 }
 
 .resedaBottom h6 {
@@ -107,4 +115,8 @@
   flex-direction: row;
   gap: 1rem;
   align-items: center;
+}
+
+.resedaTabBar div {
+  cursor: pointer;
 }
