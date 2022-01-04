@@ -1,6 +1,7 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../client';
+import { connect } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 
 type Server = {
@@ -13,7 +14,7 @@ type Server = {
     hostname: string
 };
 
-const TabView: NextPage = () => {
+const TabView: NextPage<{ connectionCallback: Function }> = ({ connectionCallback }) => {
     const [ currentTab, setCurrentTab ] = useState("servers");
     const [ serverRegistry, setServerRegistry ] = useState<Server[]>();
 
@@ -25,8 +26,15 @@ const TabView: NextPage = () => {
                 setServerRegistry(e.data)
             });
 
+        const subscription = supabase
+            .from('server_registry')
+            .on('*', (e) => {
+                setServerRegistry(e.new)
+            })
+            .subscribe();
+
         return () => {
-            
+            subscription.unsubscribe()
         }
     }, []);
 
@@ -45,7 +53,20 @@ const TabView: NextPage = () => {
                             case "servers":
                                 return (
                                     <div>
-                                        <h1>servers!</h1>
+                                        {
+                                            serverRegistry?.map(e => {
+                                                return (
+                                                    <div onClick={() => {
+                                                        connect(e.id).then((conn) => {
+                                                            connectionCallback({
+                                                                ...conn,
+                                                                location: e.location
+                                                            })
+                                                        });
+                                                    }}>{e.location}</div>
+                                                )
+                                            })
+                                        }
                                     </div>
                                 )
 

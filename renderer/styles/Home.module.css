@@ -47,7 +47,7 @@
   gap: 1rem;
 }
 
-.connection {
+.connected {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -65,9 +65,27 @@
   border-radius: 7px;
 }
 
-.connection h4 {
+.connected h4 {
   color: var(--off-white-blue);
   font-weight: 400;
+}
+
+.disconnected {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: .5rem;
+
+  /* background-color: rgb(226, 223, 223); */
+  /* border-color: var(--off-blue); */
+  /* border: var(--off-accent) solid 2px; */
+  color: var(--text-primary);
+  background-color: transparent;
+
+  padding: .4rem .8rem;
+  border-radius: 7px;
 }
 
 .connectionStatus {

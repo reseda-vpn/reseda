@@ -19,13 +19,15 @@ type Packet = {
 const filePath = path.join(process.cwd(), './', '/wg0.conf');
 let connected = false;
 
-type ResedaConnection = {
+export type ResedaConnection = {
 	protocol?: string,
 	connected: boolean,
 	connection: 0 | 1 | 2,
 	config: {},
 	as_string: string,
 	connection_id: number,
+	location: string,
+	server: string
 }
 
 type ResedaConnect = (location: string) => Promise<ResedaConnection>;
@@ -94,7 +96,9 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 				as_string: client_config.toString(),
 				connection_id: EVT_ID,
 				connected: true,
-				connection: 1
+				connection: 1,
+				location: null,
+				server: location
 			}
 		}).subscribe();
 	
@@ -117,6 +121,8 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 		config: {},
 		as_string: "",
 		connection_id: EVT_ID,
+		location: null,
+		server: location
 	}
 }
 

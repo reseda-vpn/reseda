@@ -4,7 +4,7 @@ import { Settings } from 'react-feather'
 import { exec } from 'sudo-prompt'
 import { supabase } from '../client'
 import TabView from '../components/tabview'
-import { connect, disconnect } from '../reseda-api'
+import { connect, disconnect, ResedaConnection } from '../reseda-api'
 import styles from '../styles/Home.module.css'
 import Button from '../components/un-ui/button'
 
@@ -20,9 +20,9 @@ type Packet = {
 }
 
 const Home: NextPage = () => {
-	const [ status, setStatus ] = useState<"disconnected" | "connected">("connected"); // ETS: change to disconnected when done
+	const [ status, setStatus ] = useState<"disconnected" | "connected">("disconnected");
 	const [ actionTime, setActionTime ] = useState<number>();
-	const [ connectionId, setConnectionId ] = useState<number>();
+	const [ connection, setConnection ] = useState<ResedaConnection>();
 
 	return (
 		<div className={styles.container}>
@@ -38,7 +38,7 @@ const Home: NextPage = () => {
 
 				<div>
 					{/* Body */}
-					<TabView />
+					<TabView connectionCallback={setConnection}/>
 				</div>
 			</div>
 
@@ -46,17 +46,22 @@ const Home: NextPage = () => {
 				{/* Bottom Viewport (Small) */}
 
 				<div>
-					<div className={styles.connection}>
+					<div className={status == "connected" ? styles.connected : styles.disconnected}>
 						{/* <div className={styles.connectionStatus}></div> */}
 						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
 					</div>
 					
-					<p>Singapore</p>
-					<h6>singapore-1</h6>
+					<p>{connection?.location?.toUpperCase() ?? ""}</p>
+					<h6>{connection?.server ?? ""}</h6>
 				</div>
 
 				<div>
-					<Button>Disconnect</Button>
+					{
+						status == "connected" ? 
+						<Button onClick={() => disconnect(connection.connection_id)}>Disconnect</Button>
+						:
+						<></>
+					}
 				</div>
 			</div>
 
