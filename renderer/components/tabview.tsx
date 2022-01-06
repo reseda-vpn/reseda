@@ -1,3 +1,4 @@
+import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../client';
@@ -28,6 +29,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
         const subscription = supabase
             .from('server_registry')
             .on('*', (e) => {
+                console.log(e);
                 setServerRegistry(e.new)
             })
             .subscribe();
@@ -40,6 +42,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
 	return (
 		<div className={styles.resedaContentCenter}>
             <div>
+                <h4>{tab.toUpperCase()}</h4>
+
                 {
                     (() => {
                         switch(tab) {
@@ -48,14 +52,19 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                     serverRegistry?.length > 0
                                     ? serverRegistry?.map(e => {
                                         return (
-                                            <div onClick={() => {
+                                            <div 
+                                            className={styles.resedaServer}
+                                            onClick={() => {
                                                 connect(e.id).then((conn) => {
                                                     connectionCallback({
                                                         ...conn,
                                                         location: e.location
                                                     })
                                                 });
-                                            }}>{e.location}</div>
+                                            }}>
+                                                <p>{ e.location }</p>
+                                                <div className={styles.mono}>{ moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() } old</div>
+                                            </div>
                                         )
                                     }) : (<div><p>No Servers</p></div>)
                                 )
@@ -80,6 +89,16 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                         }
                     })()
                 }
+            </div>
+
+            <div className={styles.resedaRightBoxes}>
+                <div className={styles.resedaUsageBox}>
+                    <h2>Usage</h2>
+
+                    <div>
+
+                    </div>
+                </div>
             </div>
         </div>
 	)

@@ -15,8 +15,8 @@ if (isProd) {
   await app.whenReady();
 
   const mainWindow = createWindow('main', {
-    width: 1000,
-    height: 600,
+    width: 855,
+    height: 555,
     frame: false,
     webPreferences: {
       preload: path.resolve("./preload.ts"),

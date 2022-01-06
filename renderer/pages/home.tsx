@@ -58,7 +58,7 @@ const Home: NextPage = () => {
 					{/* Header - Title */}
 					<div>
 						<div className={styles.title}>R.</div>
-						<div>Reseda</div>
+						<div className={styles.reseda}>Reseda</div>
 					</div>
 
 					<div>

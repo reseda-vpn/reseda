@@ -29,7 +29,7 @@
     font-family: inherit;
 
     background-color: var(--off-white);
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     stroke: var(--text-primary);
 }
 
