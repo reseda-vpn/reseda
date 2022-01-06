@@ -2,8 +2,15 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  font-family: "GT Walsheim Pro", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+@import url(../public/fonts/walsh/stylesheet.css);
+
+@font-face {
+  font-family: "DM Mono";
+  src: url('../public/fonts/dm-mono/DMMono-Regular.ttf');
 }
 
 body {

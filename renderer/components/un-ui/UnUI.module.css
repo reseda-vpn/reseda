@@ -27,6 +27,10 @@
     gap: .5rem;
 
     font-family: inherit;
+
+    background-color: var(--off-white);
+    color: var(--text-primary);
+    stroke: var(--text-primary);
 }
 
 .button:hover {

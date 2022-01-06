@@ -1,11 +1,12 @@
-import { app } from 'electron';
+import { app, ipcRenderer } from 'electron';
 import serve from 'electron-serve';
+import path from 'path';
 import { createWindow } from './helpers';
 
 const isProd: boolean = process.env.NODE_ENV === 'production';
 
 if (isProd) {
-  serve({ directory: 'app' });
+  serve({ directory: 'app'  });
 } else {
   app.setPath('userData', `${app.getPath('userData')} (development)`);
 }
@@ -16,8 +17,14 @@ if (isProd) {
   const mainWindow = createWindow('main', {
     width: 1000,
     height: 600,
+    frame: false,
+    webPreferences: {
+      preload: path.resolve("./preload.ts"),
+      contextIsolation: false,
+      nodeIntegration: true,
+    }
   });
-
+  
   mainWindow.setMenuBarVisibility(false);
   app.setUserTasks([])
   

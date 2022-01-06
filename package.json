@@ -14,7 +14,9 @@
     "buildDependenciesFromSource": true
   },
   "dependencies": {
+    "@electron/remote": "^2.0.1",
     "@supabase/supabase-js": "^1.29.1",
+    "deepmerge": "^4.2.2",
     "electron-serve": "^1.1.0",
     "electron-store": "^8.0.1",
     "path": "^0.12.7",

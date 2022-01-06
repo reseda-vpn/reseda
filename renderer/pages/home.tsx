@@ -7,6 +7,9 @@ import TabView from '../components/tabview'
 import { connect, disconnect, ResedaConnection } from '../reseda-api'
 import styles from '../styles/Home.module.css'
 import Button from '../components/un-ui/button'
+import { platform } from 'os'
+import PlatformControls from '../components/platform_controls'
+import { ipcRenderer } from 'electron'
 
 type Packet = {
 	id: number,
@@ -20,25 +23,56 @@ type Packet = {
 }
 
 const Home: NextPage = () => {
-	const [ status, setStatus ] = useState<"disconnected" | "connected">("disconnected");
+	const [ status, setStatus ] = useState<"disconnected" | "connected">("connected");
+	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
+
 	const [ actionTime, setActionTime ] = useState<number>();
 	const [ connection, setConnection ] = useState<ResedaConnection>();
+    const [ currentTab, setCurrentTab ] = useState<"servers" | "multi-hop" | "settings">("servers");
 
 	return (
 		<div className={styles.container}>
+			{
+				platform() !== "darwin" ?
+				<div className={styles.resedaFrame}>
+					<div>
+						Reseda VPN
+					</div>
+
+					<PlatformControls 
+						onClose={() => ipcRenderer.send("close")}
+						onMinimize={() => ipcRenderer.send("close")}	
+						onMaximize={() => {
+							ipcRenderer.send(maximized == "maximized" ? "unmaximize" : "maximize");
+						 	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
+						}}
+					/>
+				</div>
+				:
+				<></>
+			}
+			
+
 			<div className={styles.resedaCenter}>
 				<div className={styles.resedaHeader}>
 					{/* Header - Title */}
-					<div className={styles.title}>Reseda</div>
+					<div>
+						<div className={styles.title}>R.</div>
+						<div>Reseda</div>
+					</div>
 
 					<div>
-						{/* <Settings size={18} /> */}
+						<div className={styles.resedaTabBar}>
+							<div onClick={() => setCurrentTab("servers")}>Servers</div>
+							<div onClick={() => setCurrentTab("multi-hop")}>Multi-Hop</div>
+							<div onClick={() => setCurrentTab("settings")}>Settings</div>
+						</div>
 					</div>
 				</div>
 
 				<div>
 					{/* Body */}
-					<TabView connectionCallback={setConnection}/>
+					<TabView connectionCallback={setConnection} tab={currentTab} />
 				</div>
 			</div>
 
@@ -51,8 +85,8 @@ const Home: NextPage = () => {
 						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
 					</div>
 					
-					<p>{connection?.location?.toUpperCase() ?? ""}</p>
-					<h6>{connection?.server ?? ""}</h6>
+					<p>{connection?.location?.toUpperCase() ?? "Singapore"}</p>
+					<h6>{connection?.server ?? "singapore-1"}</h6>
 				</div>
 
 				<div>
@@ -64,45 +98,6 @@ const Home: NextPage = () => {
 					}
 				</div>
 			</div>
-
-			{/* <button onClick={() => {
-				switch(status) {
-					case "disconnected": 
-						const conn_start = new Date().getTime();
-						connect("singapore-1").then(res => {
-							const { connection_id, connected } = res;
-							const end = new Date().getTime();
-
-							setConnectionId(connection_id);
-							setActionTime(end - conn_start);
-		
-							// if(connected) 
-							setStatus("connected");
-						});
-						break;
-
-					case "connected":
-						const disc_start = new Date().getTime();
-						disconnect(connectionId).then(res => {
-							// const { connected } = res;
-							const end = new Date().getTime();
-
-							setConnectionId(-1);
-							setActionTime(end - disc_start);
-		
-							// if(!connected) 
-							setStatus("disconnected");
-							supabase.removeAllSubscriptions();
-						});
-						break;
-					
-					default:
-						console.log("Something went wrong...");
-				}
-				
-			}}>{status == "connected" ? "Disconnect" : "Connect"}</button>
-
-			<p>Action performed in {(actionTime ?? 0) / 1000}s</p> */}
 		</div>
 	)
 }

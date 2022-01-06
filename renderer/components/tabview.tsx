@@ -14,8 +14,7 @@ type Server = {
     hostname: string
 };
 
-const TabView: NextPage<{ connectionCallback: Function }> = ({ connectionCallback }) => {
-    const [ currentTab, setCurrentTab ] = useState("servers");
+const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-hop" | "settings" }> = ({ connectionCallback, tab }) => {
     const [ serverRegistry, setServerRegistry ] = useState<Server[]>();
 
     useEffect(() => {
@@ -40,40 +39,41 @@ const TabView: NextPage<{ connectionCallback: Function }> = ({ connectionCallbac
 
 	return (
 		<div className={styles.resedaContentCenter}>
-            <div className={styles.resedaTabBar}>
-                <div onClick={() => setCurrentTab("servers")}>Servers</div>
-                <div onClick={() => setCurrentTab("multi-hop")}>Multi-Hop</div>
-                <div onClick={() => setCurrentTab("settings")}>Settings</div>
-            </div>
-
             <div>
                 {
                     (() => {
-                        switch(currentTab) {
+                        switch(tab) {
                             case "servers":
                                 return (
-                                    <div>
-                                        {
-                                            serverRegistry?.map(e => {
-                                                return (
-                                                    <div onClick={() => {
-                                                        connect(e.id).then((conn) => {
-                                                            connectionCallback({
-                                                                ...conn,
-                                                                location: e.location
-                                                            })
-                                                        });
-                                                    }}>{e.location}</div>
-                                                )
-                                            })
-                                        }
-                                    </div>
+                                    serverRegistry?.length > 0
+                                    ? serverRegistry?.map(e => {
+                                        return (
+                                            <div onClick={() => {
+                                                connect(e.id).then((conn) => {
+                                                    connectionCallback({
+                                                        ...conn,
+                                                        location: e.location
+                                                    })
+                                                });
+                                            }}>{e.location}</div>
+                                        )
+                                    }) : (<div><p>No Servers</p></div>)
                                 )
 
                                 break;
                             case "multi-hop":
+                                return (
+                                    <div>
+                                        <p>multi</p>
+                                    </div>
+                                )
                                 break;
                             case "settings":
+                                return (
+                                    <div>
+                                        <p>settings</p>
+                                    </div>
+                                )
                                 break;
                             default: 
                                 break;

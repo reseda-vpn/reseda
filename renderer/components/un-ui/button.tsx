@@ -19,7 +19,7 @@ const Button: React.FC<Props & NativeAttrs> = ({ icon, children, ...args }) => {
                 icon == false ?
                     <></>
                 : 
-                    icon ? icon : <ArrowRight size={16} />
+                    icon ? icon : <ArrowRight size={16} color={"var(--text-primary)"}/>
             }
         </button>
     )
