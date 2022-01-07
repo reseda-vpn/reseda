@@ -88,7 +88,7 @@ const Home: NextPage = () => {
 						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
 					</div>
 					
-					<p>{connection?.location?.toUpperCase() ?? ""}</p>
+					<p>{connection?.location ?? ""}</p>
 					<h6>{connection?.server ?? ip.address("public") }</h6>
 				</div>
 

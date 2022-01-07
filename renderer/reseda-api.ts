@@ -5,6 +5,16 @@ import { supabase } from './client'
 import { WgConfig } from "wireguard-tools";
 import child_process, { exec } from 'child_process'
 
+// const arch = child_process.spawnSync("arch").output.toString();
+
+const architecture = () => {
+	return "x86";
+	// if(arch.includes("amd")) return "amd64";
+	// if(arch.includes("arm64")) return "arm64";
+}
+
+const run_loc = ''; //path.join(process.cwd(), './', `/renderer/wireguard-windows/${architecture()}`);
+
 type Packet = {
 	id: number,
 	author: string,
@@ -34,6 +44,8 @@ type ResedaConnect = (location: string) => Promise<ResedaConnection>;
 type ResedaDisconnect = (connection_id: number) => Promise<ResedaConnection>;
 
 const connect: ResedaConnect = async (location: string): Promise<any> => {
+	console.log(run_loc);
+
 	// Create local client-configuration
 	const client_config = new WgConfig({
 		wgInterface: {
@@ -46,8 +58,8 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 	await client_config.generateKeys();
 	console.log("[CONN] >> Generated Client Configuration");
 	
-	// Generate UNIQUE Public Key using wireguard (wg).
-	const puckey = child_process.spawnSync("wg", ["pubkey"], { input: client_config.wgInterface.privateKey }).output;
+	// Generate UNIQUE Public Key using wireguard (wg). public key -> pu-c-key
+	const puckey = child_process.spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: client_config.wgInterface.privateKey }).output;
 	const key = puckey.toString();
 	
 	// Set the public key omitting /n and /t after '='.
@@ -78,7 +90,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 			client_config.writeToFile();
 
 			console.log(`EXECUTING "${`wireguard /installtunnelservice ${filePath}`}" as sudo (or equiv.)`);
-			sudo.exec(`wireguard /installtunnelservice ${filePath}`, { //   ${filePath}
+			sudo.exec(`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath}`, { //   ${filePath}
 				name: "Reseda Wireguard"
 			}, (e, out, err) => {
 				if(err) throw err;
@@ -127,7 +139,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 }
 
 const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any> => {
-	sudo.exec(`wireguard /uninstalltunnelservice wg0`, {
+	sudo.exec(`${run_loc}/wireguard.exe /uninstalltunnelservice wg0`, {
         name: "Reseda Wireguard"
     }, (_, __, err) => {
         if(err) throw err;
