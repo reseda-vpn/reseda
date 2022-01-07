@@ -19,6 +19,7 @@
     "deepmerge": "^4.2.2",
     "electron-serve": "^1.1.0",
     "electron-store": "^8.0.1",
+    "ip": "^1.1.5",
     "moment": "^2.29.1",
     "path": "^0.12.7",
     "react-feather": "^2.0.9",

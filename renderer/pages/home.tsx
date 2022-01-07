@@ -8,8 +8,9 @@ import { connect, disconnect, ResedaConnection } from '../reseda-api'
 import styles from '../styles/Home.module.css'
 import Button from '../components/un-ui/button'
 import { platform } from 'os'
+import ip from "ip"
 import PlatformControls from '../components/platform_controls'
-import { ipcRenderer } from 'electron'
+// const remote = require('@electron/remote')
 
 type Packet = {
 	id: number,
@@ -23,12 +24,14 @@ type Packet = {
 }
 
 const Home: NextPage = () => {
-	const [ status, setStatus ] = useState<"disconnected" | "connected">("connected");
+	const [ status, setStatus ] = useState<"disconnected" | "connected">("disconnected");
 	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
 
 	const [ actionTime, setActionTime ] = useState<number>();
 	const [ connection, setConnection ] = useState<ResedaConnection>();
     const [ currentTab, setCurrentTab ] = useState<"servers" | "multi-hop" | "settings">("servers");
+
+	// console.log(remote)
 
 	return (
 		<div className={styles.container}>
@@ -40,12 +43,12 @@ const Home: NextPage = () => {
 					</div>
 
 					<PlatformControls 
-						onClose={() => ipcRenderer.send("close")}
-						onMinimize={() => ipcRenderer.send("close")}	
-						onMaximize={() => {
-							ipcRenderer.send(maximized == "maximized" ? "unmaximize" : "maximize");
-						 	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
-						}}
+						// onClose={() => remote.getCurrentWindow().close()}
+						// onMinimize={() => remote.getCurrentWindow().minimize()}	
+						// onMaximize={() => {
+						// 	maximized == "maximized" ? remote.getCurrentWindow().unmaximize() : remote.getCurrentWindow().maximize();
+						//  	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
+						// }}
 					/>
 				</div>
 				:
@@ -85,8 +88,8 @@ const Home: NextPage = () => {
 						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
 					</div>
 					
-					<p>{connection?.location?.toUpperCase() ?? "Singapore"}</p>
-					<h6>{connection?.server ?? "singapore-1"}</h6>
+					<p>{connection?.location?.toUpperCase() ?? ""}</p>
+					<h6>{connection?.server ?? ip.address("public") }</h6>
 				</div>
 
 				<div>

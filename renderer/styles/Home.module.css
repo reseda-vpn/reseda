@@ -216,7 +216,7 @@
   background-color: var(--text-primary);
   color: var(--off-white);
 
-  -webkit-user-select: none;
+  user-select: none;
   -webkit-app-region: drag;
 }
 
@@ -248,6 +248,10 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+.resedaServer:hover {
+  background-color: var(--accent-light);
 }
 
 .resedaServer * {

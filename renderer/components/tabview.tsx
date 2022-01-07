@@ -30,7 +30,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
             .from('server_registry')
             .on('*', (e) => {
                 console.log(e);
-                setServerRegistry(e.new)
+                console.log(e.eventType);
+                // setServerRegistry(e.new)
             })
             .subscribe();
 
@@ -53,6 +54,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                     ? serverRegistry?.map(e => {
                                         return (
                                             <div 
+                                            key={e.id}
                                             className={styles.resedaServer}
                                             onClick={() => {
                                                 connect(e.id).then((conn) => {
@@ -63,7 +65,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                 });
                                             }}>
                                                 <p>{ e.location }</p>
-                                                <div className={styles.mono}>{ moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() } old</div>
+                                                {e.hostname}
+                                                <div className={styles.mono}>Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }</div>
                                             </div>
                                         )
                                     }) : (<div><p>No Servers</p></div>)
