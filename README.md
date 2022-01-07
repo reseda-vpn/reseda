@@ -1,38 +1,22 @@
-<p align="center"><img src="https://i.imgur.com/NZfsD1p.png"></p>
+## Reseda VPN Client
+A Client UI for the reseda-vpn network, allows anyone to connect to any publicically advertized `reseda-server` server. 
+Client and Server network improvements include dynamic usage handling and on-demand server spinup for user load distrobution.
 
-## Usage
+> Note: It is not intended for any user to install from this git repository as it may contain buggy code, which improperly handled can leave users stranded without internet where a tunnel is left open and not closed. Reseda encourages installing only the `lts` or `latest` version from . However, as the project client is open-source - you are free to browse the code and download any release versions of the code. However it is warned that any download of unreleased code is not release product of reseda.
 
-### Create an App
+Current Support:
+ - Windows (7, 8, 10, 11+)
 
-```
-# with npx
-$ npx create-nextron-app my-app --example with-typescript
+Upcomming Support:
+ - Linux Systems (Ubuntu, Debian...)
+ - Darwin (MacOS)
 
-# with yarn
-$ yarn create nextron-app my-app --example with-typescript
+### Install Instructions
+1. Head to `https://reseda.app/download`
+2. Download the latest version for your operating system
+3. Sign in with your reseda-account. 
+4. Enjoy your `free` vpn whilst reseda is in pre-release.
 
-# with pnpx
-$ pnpx create-nextron-app my-app --example with-typescript
-```
+-------
 
-### Install Dependencies
-
-```
-$ cd my-app
-
-# using yarn or npm
-$ yarn (or `npm install`)
-
-# using pnpm
-$ pnpm install --shamefully-hoist
-```
-
-### Use it
-
-```
-# development mode
-$ yarn dev (or `npm run dev` or `pnpm run dev`)
-
-# production build
-$ yarn build (or `npm run build` or `pnpm run build`)
-```
+Built with Electron and NextJS, the wireguard protocol and coffee in New Zealand ☕. 
