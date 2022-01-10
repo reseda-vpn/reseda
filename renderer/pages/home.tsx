@@ -24,7 +24,6 @@ type Packet = {
 }
 
 const Home: NextPage = () => {
-	const [ status, setStatus ] = useState<"disconnected" | "connected">("disconnected");
 	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
 
 	const [ actionTime, setActionTime ] = useState<number>();
@@ -83,9 +82,9 @@ const Home: NextPage = () => {
 				{/* Bottom Viewport (Small) */}
 
 				<div>
-					<div className={status == "connected" ? styles.connected : styles.disconnected}>
+					<div className={connection ? styles.connected : styles.disconnected}>
 						{/* <div className={styles.connectionStatus}></div> */}
-						<h4>{status == "connected" ? "CONNECTED" : "DISCONNECTED"}</h4>
+						<h4>{connection ? "CONNECTED" : "DISCONNECTED"}</h4>
 					</div>
 					
 					<p>{connection?.location ?? ""}</p>
@@ -94,8 +93,8 @@ const Home: NextPage = () => {
 
 				<div>
 					{
-						status == "connected" ? 
-						<Button onClick={() => disconnect(connection.connection_id)}>Disconnect</Button>
+						connection ? 
+						<Button onClick={() => disconnect(connection.connection_id).then(e => setConnection(null))}>Disconnect</Button>
 						:
 						<></>
 					}

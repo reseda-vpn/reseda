@@ -5,15 +5,7 @@ import { supabase } from './client'
 import { WgConfig } from "wireguard-tools";
 import child_process, { exec } from 'child_process'
 
-// const arch = child_process.spawnSync("arch").output.toString();
-
-const architecture = () => {
-	return "x86";
-	// if(arch.includes("amd")) return "amd64";
-	// if(arch.includes("arm64")) return "arm64";
-}
-
-const run_loc = ''; //path.join(process.cwd(), './', `/renderer/wireguard-windows/${architecture()}`);
+const run_loc = path.join(process.cwd(), './', `/wireguard`);
 
 type Packet = {
 	id: number,
@@ -89,7 +81,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 			client_config.wgInterface.address = [`192.168.69.${data.client_number}/24`]
 			client_config.writeToFile();
 
-			console.log(`EXECUTING "${`wireguard /installtunnelservice ${filePath}`}" as sudo (or equiv.)`);
+			console.log(`EXECUTING "${`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath}`}" as sudo (or equiv.)`);
 			sudo.exec(`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath}`, { //   ${filePath}
 				name: "Reseda Wireguard"
 			}, (e, out, err) => {
