@@ -3,6 +3,8 @@ node_modules
 .next
 dist
 
+/app
+app
 .env
 node_modules/**
 .vscode

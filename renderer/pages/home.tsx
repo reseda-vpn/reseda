@@ -67,7 +67,7 @@ const Home: NextPage = () => {
 				<div className={styles.resedaHeader}>
 					{/* Header - Title */}
 					<div>
-						<div className={styles.title}>R.</div>
+						{/* <div className={styles.title}>R.</div> */}
 						<div className={styles.reseda}>Reseda</div>
 					</div>
 
@@ -95,7 +95,7 @@ const Home: NextPage = () => {
 						<h4>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
 					</div>
 					
-					<p>{connection?.location ?? ""}</p>
+					<p>{connection?.location?.country ?? ""}</p>
 					<h6>{connection?.server ?? ip.address("public") }</h6>
 				</div>
 

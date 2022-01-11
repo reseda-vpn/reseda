@@ -4,6 +4,7 @@ import sudo from "sudo-prompt"
 import { supabase } from './client'
 import { WgConfig } from "wireguard-tools";
 import child_process, { exec } from 'child_process'
+import { Server } from './components/tabview';
 
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
 
@@ -28,14 +29,14 @@ export type ResedaConnection = {
 	config: {},
 	as_string: string,
 	connection_id: number,
-	location: string,
+	location: Server,
 	server: string
 }
 
-type ResedaConnect = (location: string, reference: Function) => Promise<ResedaConnection>;
+type ResedaConnect = (location: Server, time_callback: Function, reference: Function) => Promise<ResedaConnection>;
 type ResedaDisconnect = (connection_id: number, reference: Function) => Promise<ResedaConnection>;
 
-const connect: ResedaConnect = async (location: string, reference: Function): Promise<any> => {
+const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	console.log(run_loc);
 
 	// Create local client-configuration
@@ -72,7 +73,7 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 			
 			if(data.id !== EVT_ID || connected) return;
 		
-			console.log(`[CONN] >> Protocol to ${location} established.`);
+			console.log(`[CONN] >> Protocol to ${location.id} established.`);
 		
 			client_config.addPeer({
 				publicKey: data.svr_pub_key,
@@ -89,6 +90,8 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 			}, (e, out, err) => {
 				if(err) throw err;
 				console.log(e, out);
+
+				time_callback(new Date().getTime());
 			});
 
 			console.log("[CONN] >> Received! Connecting...");
@@ -105,24 +108,28 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 				connection_id: EVT_ID,
 				connected: true,
 				connection: 1,
-				location: null,
-				server: location
+				location: location,
+				server: location.id
 			});
 
 			return;
-		}).subscribe();
-	
-	await supabase
-		.from('open_connections')
-		.insert({
-			server: location,
-			client_pub_key: client_config.publicKey,
-			author: supabase.auth.user()?.id
-		}).then(e => {
-			EVT_ID = e?.data?.[0]?.id;
-		});
+		}).subscribe((e) => {
+			console.log("SUBSCRIBED TO RLTME.", e);
 
-	console.log("[CONN] >> Published Configuration, Awaiting Response");
+			if(e == "SUBSCRIBED") {
+				supabase
+					.from('open_connections')
+					.insert({
+						server: location.id,
+						client_pub_key: client_config.publicKey,
+						author: supabase.auth.user()?.id
+					}).then(e => {
+						EVT_ID = e?.data?.[0]?.id;
+
+						console.log("[CONN] >> Published Configuration, Awaiting Response");
+					});
+			}
+		})
 
 	reference({
 		protocol: "wireguard",
@@ -131,8 +138,8 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 		config: {},
 		as_string: "",
 		connection_id: EVT_ID,
-		location: null,
-		server: location
+		location: location,
+		server: location.id
 	});
 }
 

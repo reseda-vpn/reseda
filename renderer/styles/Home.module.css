@@ -16,7 +16,7 @@
   height: 100%;
   width: 100%;
   
-  padding: 1rem 2rem 2rem 2rem;
+  padding: 2rem 2rem 2rem 2rem;
 
   gap: 1rem;
 }
@@ -135,10 +135,27 @@
 .reseda {
   font-weight: 700;
   text-transform: uppercase;
+  position: relative;
+}
+
+.reseda:after {
+  content: "ALPHA";
+  color: var(--accent-blue);
+  position: absolute;
+  bottom: 0;
+  right: -60%;
+  bottom: -10%;
+  font-size: .7rem;
+
+  background: linear-gradient(-45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
+
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .resedaHeader {
   width: 100%;
+  padding-bottom: 1rem;
 
   display: flex;
   flex-direction: row;
@@ -181,6 +198,10 @@
   width: 40%;
 }
 
+.resedaRightBoxes * {
+  transition: 1s ease all;
+}
+
 .resedaUsageBox {
   border-radius: 13px;
   background-color: var(--text-primary);
@@ -192,6 +213,8 @@
   flex-direction: column;
 
   color: var(--off-white);
+
+  transition: .2s ease all;
 }
 
 .resedaUsageBox button {
@@ -389,9 +412,12 @@
 
 .resedaFancyConnection {
   transition: .2s ease all;
-  transition-delay: 0.1s;
 
   padding: 3rem 0rem;
+}
+
+.resedaFancyConnection * {
+  transition: .2s ease all;
 }
 
 .resedaFancyConnection > div:not(:first-of-type) {
@@ -454,16 +480,14 @@
 
   color: rgb(255, 255, 255);
 
-  /* background: linear-gradient(-45deg, rgba(189,178,241,1) 0%, rgba(241,201,153,1) 33%, rgba(189,178,241,1) 66%, rgba(241,201,153,1) 100%); */
-  background: linear-gradient(-45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
+  /* background: linear-gradient(45deg, rgba(189,178,241,1) 0%, rgba(241,201,153,1) 33%, rgba(189,178,241,1) 66%, rgba(241,201,153,1) 100%); */
+  background: linear-gradient(45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
   /* background: linear-gradient(-45deg, rgba(85,116,164,1) 0%, rgba(62,191,232,1) 33%, rgba(85,116,164,1) 66%, rgba(62,191,232,1) 100%); */
 
-	background-size: 600%;
+	background-size: 400% 400%;
   animation: animated_text 5s linear infinite;
 
   position: relative;
-
-  position: absolute;
   z-index: 50;
 }
 
@@ -489,6 +513,6 @@
 }
 
 @keyframes animated_text {
-	0% { background-position: 0px 50%; }
-	100% { background-position: 100% 100%; }
+	0% { background-position: 100% 0%; }
+	100% { background-position: 25% 100%; }
 }

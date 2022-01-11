@@ -6,8 +6,9 @@ import { connect, disconnect, ResedaConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
+import { useDate } from './useDate';
 
-type Server = {
+export type Server = {
     id: string,
     created_at: string,
     uptime: any,
@@ -20,6 +21,8 @@ type Server = {
 const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-hop" | "settings", connection: ResedaConnection }> = ({ connectionCallback, tab, connection }) => {
     const [ serverRegistry, setServerRegistry ] = useState<Server[]>();
     const [ fetching, setFetching ] = useState<boolean>(true);
+    const [ connectionTime, setConnectionTime ] = useState(null);
+    const { today } = useDate();
 
     useEffect(() => {
         supabase
@@ -65,12 +68,14 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                             key={e.id}
                                             className={connection?.server == e.id && connection.connected ? styles.resedaServerConnected : (connection?.server == e.id && !connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
                                             onClick={() => {
+                                                if(connection?.server == e.id) return;
+
                                                 if(connection?.connected) {
                                                     disconnect(connection.connection_id, connectionCallback).then(() => {
-                                                        connect(e.id, connectionCallback)
+                                                        connect(e, setConnectionTime, connectionCallback)
                                                     })
                                                 }else {
-                                                    connect(e.id, connectionCallback)
+                                                    connect(e, setConnectionTime, connectionCallback)
                                                 }
                                             }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
@@ -146,8 +151,13 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                             return (
                                                 <span>
                                                     <span>
-                                                        <span >
-                                                            R
+                                                        <span style={{  background: 'radial-gradient(circle, rgba(87,156,251,1) 0%, rgba(18,24,41,0) 110%)', backgroundSize: '400%', animation: 'animated_text 5s linear infinite' }} >
+                                                            {
+                                                                connection.location ?
+                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))' }} className={`twa twa-${connection.location.country.toLowerCase().replaceAll(" ", "-")}-flag`}></span>
+                                                                :
+                                                                "R"
+                                                            }
                                                         </span>
                                                     </span>
                                                 </span>
@@ -187,8 +197,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                     case 1:
                                         return (
                                             <div>
-                                                <h2>Connected</h2>
-                                                <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p>
+                                                <h2>{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
+                                                <p style={{ opacity: 0.6 }} className={styles.mono}>{connection?.location?.hostname}</p>
+                                                {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
                                             </div>
                                         )
                                     case 2:
