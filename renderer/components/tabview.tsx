@@ -66,7 +66,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                             className={connection?.server == e.id && connection.connected ? styles.resedaServerConnected : (connection?.server == e.id && !connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
                                             onClick={() => {
                                                 if(connection?.connected) {
-                                                    disconnect(connection.connection_id).then(conn => {
+                                                    disconnect(connection.connection_id, connectionCallback).then(() => {
                                                         connect(e.id, connectionCallback)
                                                     })
                                                 }else {
@@ -173,7 +173,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                     </div>
 
                     <Button disabled={!connection.connected} icon={false} onClick={() => {
-                        disconnect(connection.connection_id);
+                        disconnect(connection.connection_id, connectionCallback);
                     }}>Disconnect</Button>
                 </div>
             </div>

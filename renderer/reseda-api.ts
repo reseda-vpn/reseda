@@ -33,7 +33,7 @@ export type ResedaConnection = {
 }
 
 type ResedaConnect = (location: string, reference: Function) => Promise<ResedaConnection>;
-type ResedaDisconnect = (connection_id: number) => Promise<ResedaConnection>;
+type ResedaDisconnect = (connection_id: number, reference: Function) => Promise<ResedaConnection>;
 
 const connect: ResedaConnect = async (location: string, reference: Function): Promise<any> => {
 	console.log(run_loc);
@@ -106,6 +106,8 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 				location: null,
 				server: location
 			});
+
+			return;
 		}).subscribe();
 	
 	await supabase
@@ -132,7 +134,7 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 	});
 }
 
-const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any> => {
+const disconnect: ResedaDisconnect = async (connection_id: number, reference: Function): Promise<any> => {
 	sudo.exec(`${run_loc}/wireguard.exe /uninstalltunnelservice wg0`, {
         name: "Reseda Wireguard"
     }, (_, __, err) => {
@@ -144,7 +146,7 @@ const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any>
             .match({
                 id: connection_id
             }).then(e => {
-				return {
+				reference({
 					protocol: "wireguard",
 					config: e.data,
 					as_string: JSON.stringify(e.data),
@@ -153,7 +155,9 @@ const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any>
 					connection: 0,
 					location: null,
 					server: null
-				}
+				});
+
+				return {};
             });
     });
 }
