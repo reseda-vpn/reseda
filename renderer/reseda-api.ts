@@ -32,10 +32,10 @@ export type ResedaConnection = {
 	server: string
 }
 
-type ResedaConnect = (location: string) => Promise<ResedaConnection>;
+type ResedaConnect = (location: string, reference: Function) => Promise<ResedaConnection>;
 type ResedaDisconnect = (connection_id: number) => Promise<ResedaConnection>;
 
-const connect: ResedaConnect = async (location: string): Promise<any> => {
+const connect: ResedaConnect = async (location: string, reference: Function): Promise<any> => {
 	console.log(run_loc);
 
 	// Create local client-configuration
@@ -96,7 +96,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 
 			await supabase.removeAllSubscriptions();
 
-			return {
+			reference({
 				protocol: "wireguard",
 				config: client_config.toJson(),
 				as_string: client_config.toString(),
@@ -105,7 +105,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 				connection: 1,
 				location: null,
 				server: location
-			}
+			});
 		}).subscribe();
 	
 	await supabase
@@ -120,7 +120,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 
 	console.log("[CONN] >> Published Configuration, Awaiting Response");
 
-	return {
+	reference({
 		protocol: "wireguard",
 		connected: false,
 		connection: 2,
@@ -129,7 +129,7 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 		connection_id: EVT_ID,
 		location: null,
 		server: location
-	}
+	});
 }
 
 const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any> => {
@@ -150,7 +150,9 @@ const disconnect: ResedaDisconnect = async (connection_id: number): Promise<any>
 					as_string: JSON.stringify(e.data),
 					connection_id,
 					connected: false,
-					connection: 0
+					connection: 0,
+					location: null,
+					server: null
 				}
             });
     });

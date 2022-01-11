@@ -2,9 +2,10 @@ import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../client';
-import { connect } from '../reseda-api';
+import { connect, disconnect, ResedaConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
-import twemoji from "twemoji"
+import Button from "./un-ui/button"
+import { CornerDownRight, Link, Loader } from 'react-feather';
 
 type Server = {
     id: string,
@@ -16,15 +17,17 @@ type Server = {
     hostname: string
 };
 
-const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-hop" | "settings" }> = ({ connectionCallback, tab }) => {
+const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-hop" | "settings", connection: ResedaConnection }> = ({ connectionCallback, tab, connection }) => {
     const [ serverRegistry, setServerRegistry ] = useState<Server[]>();
+    const [ fetching, setFetching ] = useState<boolean>(true);
 
     useEffect(() => {
         supabase
             .from('server_registry')
             .select("*")
             .then(e => {
-                setServerRegistry(e.data)
+                setServerRegistry(e.data);
+                setFetching(false);
             });
 
         const subscription = supabase
@@ -41,6 +44,10 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
         }
     }, []);
 
+    useEffect(() => {
+        console.log(connection);
+    }, [connection])
+
 	return (
 		<div className={styles.resedaContentCenter}>
             <div>
@@ -56,25 +63,42 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                         return (
                                             <div 
                                             key={e.id}
-                                            className={styles.resedaServer}
+                                            className={connection?.server == e.id && connection.connected ? styles.resedaServerConnected : (connection?.server == e.id && !connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
                                             onClick={() => {
-                                                connect(e.id).then((conn) => {
-                                                    connectionCallback({
-                                                        ...conn,
-                                                        location: e.country
+                                                if(connection?.connected) {
+                                                    disconnect(connection.connection_id).then(conn => {
+                                                        connect(e.id, connectionCallback)
                                                     })
-                                                });
+                                                }else {
+                                                    connect(e.id, connectionCallback)
+                                                }
                                             }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
                                                     <span style={{ height: '22px' }} className={`twa twa-${e.location.toLowerCase().replaceAll(" ", "-")}-flag`}></span>
                                                     <p>{ e.country }</p>
                                                 </div>
                                                 
-                                                {e.hostname}
-                                                <div className={styles.mono}>Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }</div>
+                                                <p className={styles.mono}>{e.hostname}</p>
+                                                {
+                                                    connection?.server == e.id && connection.connected ? 
+                                                        <Link size={16}></Link>
+                                                    :
+                                                        <div className={styles.mono}>Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }</div>
+                                                }
+                                                
+                                                
                                             </div>
                                         )
-                                    }) : (<div><p>No Servers</p></div>)
+                                    }) : (
+                                        fetching ? 
+                                            <div className={styles.loadingContent}>
+                                                <Loader />
+                                            </div>
+                                        :
+                                            <div>
+                                                <p>No Servers</p>
+                                            </div>
+                                    )
                                 )
 
                                 break;
@@ -101,11 +125,56 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
 
             <div className={styles.resedaRightBoxes}>
                 <div className={styles.resedaUsageBox}>
-                    <h2>Usage</h2>
+                    {/* <h2>Connection</h2> */}
 
-                    <div>
+                    <div className={styles.resedaFancyConnection}>
+                        <div>
+                            {
+                                connection?.connected ? 
+                                <span>
+                                    <span>
+                                        <span>
+                                            R
+                                        </span>
+                                    </span>
+                                </span>
+                                :
+                                <span>
+                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
+                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.158)'}}>
+                                            R
+                                        </span>
+                                    </span>
+                                </span>
+                            }
+                        </div>
 
+                        {
+                            (() => {
+                                switch(connection?.connection) {
+                                    case 0:
+                                        return <p>Not Connected</p>
+                                    case 1:
+                                        return (
+                                            <div>
+                                                <h2>Connected</h2>
+                                                <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p>
+                                            </div>
+                                        )
+                                    case 2:
+                                        return <p>Connecting...</p>
+                                    default:
+                                        return <p>Not Connected</p>
+                                }
+                            })()
+                        }
+
+                        
                     </div>
+
+                    <Button disabled={!connection.connected} icon={false} onClick={() => {
+                        disconnect(connection.connection_id);
+                    }}>Disconnect</Button>
                 </div>
             </div>
         </div>

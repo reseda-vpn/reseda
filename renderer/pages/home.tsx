@@ -25,9 +25,17 @@ type Packet = {
 
 const Home: NextPage = () => {
 	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
-
 	const [ actionTime, setActionTime ] = useState<number>();
-	const [ connection, setConnection ] = useState<ResedaConnection>();
+	const [ connection, setConnection ] = useState<ResedaConnection>({
+		protocol: "wireguard",
+		config: null,
+		as_string: "",
+		connection_id: null,
+		connected: false,
+		connection: 0,
+		location: null,
+		server: null
+	});
     const [ currentTab, setCurrentTab ] = useState<"servers" | "multi-hop" | "settings">("servers");
 
 	// console.log(remote)
@@ -72,9 +80,9 @@ const Home: NextPage = () => {
 					</div>
 				</div>
 
-				<div>
+				<div className={styles.resedaBody}>
 					{/* Body */}
-					<TabView connectionCallback={setConnection} tab={currentTab} />
+					<TabView connectionCallback={setConnection} tab={currentTab} connection={connection} />
 				</div>
 			</div>
 
@@ -94,7 +102,8 @@ const Home: NextPage = () => {
 				<div>
 					{
 						connection ? 
-						<Button onClick={() => disconnect(connection.connection_id).then(e => setConnection(null))}>Disconnect</Button>
+						<></>
+						// <Button onClick={() => disconnect(connection.connection_id).then(e => setConnection(null))}>Disconnect</Button>
 						:
 						<></>
 					}

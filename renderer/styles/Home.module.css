@@ -16,7 +16,7 @@
   height: 100%;
   width: 100%;
   
-  padding: 1rem 2rem;
+  padding: 1rem 2rem 2rem 2rem;
 
   gap: 1rem;
 }
@@ -155,6 +155,7 @@
 .resedaContentCenter {
   display: flex;
   flex-direction: row;
+  height: 100%;
   flex: 1;
   gap: 1rem;
   justify-content: space-between;
@@ -182,9 +183,19 @@
 
 .resedaUsageBox {
   border-radius: 13px;
-  background-color: var(--off-white-blue);
+  background-color: var(--text-primary);
 
   padding: 1rem;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  color: var(--off-white);
+}
+
+.resedaUsageBox button {
+  background-color: white !important;
 }
 
 .resedaUsageBox h2 {
@@ -192,6 +203,10 @@
   font-size: 0.9rem;
   text-transform: uppercase;
   /* font-family: "DM Mono"; */
+}
+
+.resedaUsageBox * {
+  color: var(--off-white);
 }
 
 .resedaTabBar {
@@ -256,8 +271,59 @@
   background-size: 22px;
 }
 
+.resedaServerConnected > div:first-of-type span {
+  width: 22px;
+  height: 22px;
+  background-size: 22px;
+}
+
 .resedaServer:hover {
-  background-color: var(--off-white-blue);
+  background-color: var(--off-white);
+}
+
+.resedaServerConnecting {
+  background-color: var(--text-primary);
+  color: var(--off-white);
+
+  width: 100%;
+  border-radius: 7px;
+  padding: .6rem 1rem;
+
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resedaServerConnected {
+  background-color: var(--text-primary);
+  color: var(--off-white);
+
+  width: 100%;
+  border-radius: 7px;
+  padding: .6rem 1rem;
+
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resedaServerConnected * {
+  color: var(--off-white);
+}
+
+.resedaServerConnected * {
+  margin: 0;
+}
+
+.resedaServerConnecting * {
+  color: var(--off-white);
+  margin: 0;
 }
 
 .resedaServer * {
@@ -268,4 +334,119 @@
   font-family: "DM Mono";
   font-size: .8rem;
   margin: 0;
+}
+
+.resedaBody {
+  height: 100%;
+}
+
+.loadingContent {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingContent > svg {
+  animation: spin .75s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0);
+  }
+  50% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+.resedaFancyConnection {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+
+  width: 100%;
+  flex: 1;
+
+  gap: 1rem;
+}
+
+.resedaFancyConnection > div {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resedaFancyConnection {
+  transition: .2s ease all;
+  transition-delay: 0.1s;
+
+  padding: 3rem 0rem;
+}
+
+.resedaFancyConnection > div:not(:first-of-type) {
+  height: fit-content;
+  flex: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+
+  gap: .8rem;
+}
+
+.resedaFancyConnection > div:not(:first-of-type) * {
+  margin: 0;
+}
+
+.resedaFancyConnection > div > span {
+  border: 2px solid rgba(255, 255, 255, 0.158);
+  height: 250px;
+  width: 250px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resedaFancyConnection button {
+  background-color: white;
+}
+
+.resedaFancyConnection > div > span > span {
+  border: 2px solid rgba(255, 255, 255, 0.336);
+  height: 200px;
+  width: 200px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resedaFancyConnection > div > span > span > span {
+  border: 2px solid white;
+  height: 150px;
+  width: 150px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 5rem;
+  user-select: none;
+  font-weight: 900;
+
+  color: rgb(255, 255, 255);
 }
