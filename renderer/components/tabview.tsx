@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../client';
 import { connect } from '../reseda-api';
 import styles from '../styles/Home.module.css'
+import twemoji from "twemoji"
 
 type Server = {
     id: string,
@@ -60,11 +61,15 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                 connect(e.id).then((conn) => {
                                                     connectionCallback({
                                                         ...conn,
-                                                        location: e.location
+                                                        location: e.country
                                                     })
                                                 });
                                             }}>
-                                                <p>{ e.location }</p>
+                                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
+                                                    <span style={{ height: '22px' }} className={`twa twa-${e.location.toLowerCase().replaceAll(" ", "-")}-flag`}></span>
+                                                    <p>{ e.country }</p>
+                                                </div>
+                                                
                                                 {e.hostname}
                                                 <div className={styles.mono}>Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }</div>
                                             </div>

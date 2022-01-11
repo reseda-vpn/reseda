@@ -94,6 +94,8 @@ const connect: ResedaConnect = async (location: string): Promise<any> => {
 
 			console.log(client_config);
 
+			await supabase.removeAllSubscriptions();
+
 			return {
 				protocol: "wireguard",
 				config: client_config.toJson(),
