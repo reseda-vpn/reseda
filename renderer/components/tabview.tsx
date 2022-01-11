@@ -130,22 +130,52 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                     <div className={styles.resedaFancyConnection}>
                         <div>
                             {
-                                connection?.connected ? 
-                                <span>
-                                    <span>
-                                        <span>
-                                            R
-                                        </span>
-                                    </span>
-                                </span>
-                                :
-                                <span>
-                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
-                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.158)'}}>
-                                            R
-                                        </span>
-                                    </span>
-                                </span>
+                                (() => {
+                                    switch(connection?.connection) {
+                                        case 0:
+                                            return (
+                                                <span>
+                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'none', backgroundColor: 'rgba(255,255,255,0.1'}}>
+                                                            R
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            )
+                                        case 1:
+                                            return (
+                                                <span>
+                                                    <span>
+                                                        <span >
+                                                            R
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            )
+                                        case 2:
+                                            return (
+                                                <span>
+                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
+                                                        <div></div>
+
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)'}}>
+                                                            R
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            )
+                                        default:
+                                            return (
+                                                <span>
+                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'none'}}>
+                                                            R
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            )
+                                    }
+                                })()
                             }
                         </div>
 
@@ -171,10 +201,30 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
 
                         
                     </div>
-
-                    <Button disabled={!connection.connected} icon={false} onClick={() => {
-                        disconnect(connection.connection_id, connectionCallback);
-                    }}>Disconnect</Button>
+                    
+                    {
+                        (() => {
+                            switch(connection?.connection) {
+                                case 0:
+                                    return <></>
+                                case 1:
+                                    return (
+                                        <Button icon={false} onClick={() => {
+                                            disconnect(connection.connection_id, connectionCallback);
+                                        }}>Disconnect</Button>
+                                    )
+                                case 2:
+                                    return (
+                                        <Button icon={false} onClick={() => {
+                                            disconnect(connection.connection_id, connectionCallback);
+                                        }}>Cancel</Button>
+                                    )
+                                default:
+                                    return <></>
+                            }
+                        })()
+                    }
+                    
                 </div>
             </div>
         </div>

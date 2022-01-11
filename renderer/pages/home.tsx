@@ -32,7 +32,7 @@ const Home: NextPage = () => {
 		as_string: "",
 		connection_id: null,
 		connected: false,
-		connection: 2,
+		connection: 0,
 		location: null,
 		server: null
 	});

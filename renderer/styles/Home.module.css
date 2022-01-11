@@ -410,6 +410,7 @@
 
 .resedaFancyConnection > div > span {
   border: 2px solid rgba(255, 255, 255, 0.158);
+  background-color: rgba(255, 255, 255, 0.025);
   height: 250px;
   width: 250px;
   border-radius: 50%;
@@ -425,6 +426,7 @@
 
 .resedaFancyConnection > div > span > span {
   border: 2px solid rgba(255, 255, 255, 0.336);
+  background-color: rgba(255, 255, 255, 0.05);
   height: 200px;
   width: 200px;
   border-radius: 50%;
@@ -432,6 +434,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  position: relative;
 }
 
 .resedaFancyConnection > div > span > span > span {
@@ -449,4 +453,42 @@
   font-weight: 900;
 
   color: rgb(255, 255, 255);
+
+  /* background: linear-gradient(-45deg, rgba(189,178,241,1) 0%, rgba(241,201,153,1) 33%, rgba(189,178,241,1) 66%, rgba(241,201,153,1) 100%); */
+  background: linear-gradient(-45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
+  /* background: linear-gradient(-45deg, rgba(85,116,164,1) 0%, rgba(62,191,232,1) 33%, rgba(85,116,164,1) 66%, rgba(62,191,232,1) 100%); */
+
+	background-size: 600%;
+  animation: animated_text 5s linear infinite;
+
+  position: relative;
+
+  position: absolute;
+  z-index: 50;
+}
+
+.resedaFancyConnection > div > span > span > div {
+  height: 200px;
+  width: 50px;
+  background-color: white;
+  position: absolute;
+
+  z-index: 30;
+  clip-path: circle(76px at center);
+  animation: spin 2s ease 0s infinite;
+  border-radius: 55%;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes animated_text {
+	0% { background-position: 0px 50%; }
+	100% { background-position: 100% 100%; }
 }
