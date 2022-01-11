@@ -60,9 +60,11 @@ const connect: ResedaConnect = async (location: string, reference: Function): Pr
 
 	// Client Event Id
 	let EVT_ID;
+
+	await supabase.removeAllSubscriptions();
 	
 	// Now await a server response, to the current.
-	supabase
+	await supabase
 		.from('open_connections')
 		.on("UPDATE", async (event) => {
 			const data: Packet = event.new;

@@ -92,7 +92,7 @@ const Home: NextPage = () => {
 				<div>
 					<div className={connection ? styles.connected : styles.disconnected}>
 						{/* <div className={styles.connectionStatus}></div> */}
-						<h4>{connection ? "CONNECTED" : "DISCONNECTED"}</h4>
+						<h4>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
 					</div>
 					
 					<p>{connection?.location ?? ""}</p>
