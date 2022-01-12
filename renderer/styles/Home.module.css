@@ -232,6 +232,10 @@
   color: var(--off-white);
 }
 
+.resedaUsageBox > *:not(button) {
+  flex-grow: 1;
+}
+
 .resedaTabBar {
   display: flex;
   flex-direction: row;
@@ -412,12 +416,16 @@
 
 .resedaFancyConnection {
   transition: .2s ease all;
-
+  flex-grow: 1;
   padding: 3rem 0rem;
 }
 
 .resedaFancyConnection * {
   transition: .2s ease all;
+}
+
+.resedaFancyConnection svg {
+  transition: height 0.4s width 0.4s;
 }
 
 .resedaFancyConnection > div:not(:first-of-type) {
@@ -444,6 +452,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* animation: pulse2 4s ease infinite; */
+}
+
+@keyframes pulse2 {
+  0% {
+    height: 250px;
+    width: 250px;
+  }
+  50% {
+    height: 270px;
+    width: 270px;
+  }
+  100% {
+    height: 250px;
+    width: 250px;
+  }
 }
 
 .resedaFancyConnection button {
@@ -462,6 +487,23 @@
   justify-content: center;
 
   position: relative;
+
+  /* animation: pulse1 4s ease infinite; */
+}
+
+@keyframes pulse1 {
+  0% {
+    height: 200px;
+    width: 200px;
+  }
+  50% {
+    height: 220px;
+    width: 220px;
+  }
+  100% {
+    height: 200px;
+    width: 200px;
+  }
 }
 
 .resedaFancyConnection > div > span > span > span {
@@ -481,7 +523,7 @@
   color: rgb(255, 255, 255);
 
   /* background: linear-gradient(45deg, rgba(189,178,241,1) 0%, rgba(241,201,153,1) 33%, rgba(189,178,241,1) 66%, rgba(241,201,153,1) 100%); */
-  background: linear-gradient(45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
+  background: linear-gradient(45deg, #6355a4 0%, #e89a3e 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
   /* background: linear-gradient(-45deg, rgba(85,116,164,1) 0%, rgba(62,191,232,1) 33%, rgba(85,116,164,1) 66%, rgba(62,191,232,1) 100%); */
 
 	background-size: 400% 400%;
@@ -493,14 +535,14 @@
 
 .resedaFancyConnection > div > span > span > div {
   height: 200px;
-  width: 80px;
+  width: 120px;
   background-color: white;
   position: absolute;
 
   z-index: 30;
-  clip-path: circle(76px at center);
+  clip-path: circle(77px at center);
   animation: spin 2s ease 0s infinite;
-  border-radius: 55%;
+  border-radius: 50%;
 }
 
 @keyframes spin {

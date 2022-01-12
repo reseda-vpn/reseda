@@ -25,7 +25,7 @@ let connected = false;
 export type ResedaConnection = {
 	protocol?: string,
 	connected: boolean,
-	connection: 0 | 1 | 2,
+	connection: 0 | 1 | 2 | 3,
 	config: {},
 	as_string: string,
 	connection_id: number,
@@ -37,6 +37,8 @@ type ResedaConnect = (location: Server, time_callback: Function, reference: Func
 type ResedaDisconnect = (connection_id: number, reference: Function) => Promise<ResedaConnection>;
 
 const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
+	time_callback(new Date().getTime());
+
 	console.log(run_loc);
 
 	// Create local client-configuration
@@ -71,7 +73,18 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 			const data: Packet = event.new;
 			console.log(data.id, EVT_ID);
 			
-			if(data.id !== EVT_ID || connected) return;
+			if(data.id !== EVT_ID || connected) {
+				reference({
+					protocol: "wireguard",
+					config: client_config.toJson(),
+					as_string: client_config.toString(),
+					connection_id: EVT_ID,
+					connected: false,
+					connection: 3,
+					location: location,
+					server: location.id
+				});
+			}
 		
 			console.log(`[CONN] >> Protocol to ${location.id} established.`);
 		
@@ -92,29 +105,29 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 				console.log(e, out);
 
 				time_callback(new Date().getTime());
+
+				console.log("[CONN] >> Received! Connecting...");
+				connected = true;
+
+				console.log(client_config);
+
+				supabase.removeAllSubscriptions();
+
+				reference({
+					protocol: "wireguard",
+					config: client_config.toJson(),
+					as_string: client_config.toString(),
+					connection_id: EVT_ID,
+					connected: true,
+					connection: 1,
+					location: location,
+					server: location.id
+				});
+
+				return;
 			});
-
-			console.log("[CONN] >> Received! Connecting...");
-			connected = true;
-
-			console.log(client_config);
-
-			await supabase.removeAllSubscriptions();
-
-			reference({
-				protocol: "wireguard",
-				config: client_config.toJson(),
-				as_string: client_config.toString(),
-				connection_id: EVT_ID,
-				connected: true,
-				connection: 1,
-				location: location,
-				server: location.id
-			});
-
-			return;
 		}).subscribe((e) => {
-			console.log("SUBSCRIBED TO RLTME.", e);
+			console.log("SUBSCRIBED TO REALTIME.", e);
 
 			if(e == "SUBSCRIBED") {
 				supabase
@@ -148,6 +161,17 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
         name: "Reseda Wireguard"
     }, (_, __, err) => {
         if(err) throw err;
+
+		reference({
+			protocol: "wireguard",
+			config: {},
+			as_string: "",
+			connection_id,
+			connected: false,
+			connection: 0,
+			location: null,
+			server: null
+		});
 
         supabase
             .from('open_connections')

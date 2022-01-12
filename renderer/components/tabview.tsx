@@ -139,9 +139,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                     switch(connection?.connection) {
                                         case 0:
                                             return (
-                                                <span>
-                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
-                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'none', backgroundColor: 'rgba(255,255,255,0.1'}}>
+                                                <span style={{ animation: 'none'  }}>
+                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', animation: 'none' }}>
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'none', backgroundColor: 'rgba(255,255,255,0.1' }}>
                                                             R
                                                         </span>
                                                     </span>
@@ -149,9 +149,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                             )
                                         case 1:
                                             return (
-                                                <span>
-                                                    <span>
-                                                        <span style={{  background: 'radial-gradient(circle, rgba(87,156,251,1) 0%, rgba(18,24,41,0) 110%)', backgroundSize: '400%', animation: 'animated_text 5s linear infinite' }} >
+                                                <span style={{ animation: 'none'  }} >
+                                                    <span style={{ animation: 'none'  }} >
+                                                        <span style={{ backgroundSize: '400%', animationDuration: '10s' }} >
                                                             {
                                                                 connection.location ?
                                                                 <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))' }} className={`twa twa-${connection.location.country.toLowerCase().replaceAll(" ", "-")}-flag`}></span>
@@ -169,6 +169,18 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                         <div></div>
 
                                                         <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)'}}>
+                                                            R
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            )
+                                        case 3:
+                                            return (
+                                                <span>
+                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
+                                                        <div style={{ animationDuration: '15s', animationTimingFunction: 'linear' }}></div>
+
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'linear-gradient(45deg, rgba(213,109,97,1) 0%, rgba(232,82,62,1) 33%, rgba(213,109,97,1) 66%, rgba(232,82,62,1) 100%)', backgroundSize: '400%'}}>
                                                             R
                                                         </span>
                                                     </span>
@@ -197,6 +209,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                     case 1:
                                         return (
                                             <div>
+                                                <p>Connected</p>
                                                 <h2>{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
                                                 <p style={{ opacity: 0.6 }} className={styles.mono}>{connection?.location?.hostname}</p>
                                                 {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
@@ -204,6 +217,13 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                         )
                                     case 2:
                                         return <p>Connecting...</p>
+                                    case 3:
+                                        return (
+                                            <div>
+                                                <p>Connection Failed</p>
+                                                <p style={{ opacity: 0.6 }} className={styles.mono}>{btoa(connection.as_string)}</p>
+                                            </div>
+                                        )
                                     default:
                                         return <p>Not Connected</p>
                                 }
@@ -229,6 +249,15 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                         <Button icon={false} onClick={() => {
                                             disconnect(connection.connection_id, connectionCallback);
                                         }}>Cancel</Button>
+                                    )
+                                case 3:
+                                    return (
+                                        <Button icon={false} onClick={() => {
+                                            disconnect(connection.connection_id, connectionCallback).then(e => {
+                                                if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback);
+                                                else return;
+                                            })
+                                        }}>Retry</Button>
                                     )
                                 default:
                                     return <></>
