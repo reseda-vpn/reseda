@@ -11,11 +11,11 @@ const buttons = (isWin: boolean, maximized: boolean, onMinimize: () => void, onM
     onClick: onMinimize,
     icon: <MinimizeIcon isWin={isWin} />
   },
-  {
-    type: 'maximize',
-    onClick: onMaximize,
-    icon: maximized ? <RestoreIcon isWin={isWin} /> : <MaximizeIcon isWin={isWin} />
-  },
+  // {
+  //   type: 'maximize',
+  //   onClick: onMaximize,
+  //   icon: maximized ? <RestoreIcon isWin={isWin} /> : <MaximizeIcon isWin={isWin} />
+  // },
   {
     type: 'close',
     onClick: onClose,

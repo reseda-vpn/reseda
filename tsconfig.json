@@ -16,7 +16,14 @@
     "noEmit": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": "./",
+    "paths": {
+      "@components/*": ["renderer/components/*"],
+      "@styles/*": ["renderer/styles/*"],
+      "@public/*": ["renderer/public/*"],
+      "@root/*": ["renderer/*"]
+    },
   },
   "exclude": [
     "node_modules",

@@ -286,10 +286,15 @@
 
   cursor: pointer;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: 35% 25% 1fr;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+.resedaServer > div:last-of-type {
+  justify-self: flex-end;
 }
 
 .resedaServer > div:first-of-type span {

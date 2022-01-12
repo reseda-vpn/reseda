@@ -1,16 +1,19 @@
 import type { NextPage } from 'next'
-import { useState } from 'react'
-import { Settings } from 'react-feather'
-import { exec } from 'sudo-prompt'
-import { supabase } from '../client'
-import TabView from '../components/tabview'
-import { connect, disconnect, ResedaConnection } from '../reseda-api'
-import styles from '../styles/Home.module.css'
-import Button from '../components/un-ui/button'
+import { useEffect, useState } from 'react'
+import { supabase } from '@root/client'
+import TabView from '@components/tabview'
+import { connect, disconnect, ResedaConnection } from '@root/reseda-api'
+import styles from '@styles/Home.module.css'
 import { platform } from 'os'
 import ip from "ip"
 import PlatformControls from '../components/platform_controls'
-// const remote = require('@electron/remote')
+
+const fetcher = (url, token) =>
+  fetch(url, {
+    method: 'GET',
+    headers: new Headers({ 'Content-Type': 'application/json', token }),
+    credentials: 'same-origin',
+  }).then((res) => res.json())
 
 type Packet = {
 	id: number,
@@ -38,7 +41,13 @@ const Home: NextPage = () => {
 	});
     const [ currentTab, setCurrentTab ] = useState<"servers" | "multi-hop" | "settings">("servers");
 
-	// console.log(remote)
+	useEffect(() => {
+		const session = supabase.auth.session()
+
+		fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
+			console.log(e);
+		});
+	}, []);
 
 	return (
 		<div className={styles.container}>

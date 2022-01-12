@@ -15,7 +15,8 @@ export type Server = {
     location: string,
     country: string,
     virtual: boolean,
-    hostname: string
+    hostname: string,
+    flag: string
 };
 
 const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-hop" | "settings", connection: ResedaConnection }> = ({ connectionCallback, tab, connection }) => {
@@ -79,7 +80,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                 }
                                             }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
-                                                    <span style={{ height: '22px' }} className={`twa twa-${e.location.toLowerCase().replaceAll(" ", "-")}-flag`}></span>
+                                                    <span style={{ height: '22px' }} className={`twa twa-${e.flag}`}></span>
                                                     <p>{ e.country }</p>
                                                 </div>
                                                 
@@ -154,7 +155,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                         <span style={{ backgroundSize: '400%', animationDuration: '10s' }} >
                                                             {
                                                                 connection.location ?
-                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))' }} className={`twa twa-${connection.location.country.toLowerCase().replaceAll(" ", "-")}-flag`}></span>
+                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))' }} className={`twa twa-${connection.location.flag}`}></span>
                                                                 :
                                                                 "R"
                                                             }
@@ -221,7 +222,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                         return (
                                             <div>
                                                 <p>Connection Failed</p>
-                                                <p style={{ opacity: 0.6 }} className={styles.mono}>{btoa(connection.as_string)}</p>
+                                                <p style={{ opacity: 0.6, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }} className={styles.mono}>{btoa(connection.as_string)}</p>
                                             </div>
                                         )
                                     default:
