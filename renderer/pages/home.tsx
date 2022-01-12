@@ -51,7 +51,7 @@ const Home: NextPage = () => {
 
 	return (
 		<div className={styles.container}>
-			{
+			{/* {
 				platform() !== "darwin" ?
 				<div className={styles.resedaFrame}>
 					<div>
@@ -69,7 +69,7 @@ const Home: NextPage = () => {
 				</div>
 				:
 				<></>
-			}
+			} */}
 			
 
 			<div className={styles.resedaCenter}>

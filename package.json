@@ -11,7 +11,10 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
-    "buildDependenciesFromSource": true
+    "buildDependenciesFromSource": true,
+    "extraFiles": [
+      "wireguard"
+    ]
   },
   "dependencies": {
     "@electron/remote": "^2.0.1",
