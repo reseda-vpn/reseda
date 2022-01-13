@@ -2,7 +2,7 @@ import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../client';
-import { connect, disconnect, ResedaConnection } from '../reseda-api';
+import { connect, connect_pure, disconnect, ResedaConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
@@ -86,10 +86,15 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                 
                                                 <p className={styles.mono}>{e.hostname}</p>
                                                 {
-                                                    connection?.server == e.id && connection.connected ? 
-                                                        <Link size={16}></Link>
+                                                    connection?.server == e.id && connection.connected ?
+                                                        <div>
+                                                            <p>Connected</p>
+                                                            <Link size={16}></Link>
+                                                        </div> 
                                                     :
-                                                        <div className={styles.mono}>Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }</div>
+                                                        <div className={styles.mono}>
+                                                            Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }
+                                                        </div>
                                                 }
                                                 
                                                 

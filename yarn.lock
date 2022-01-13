@@ -1249,12 +1249,14 @@
   "resolved" "https://registry.npmjs.org/@types/ms/-/ms-0.7.31.tgz"
   "version" "0.7.31"
 
-"@types/node@*":
-  "integrity" "sha512-w3mrvNXLeDYV1GKTZorGJQivK6XLCoGwpnyJFbJVK/aTBQUxOCaa/GlFAAN3OTDFcb7h5tiFG+YXCO2By+riZw=="
-  "resolved" "https://registry.npmjs.org/@types/node/-/node-17.0.5.tgz"
-  "version" "17.0.5"
+"@types/node-windows@^0.1.2":
+  "integrity" "sha512-Luni8arbv20PGunfPtqSHtmcm1if6t3sWuYj4aUGexalb3rUNw1a9M0GDU35Vrx012De6q37kP9IU+tYCYn/DA=="
+  "resolved" "https://registry.npmjs.org/@types/node-windows/-/node-windows-0.1.2.tgz"
+  "version" "0.1.2"
+  dependencies:
+    "@types/node" "*"
 
-"@types/node@^14.14.31", "@types/node@^14.6.2":
+"@types/node@*", "@types/node@^14.14.31", "@types/node@^14.6.2":
   "integrity" "sha512-GtTH2crF4MtOIrrAa+jgTV9JX/PfoUCYr6MiZw7O/dkZu5b6gm5dc1nAL0jwGo4ortSBBtGyeVaxdC8X6V+pLg=="
   "resolved" "https://registry.npmjs.org/@types/node/-/node-14.18.3.tgz"
   "version" "14.18.3"
@@ -4086,6 +4088,11 @@
   "resolved" "https://registry.npmjs.org/minimist/-/minimist-1.2.5.tgz"
   "version" "1.2.5"
 
+"minimist@~0.0.1":
+  "integrity" "sha1-3j+YVD2/lggr5IrRoMfNqDYwHc8="
+  "resolved" "https://registry.npmjs.org/minimist/-/minimist-0.0.10.tgz"
+  "version" "0.0.10"
+
 "minipass-collect@^1.0.2":
   "integrity" "sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA=="
   "resolved" "https://registry.npmjs.org/minipass-collect/-/minipass-collect-1.0.2.tgz"
@@ -4374,6 +4381,14 @@
   "resolved" "https://registry.npmjs.org/node-releases/-/node-releases-2.0.1.tgz"
   "version" "2.0.1"
 
+"node-windows@^1.0.0-beta.6":
+  "integrity" "sha512-Ehig70tF9A9Wns4VMpnsvT7dyat/d2fio6C4g1RAEaAi+piAjN6Wc+/fdSOifl8YCCncVllijv5Q9wdyHvdgeA=="
+  "resolved" "https://registry.npmjs.org/node-windows/-/node-windows-1.0.0-beta.6.tgz"
+  "version" "1.0.0-beta.6"
+  dependencies:
+    "optimist" "~0.6.0"
+    "xml" "0.0.12"
+
 "nopt@^5.0.0":
   "integrity" "sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ=="
   "resolved" "https://registry.npmjs.org/nopt/-/nopt-5.0.0.tgz"
@@ -4462,6 +4477,14 @@
   "version" "5.1.2"
   dependencies:
     "mimic-fn" "^2.1.0"
+
+"optimist@~0.6.0":
+  "integrity" "sha1-2j6nRob6IaGaERwybpDrFaAZZoY="
+  "resolved" "https://registry.npmjs.org/optimist/-/optimist-0.6.1.tgz"
+  "version" "0.6.1"
+  dependencies:
+    "minimist" "~0.0.1"
+    "wordwrap" "~0.0.2"
 
 "os-browserify@^0.3.0", "os-browserify@0.3.0":
   "integrity" "sha1-hUNzx/XCMVkU/Jv8a9gjj92h7Cc="
@@ -5946,6 +5969,11 @@
     "async" "^3.2.0"
     "iconv-lite" "^0.5.0"
 
+"wordwrap@~0.0.2":
+  "integrity" "sha1-o9XabNXAvAAI03I0u68b7WMFkQc="
+  "resolved" "https://registry.npmjs.org/wordwrap/-/wordwrap-0.0.3.tgz"
+  "version" "0.0.3"
+
 "wrap-ansi@^7.0.0":
   "integrity" "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="
   "resolved" "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz"
@@ -5974,6 +6002,11 @@
   "integrity" "sha512-PSNhEJDejZYV7h50BohL09Er9VaIefr2LMAf3OEmpCkjOi34eYyQYAXUTjEQtZJTKcF0E2UKTh+osDLsgNim9Q=="
   "resolved" "https://registry.npmjs.org/xdg-basedir/-/xdg-basedir-4.0.0.tgz"
   "version" "4.0.0"
+
+"xml@0.0.12":
+  "integrity" "sha1-8Is0cQmRK+AChXhfRvFa2OUKX2c="
+  "resolved" "https://registry.npmjs.org/xml/-/xml-0.0.12.tgz"
+  "version" "0.0.12"
 
 "xmlbuilder@^9.0.7":
   "integrity" "sha1-Ey7mPS7FVlxVfiD0wi35rKaGsQ0="
