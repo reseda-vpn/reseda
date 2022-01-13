@@ -19,8 +19,8 @@ if (isProd) {
 
   const mainWindow = createWindow('main', {
     width: 1050,
-    height: 700,
-    // frame: false,
+    height: 750,
+    frame: false,
     resizable: false,
     webPreferences: {
       // preload: path.join(__dirname, 'preload.js'),
@@ -30,7 +30,10 @@ if (isProd) {
   });
 
   mainWindow.setMenuBarVisibility(false);
-  app.setUserTasks([])
+  app.setUserTasks([]);
+
+  ipcMain.on('minimize', () => mainWindow.minimize() );
+  ipcMain.on('close', () => mainWindow.close())
   
   if (isProd) {
     await mainWindow.loadURL('app://./home.html');

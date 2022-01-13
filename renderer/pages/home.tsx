@@ -1,12 +1,8 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '@root/client'
-import TabView from '@components/tabview'
-import { connect, disconnect, ResedaConnection } from '@root/reseda-api'
-import styles from '@styles/Home.module.css'
-import { platform } from 'os'
-import ip from "ip"
-import PlatformControls from '../components/platform_controls'
+import Home from '@components/home'
+import Auth from '@components/auth'
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -26,100 +22,29 @@ type Packet = {
 	server_endpoint: string
 }
 
-const Home: NextPage = () => {
-	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
-	const [ actionTime, setActionTime ] = useState<number>();
-	const [ connection, setConnection ] = useState<ResedaConnection>({
-		protocol: "wireguard",
-		config: null,
-		as_string: "",
-		connection_id: null,
-		connected: false,
-		connection: 0,
-		location: null,
-		server: null
-	});
-    const [ currentTab, setCurrentTab ] = useState<"servers" | "multi-hop" | "settings">("servers");
+const Reseda: NextPage = () => {
+	const [ user, setUser ] = useState(true);
 
-	useEffect(() => {
-		const session = supabase.auth.session()
+	// useEffect(() => {
+	// 	const session = supabase.auth.session()
 
-		fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
-			console.log(e);
-		});
-	}, []);
+	// 	fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
+	// 		console.log(e);
+	// 	});
+	// }, []);
 
 	return (
-		<div className={styles.container}>
-			{/* {
-				platform() !== "darwin" ?
-				<div className={styles.resedaFrame}>
-					<div>
-						Reseda VPN
-					</div>
-
-					<PlatformControls 
-						// onClose={() => remote.getCurrentWindow().close()}
-						// onMinimize={() => remote.getCurrentWindow().minimize()}	
-						// onMaximize={() => {
-						// 	maximized == "maximized" ? remote.getCurrentWindow().unmaximize() : remote.getCurrentWindow().maximize();
-						//  	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
-						// }}
-					/>
-				</div>
+		<div>
+			{
+				!user ?
+					<Auth />
 				:
-				<></>
-			} */}
-			
-
-			<div className={styles.resedaCenter}>
-				<div className={styles.resedaHeader}>
-					{/* Header - Title */}
-					<div>
-						{/* <div className={styles.title}>R.</div> */}
-						<div className={styles.reseda}>Reseda</div>
-					</div>
-
-					<div>
-						<div className={styles.resedaTabBar}>
-							<div onClick={() => setCurrentTab("servers")}>Servers</div>
-							<div onClick={() => setCurrentTab("multi-hop")}>Multi-Hop</div>
-							<div onClick={() => setCurrentTab("settings")}>Settings</div>
-						</div>
-					</div>
-				</div>
-
-				<div className={styles.resedaBody}>
-					{/* Body */}
-					<TabView connectionCallback={setConnection} tab={currentTab} connection={connection} />
-				</div>
-			</div>
-
-			<div className={styles.resedaBottom}>
-				{/* Bottom Viewport (Small) */}
-
-				<div>
-					<div className={connection ? styles.connected : styles.disconnected}>
-						{/* <div className={styles.connectionStatus}></div> */}
-						<h4>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
-					</div>
-					
-					<p>{connection?.location?.country ?? ""}</p>
-					<h6>{connection?.server ?? ip.address("public") }</h6>
-				</div>
-
-				<div>
-					{
-						connection ? 
-						<></>
-						// <Button onClick={() => disconnect(connection.connection_id).then(e => setConnection(null))}>Disconnect</Button>
-						:
-						<></>
-					}
-				</div>
-			</div>
+					<Home />
+			}
 		</div>
 	)
+		
+	
 }
 
-export default Home
+export default Reseda
