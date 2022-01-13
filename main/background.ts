@@ -4,7 +4,6 @@ import path from 'path';
 import fs from "fs"
 import sudo from "sudo-prompt"
 import { createWindow } from './helpers';
-import { init } from '../renderer/reseda-api';
 import { WgConfig } from 'wireguard-tools';
 import { exec, spawnSync } from 'child_process';
 import { Service } from "node-windows"
@@ -72,8 +71,39 @@ app.on('ready', async () => {
     }
   }
 
-  if(isFirstTime) {
-    const filePath = path.join(process.cwd(), './', '/wg0.conf');
+  if(isFirstTime) { 
+    installConfig();
+  }else {
+    ex(`sc query WireGuardTunnel$wg0`, false, (out) => {
+      if(out.includes('does not exist')) {
+        console.log('Not first time startup, service manually uninstalled or forcefully disconnected... reinstalling...')
+        installConfig();
+      }else {
+        // Everything is looking good!
+      }
+    })
+  }
+});
+
+// From RESEDA-API due to import err.
+const ex = (command: string, with_sudo: boolean, callback: Function) => {
+	if(with_sudo) {
+		sudo.exec(command, {
+			name: "Reseda Wireguard"
+		}, (_, __, err) => {
+			if(err) throw err;
+			callback(__);
+		});
+	}else {
+		exec(command, (_, __, err) => {
+			if(err) throw err;
+			callback(__);
+		})
+	}
+}
+
+const installConfig = async () => {
+  const filePath = path.join(process.cwd(), './', '/wg0.conf');
 
     // ex(`sc.exe create WireGuardTunnel$wg0 DisplayName= ResedaWireguard type= own start= auto error= normal depend= Nsi/TcpIp binPath= "${path.join(run_loc, './main.exe')} install wireguard/wg0.conf"  &&  sc.exe --% sidtype WireGuardTunnel$wg0 unrestricted  &&  sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {})
 
@@ -102,21 +132,4 @@ app.on('ready', async () => {
     ex(`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath} && sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {
       console.log(`CONFIG INSTALLED & PUBLICIZED`);
     });
-  }
-});
-
-const ex = (command: string, with_sudo: boolean, callback: Function) => {
-	if(with_sudo) {
-		sudo.exec(command, {
-			name: "Reseda Wireguard"
-		}, (_, __, err) => {
-			if(err) throw err;
-			callback(__);
-		});
-	}else {
-		exec(command, (_, __, err) => {
-			if(err) throw err;
-			callback(__);
-		})
-	}
 }

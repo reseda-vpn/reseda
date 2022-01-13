@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@root/client'
 import Home from '@components/home'
 import Auth from '@components/auth'
+import path from 'path'
+import { app } from 'electron'
+import fs from "fs"
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -25,13 +28,17 @@ type Packet = {
 const Reseda: NextPage = () => {
 	const [ user, setUser ] = useState(true);
 
-	// useEffect(() => {
-	// 	const session = supabase.auth.session()
+	useEffect(() => {
+		const firstTime = process.argv[1] == '--squirrel-firstrun';
 
-	// 	fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
-	// 		console.log(e);
-	// 	});
-	// }, []);
+		if(firstTime) {
+			console.log(`FIRST TIME`);
+			setUser(false);
+		}else {
+			console.log(`NOT THE FIRST TIME`);
+			setUser(true);
+		}
+	}, [])
 
 	return (
 		<div>

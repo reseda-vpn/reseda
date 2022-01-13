@@ -74,7 +74,7 @@ const Auth: NextPage = () => {
 
 			<div className={styles.resedaCenter}>
 				<div>
-
+					<h1>Reseda</h1>
                 </div>
             </div>
 		</div>

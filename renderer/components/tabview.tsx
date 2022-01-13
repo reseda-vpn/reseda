@@ -2,7 +2,7 @@ import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../client';
-import { connect, connect_pure, disconnect, ResedaConnection } from '../reseda-api';
+import { connect, disconnect, ResedaConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
@@ -19,7 +19,7 @@ export type Server = {
     flag: string
 };
 
-const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-hop" | "settings", connection: ResedaConnection }> = ({ connectionCallback, tab, connection }) => {
+const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settings", connection: ResedaConnection }> = ({ connectionCallback, tab, connection }) => {
     const [ serverRegistry, setServerRegistry ] = useState<Server[]>();
     const [ fetching, setFetching ] = useState<boolean>(true);
     const [ connectionTime, setConnectionTime ] = useState(null);
@@ -38,7 +38,6 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
             .from('server_registry')
             .on('*', (e) => {
                 console.log(e);
-                console.log(e.eventType);
                 // setServerRegistry(e.new)
             })
             .subscribe();
@@ -47,10 +46,6 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
             subscription.unsubscribe()
         }
     }, []);
-
-    useEffect(() => {
-        console.log(connection);
-    }, [connection])
 
 	return (
 		<div className={styles.resedaContentCenter}>
@@ -86,9 +81,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                 
                                                 <p className={styles.mono}>{e.hostname}</p>
                                                 {
-                                                    connection?.server == e.id && connection.connected ?
+                                                    connection?.server == e.id && connection.connection == 1 ?
                                                         <div>
-                                                            <p>Connected</p>
+                                                            <p className={styles.mono}>Connected</p>
                                                             <Link size={16}></Link>
                                                         </div> 
                                                     :
@@ -113,17 +108,15 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                 )
 
                                 break;
-                            case "multi-hop":
-                                return (
-                                    <div>
-                                        <p>multi</p>
-                                    </div>
-                                )
-                                break;
                             case "settings":
                                 return (
-                                    <div>
-                                        <p>settings</p>
+                                    <div className={styles.settings}>
+                                        <div>
+                                            <h4>Protocol</h4>
+                                            <p>Wireguard</p>
+                                        </div>
+
+                                        <button onClick={() => { disconnect(connection.connection_id, connectionCallback)} }>Force Disconnect</button>
                                     </div>
                                 )
                                 break;
@@ -147,7 +140,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                             return (
                                                 <span style={{ animation: 'none'  }}>
                                                     <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', animation: 'none' }}>
-                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'none', backgroundColor: 'rgba(255,255,255,0.1' }}>
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)', background: 'none', backgroundColor: 'rgba(255,255,255,0.1)' }}>
                                                             R
                                                         </span>
                                                     </span>
@@ -155,8 +148,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                             )
                                         case 1:
                                             return (
-                                                <span style={{ animation: 'none'  }} >
-                                                    <span style={{ animation: 'none'  }} >
+                                                <span className={styles.connectedToServerOuter}>
+                                                    <span className={styles.connectedToServerInner}>
                                                         <span style={{ backgroundSize: '400%', animationDuration: '10s' }} >
                                                             {
                                                                 connection.location ?
@@ -192,6 +185,18 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                     </span>
                                                 </span>
                                             )
+                                        case 4: 
+                                            return (
+                                                <span>
+                                                    <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
+                                                        <div style={{ animationDirection: 'reverse' }}></div>
+
+                                                        <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)'}}>
+                                                            R
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            )
                                         default:
                                             return (
                                                 <span>
@@ -215,14 +220,14 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                     case 1:
                                         return (
                                             <div>
-                                                <p>Connected</p>
+                                                <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{connection?.location?.id}</i>  </p>
                                                 <h2>{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
                                                 <p style={{ opacity: 0.6 }} className={styles.mono}>{connection?.location?.hostname}</p>
                                                 {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
                                             </div>
                                         )
                                     case 2:
-                                        return <p>Connecting...</p>
+                                        return <p>{ connection?.message ?? "Connecting..." }</p>
                                     case 3:
                                         return (
                                             <div>
@@ -230,6 +235,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "multi-
                                                 <p style={{ opacity: 0.6, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }} className={styles.mono}>{btoa(connection.as_string)}</p>
                                             </div>
                                         )
+                                    case 4:
+                                        return <p>{ "Disconnecting..." }</p>
                                     default:
                                         return <p>Not Connected</p>
                                 }

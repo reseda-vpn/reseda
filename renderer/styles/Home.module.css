@@ -198,9 +198,9 @@
   width: 40%;
 }
 
-.resedaRightBoxes * {
+/* .resedaRightBoxes * {
   transition: 1s ease all;
-}
+} */
 
 .resedaUsageBox {
   border-radius: 13px;
@@ -213,8 +213,6 @@
   flex-direction: column;
 
   color: var(--off-white);
-
-  transition: .2s ease all;
 }
 
 .resedaUsageBox button {
@@ -433,6 +431,10 @@
   gap: 1rem;
 }
 
+.resedaFancyConnection * {
+  user-select: none;
+}
+
 .resedaFancyConnection > div {
   height: 100%;
   width: 100%;
@@ -482,7 +484,7 @@
   align-items: center;
   justify-content: center;
 
-  /* animation: pulse2 4s ease infinite; */
+  animation: pulse2 4s ease infinite;
 }
 
 @keyframes pulse2 {
@@ -497,6 +499,28 @@
   100% {
     height: 250px;
     width: 250px;
+  }
+}
+
+.connectedToServerOuter {
+  animation: connected_pulse2 3s cubic-bezier(0.55, 0.25, 0.45, 0.17) infinite !important;
+}
+
+@keyframes connected_pulse2 {
+  0% {
+    border-color: rgba(255, 255, 255, 0);
+    height: 250px; width: 250px;
+    background-color: rgba(255, 255, 255, 0);
+  }
+  25% {
+    border-color: rgba(255, 255, 255, 0.158);
+    height: 250px; width: 250px;
+    background-color: rgba(255, 255, 255, 0.025); 
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0);
+    height: 290px; width: 290px;
+    background-color: rgba(255, 255, 255, 0);
   }
 }
 
@@ -517,7 +541,7 @@
 
   position: relative;
 
-  /* animation: pulse1 4s ease infinite; */
+  animation: pulse1 4s ease infinite;
 }
 
 @keyframes pulse1 {
@@ -532,6 +556,29 @@
   100% {
     height: 200px;
     width: 200px;
+  }
+}
+
+.connectedToServerInner {
+  animation: connected_pulse 3s cubic-bezier(0.55, 0.25, 0.45, 0.17) infinite !important;
+  animation-delay: 1s !important;
+}
+
+@keyframes connected_pulse {
+  0% {
+    border-color: rgba(255, 255, 255, 0);
+    height: 200px; width: 200px;
+    background-color: rgba(255, 255, 255, 0);
+  }
+  25% {
+    border-color: rgba(255, 255, 255, 0.336);
+    height: 200px; width: 200px;
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0);
+    height: 230px; width: 230px;
+    background-color: rgba(255, 255, 255, 0);
   }
 }
 
@@ -586,4 +633,35 @@
 @keyframes animated_text {
 	0% { background-position: 100% 0%; }
 	100% { background-position: 25% 100%; }
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings > div {
+  width: 100%;
+  border-radius: 7px;
+  background-color: var(--text-primary);
+  color: var(--off-white);
+  padding: .6rem 1rem;
+
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: row;
+
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings > div * {
+  margin: 0;
+  color: var(--off-white);
+}
+
+.settings > div:hover {
+  background-color: #1e2844;
 }

@@ -2,7 +2,7 @@ import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '@root/client'
 import TabView from '@components/tabview'
-import { connect, disconnect, ResedaConnection } from '@root/reseda-api'
+import { connect, disconnect, ResedaConnection, resumeConnection } from '@root/reseda-api'
 import styles from '@styles/Home.module.css'
 import { platform } from 'os'
 import ip from "ip"
@@ -40,15 +40,11 @@ const Home: NextPage = () => {
 		location: null,
 		server: null
 	});
-    const [ currentTab, setCurrentTab ] = useState<"servers" | "multi-hop" | "settings">("servers");
+    const [ currentTab, setCurrentTab ] = useState<"servers" | "settings">("servers");
 
 	useEffect(() => {
-		const session = supabase.auth.session()
-
-		fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
-			console.log(e);
-		});
-	}, []);
+		resumeConnection(setConnection);
+	}, [])
 
 	return (
 		<div className={styles.container}>
@@ -84,7 +80,6 @@ const Home: NextPage = () => {
 					<div>
 						<div className={styles.resedaTabBar}>
 							<div onClick={() => setCurrentTab("servers")}>Servers</div>
-							<div onClick={() => setCurrentTab("multi-hop")}>Multi-Hop</div>
 							<div onClick={() => setCurrentTab("settings")}>Settings</div>
 						</div>
 					</div>
