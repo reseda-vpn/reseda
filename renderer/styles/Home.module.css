@@ -623,12 +623,25 @@
   border-radius: 50%;
 }
 
+.resedaFancyConnection > div > span > span > div.rev {
+  animation: spin_back 2s ease 0s infinite;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes spin_back {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
   }
 }
 

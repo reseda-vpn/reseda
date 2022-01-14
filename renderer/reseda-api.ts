@@ -387,7 +387,13 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 		...client_config
 	});
 
+	// TRANSFER OUTPUT
+	// ex("wg show wg0 transfer", false, (out) => {
+	// 	console.log(`OUTPUT >> ${out}`);
+	// })
+
 	scrapeConfig(config);
+
 
 	reference({
 		protocol: "wireguard",

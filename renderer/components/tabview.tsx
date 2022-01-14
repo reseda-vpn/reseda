@@ -193,7 +193,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                             return (
                                                 <span>
                                                     <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)' }}>
-                                                        <div style={{ animationDirection: 'reverse' }}></div>
+                                                        <div className={styles.rev}></div>
 
                                                         <span style={{ borderColor: 'rgba(255, 255, 255, 0.158)', color: 'rgba(255, 255, 255, 0.25)'}}>
                                                             R
