@@ -2,15 +2,16 @@ import Head from 'next/head'
 import '../styles/globals.css'
 import '../styles/twemoji.css'
 
-export default function App({ Component, pageProps }) {
+function SafeHydrate({ children }) {
   return (
-    <>
-      <Head>
-        <title>
-            Reseda
-        </title>
-      </Head>
-      <Component {...pageProps} />
-    </>
+    <div suppressHydrationWarning>
+      {typeof window === 'undefined' ? null : children}
+    </div>
   )
 }
+
+function App({ Component, pageProps }) {
+  return <SafeHydrate><Component {...pageProps} /></SafeHydrate>
+}
+
+export default App

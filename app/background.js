@@ -4435,10 +4435,18 @@ if (isProd) {
       nodeIntegration: true
     }
   });
+  let tray = null;
+  mainWindow.on('restore', function (event) {
+    mainWindow.show();
+    tray.destroy();
+  });
   mainWindow.setMenuBarVisibility(false);
   electron__WEBPACK_IMPORTED_MODULE_2__.app.setUserTasks([]);
   electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('minimize', () => mainWindow.minimize());
-  electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('close', () => mainWindow.close());
+  electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('close', () => {
+    mainWindow.hide();
+    tray = createTray(mainWindow);
+  });
 
   if (isProd) {
     await mainWindow.loadURL('app://./home.html');
@@ -4448,11 +4456,32 @@ if (isProd) {
   }
 })();
 
+function createTray(mainWindow) {
+  let appIcon = new electron__WEBPACK_IMPORTED_MODULE_2__.Tray(path__WEBPACK_IMPORTED_MODULE_4___default().join(process.cwd(), './', 'resources/icon.ico'));
+  const contextMenu = electron__WEBPACK_IMPORTED_MODULE_2__.Menu.buildFromTemplate([{
+    label: 'Show',
+    click: function () {
+      mainWindow.show();
+    }
+  }, {
+    label: 'Exit',
+    click: function () {
+      electron__WEBPACK_IMPORTED_MODULE_2__.app.quit();
+    }
+  }]);
+  appIcon.on('double-click', function (event) {
+    mainWindow.show();
+  });
+  appIcon.setToolTip('Reseda VPN');
+  appIcon.setContextMenu(contextMenu);
+  return appIcon;
+}
+
 electron__WEBPACK_IMPORTED_MODULE_2__.app.on('window-all-closed', () => {
   electron__WEBPACK_IMPORTED_MODULE_2__.app.quit();
 });
 electron__WEBPACK_IMPORTED_MODULE_2__.app.on('ready', async () => {
-  const firstTimeFilePath = path__WEBPACK_IMPORTED_MODULE_4___default().resolve(electron__WEBPACK_IMPORTED_MODULE_2__.app.getPath('userData'), '.first-time-huh');
+  const firstTimeFilePath = path__WEBPACK_IMPORTED_MODULE_4___default().resolve(electron__WEBPACK_IMPORTED_MODULE_2__.app.getPath('userData'), 'reseda.first-time');
   let isFirstTime;
 
   try {
@@ -4478,6 +4507,9 @@ electron__WEBPACK_IMPORTED_MODULE_2__.app.on('ready', async () => {
       }
     });
   }
+});
+electron__WEBPACK_IMPORTED_MODULE_2__.app.on('before-quit', () => {
+  ex("sc stop WireGuardTunnel$wg0", false, () => {});
 }); // From RESEDA-API due to import err.
 
 const ex = (command, with_sudo, callback) => {

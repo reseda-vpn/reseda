@@ -23,8 +23,17 @@ const filePath = path.join(process.cwd(), './', '/wg0.conf');
 let connected = false;
 
 export type ResedaConnection = {
+	/**
+	 * Protocol Used, Default `wireguard`
+	 */
 	protocol?: string,
+	/**
+	 * Connected Boolean `true/false`
+	 */
 	connected: boolean,
+	/**
+	 * Used during connecting to show state or to show errors
+	 */
 	message?: string,
 	/**
 	 * 0: Disconnected
@@ -213,7 +222,9 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 	scrapeConfig(config);
 
-	down(() => {});
+	isUp((up) => {
+		if(up) down(() => {});
+	});
 
 	// Client Event Id
 	let EVT_ID;
@@ -458,7 +469,13 @@ const down = (cb: Function) => {
 }
 
 const restart = (cb: Function) => {
-	down(() => up(() => cb()));
+	isUp((__up) => {
+		if(__up) {
+			down(() => up(() => cb()));
+		}else {
+			up(() => cb());
+		}
+	})
 } 
 
 const forceDown = (cb: Function) => {
@@ -484,7 +501,7 @@ const resumeConnection = async (reference: Function) => {
 	});
 
 	// Server was connected, but is it actually currently connected?
-	const conn_ip = config.peers?.at(0)?.endpoint?.split(":")?.[0];
+	const conn_ip = config.peers?.[0]?.endpoint?.split(":")?.[0];
 
 	isUp((det) => {
 		if(det) {
@@ -547,4 +564,4 @@ const resumeConnection = async (reference: Function) => {
 	});
 }
 
-export { connect, disconnect, resumeConnection };
+export { connect, disconnect, resumeConnection, disconnect_pure };

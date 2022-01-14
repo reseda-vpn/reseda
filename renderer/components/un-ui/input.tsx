@@ -3,10 +3,10 @@ import styles from './UnUI.module.css'
 
 import { ArrowRight } from 'react-feather'
 
-interface Props { callback: Function, children?: React.ReactNode };
+interface Props { callback: Function, children?: React.ReactNode, title?: string, defaultValue?: string };
 declare type NativeAttrs = Omit<React.InputHTMLAttributes<any>, keyof Props>;
 
-const Input: React.FC<Props & NativeAttrs> = ({ children, callback, ...args }) => {
+const Input: React.FC<Props & NativeAttrs> = ({ children, callback, title, defaultValue, ...args }) => {
     const input_ref = useRef<HTMLInputElement>(null);
 
     return (
@@ -15,6 +15,8 @@ const Input: React.FC<Props & NativeAttrs> = ({ children, callback, ...args }) =
             onChange={() => {
                 if(input_ref?.current) callback(input_ref.current.value)
             }}
+            value={defaultValue ?? ""}
+            placeholder={title ?? args?.["placeholder"] ?? ""}
             ref={input_ref}
             {...args}>
             {

@@ -2,7 +2,7 @@ import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../client';
-import { connect, disconnect, ResedaConnection } from '../reseda-api';
+import { connect, disconnect, disconnect_pure, ResedaConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
@@ -116,7 +116,11 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                             <p>Wireguard</p>
                                         </div>
 
-                                        <button onClick={() => { disconnect(connection.connection_id, connectionCallback)} }>Force Disconnect</button>
+                                        <div style={{ backgroundColor: 'transparent', justifyContent: 'space-around' }}>
+                                            <Button onClick={() => { disconnect_pure(connection.connection_id, connectionCallback)} }>Uninstall Service</Button>
+
+                                            <Button onClick={() => { disconnect(connection.connection_id, connectionCallback)} }>Force Disconnect</Button>
+                                        </div>
                                     </div>
                                 )
                                 break;

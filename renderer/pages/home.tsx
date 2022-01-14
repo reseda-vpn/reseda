@@ -26,32 +26,69 @@ type Packet = {
 }
 
 const Reseda: NextPage = () => {
-	const [ user, setUser ] = useState(true);
+	const session = supabase.auth.session()
+
+	const [ user, setUser ] = useState(supabase.auth.user());
+	const [ authView, setAuthView ] = useState('sign_in')
+	const [ firstTime, setFirstTime ] = useState(false);
 
 	useEffect(() => {
-		const firstTime = process.argv[1] == '--squirrel-firstrun';
+		const firstTimeFilePath = path.join(process.cwd(), './', '.first-time');
+		let isFirstTime;
 
-		if(firstTime) {
+		try {
+			fs.closeSync(fs.openSync(firstTimeFilePath, 'wx'));
+			isFirstTime = true;
+		} catch(e) {
+			if (e.code === 'EEXIST') {
+				isFirstTime = false;
+			} else {
+				// something gone wrong
+				throw e;
+			}
+		}
+
+		if(isFirstTime) {
 			console.log(`FIRST TIME`);
-			setUser(false);
+			setFirstTime(true);
 		}else {
 			console.log(`NOT THE FIRST TIME`);
-			setUser(true);
+			setFirstTime(false);
 		}
 	}, [])
 
-	return (
-		<div>
-			{
-				!user ?
-					<Auth />
-				:
-					<Home />
-			}
-		</div>
-	)
+	useEffect(() => {
+		// if(session)
+		// 	fetcher('/api/getUser', session.access_token).then(e => {
+		// 		setUser(e);
+		// 	});
 		
-	
+		const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+			setUser(supabase.auth.user());
+
+			console.log("User Auth Changed!", supabase.auth.user());
+			setFirstTime(false);
+
+			// fetch('/api/auth', {
+			// 	method: 'POST',
+			// 	headers: new Headers({ 'Content-Type': 'application/json' }),
+			// 	credentials: 'same-origin',
+			// 	body: JSON.stringify({ event, session }),
+			// });
+		})
+
+		return () => {
+			authListener.unsubscribe()
+		}
+	}, []);
+
+	console.log(firstTime, user)
+
+	if(firstTime || !user) {
+		return ( <Auth></Auth> )
+	}else {
+		return ( <Home></Home> )
+	}
 }
 
 export default Reseda

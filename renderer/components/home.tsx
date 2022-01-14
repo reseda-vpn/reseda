@@ -106,11 +106,7 @@ const Home: NextPage = () => {
 
 				<div>
 					{
-						connection ? 
-						<></>
-						// <Button onClick={() => disconnect(connection.connection_id).then(e => setConnection(null))}>Disconnect</Button>
-						:
-						<></>
+						supabase.auth.user().email
 					}
 				</div>
 			</div>

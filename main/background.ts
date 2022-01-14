@@ -1,4 +1,4 @@
-import { app, ipcMain, ipcRenderer } from 'electron';
+import { app, ipcMain, ipcRenderer, Menu, Tray } from 'electron';
 import serve from 'electron-serve';
 import path from 'path';
 import fs from "fs"
@@ -35,11 +35,21 @@ if (isProd) {
     }
   });
 
+  let tray = null;
+
+  mainWindow.on('restore', function (event) {
+      mainWindow.show();
+      tray.destroy();
+  });
+
   mainWindow.setMenuBarVisibility(false);
   app.setUserTasks([]);
 
   ipcMain.on('minimize', () => mainWindow.minimize() );
-  ipcMain.on('close', () => mainWindow.close())
+  ipcMain.on('close', () => {
+    mainWindow.hide();
+    tray = createTray(mainWindow);
+  })
   
   if (isProd) {
     await mainWindow.loadURL('app://./home.html');
@@ -50,13 +60,36 @@ if (isProd) {
   }
 })();
 
+function createTray(mainWindow) {
+  let appIcon = new Tray(path.join(process.cwd(), './', 'resources/icon.ico'));
+  const contextMenu = Menu.buildFromTemplate([
+      {
+          label: 'Show', click: function () {
+              mainWindow.show();
+          }
+      },
+      {
+          label: 'Exit', click: function () {
+              app.quit();
+          }
+      }
+  ]);
+
+  appIcon.on('double-click', function (event) {
+      mainWindow.show();
+  });
+  appIcon.setToolTip('Reseda VPN');
+  appIcon.setContextMenu(contextMenu);
+  return appIcon;
+}
+
 app.on('window-all-closed', () => {
   app.quit();
 });
 
 
 app.on('ready', async () => {
-  const firstTimeFilePath = path.resolve(app.getPath('userData'), '.first-time-huh');
+  const firstTimeFilePath = path.resolve(app.getPath('userData'), 'reseda.first-time');
   let isFirstTime;
 
   try {
@@ -83,6 +116,10 @@ app.on('ready', async () => {
       }
     })
   }
+});
+
+app.on('before-quit', () => {
+  ex("sc stop WireGuardTunnel$wg0", false, () => {});
 });
 
 // From RESEDA-API due to import err.
