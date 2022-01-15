@@ -51,7 +51,7 @@ export type ResedaConnection = {
 }
 
 type ResedaConnect = (location: Server, time_callback: Function, reference: Function) => Promise<ResedaConnection>;
-type ResedaDisconnect = (connection_id: number, reference: Function) => Promise<ResedaConnection>;
+type ResedaDisconnect = (connection_id: number, reference: Function, publish?: boolean) => Promise<ResedaConnection>;
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	time_callback(new Date().getTime());
@@ -359,6 +359,14 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 							location: location,
 							server: location.id
 						});
+
+						// Gracefully handle force disconnects from server.
+						const del = supabase
+							.from('open_connections')
+							.on('DELETE', () => {
+								disconnect(EVT_ID, reference, false);
+								supabase.removeSubscription(del);
+							}).subscribe()
 					});
 			}
 		})
@@ -376,7 +384,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 }
 
-const disconnect: ResedaDisconnect = async (connection_id: number, reference: Function): Promise<any> => {
+const disconnect: ResedaDisconnect = async (connection_id: number, reference: Function, publish: boolean = true): Promise<any> => {
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
 		filePath
@@ -394,7 +402,6 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 
 	scrapeConfig(config);
 
-
 	reference({
 		protocol: "wireguard",
 		config: config.toJson(),
@@ -406,29 +413,29 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 		server: null
 	});
 
-	supabase
-		.from('open_connections')
-		.delete({ returning: 'minimal' })
-		.match({
-			id: connection_id
-		}).then(fufil => {
-			console.log(fufil);
+	if(publish) {
+		supabase
+			.from('open_connections')
+			.delete({ returning: 'representation' })
+			.match({
+				id: connection_id
+			}).then(fufil => {
+				console.log(fufil);
 
-			restart(() => {
-				reference({
-					protocol: "wireguard",
-					config: config.toJson(),
-					as_string: config.toString(),
-					connection_id,
-					connected: false,
-					connection: 0,
-					location: null,
-					server: null
+				restart(() => {
+					reference({
+						protocol: "wireguard",
+						config: config.toJson(),
+						as_string: config.toString(),
+						connection_id,
+						connected: false,
+						connection: 0,
+						location: null,
+						server: null
+					});
 				});
 			});
-		});
-
-	
+	}	
 }
 
 const scrapeConfig = (config: WgConfig) => {
