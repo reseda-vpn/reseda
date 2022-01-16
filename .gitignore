@@ -12,4 +12,6 @@ dist
 *.conf
 dir
 
+.env.**
+
 *.txt

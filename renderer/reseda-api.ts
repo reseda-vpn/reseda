@@ -135,7 +135,7 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 						location: location,
 						server: location.id
 					});
-				})
+				}, config);
 			}
 			else
 				sudo.exec(`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath}`, { //   ${filePath}
@@ -230,7 +230,7 @@ const disconnect_pure: ResedaDisconnect = async (connection_id: number, referenc
 		});
 	else {
 		scrapeConfig(config);
-		ex("wg-quick down wg0", false, () => {
+		down(() => {
 			reference({
 				protocol: "wireguard",
 				config: {},
@@ -261,18 +261,19 @@ const disconnect_pure: ResedaDisconnect = async (connection_id: number, referenc
 
 					return {};
 				});
-		})
+		}, config)
 	}
 }
 
 const ex = (command: string, with_sudo: boolean, callback: Function) => {
 	if(with_sudo) {
 		sudo.exec(command, {
-			name: "Reseda Wireguard"
+			name: "Reseda VPN"
 		}, (_, __, err) => {
 			if(err) throw err;
-			callback(__);
+			if(_) throw _;
 
+			callback(__);
 			return __;
 		});
 	}else {
@@ -557,18 +558,22 @@ const init = async () => {
 	return client_config;
 }
 
-const up = (cb: Function) => {
+const up = (cb: Function, conf?: WgConfig) => {
 	if(platform == 'win32')
 		ex("net start WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
 	else
-		ex("wg syncconf wg0 <(wg-quick strip wg0)", false, out => { console.log(out); cb(); })
+		ex("ls", false, (out) => console.log(out));
+
+		ex(`wg-quick up ./wg0.conf`, true, (out) => {
+			cb(out)
+		});
 }
 
-const down = (cb: Function) => {
+const down = (cb: Function, conf?: WgConfig) => {
 	if(platform == 'win32')
 		ex("net stop WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
 	else	
-		ex("wg-quick down wg0", false, out => {console.log(out); cb();})
+		ex(`sudo wg-quick down ${filePath}`, true, (out) => cb(out))
 }
 
 const restart = (cb: Function) => {
