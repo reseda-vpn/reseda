@@ -4,10 +4,10 @@ import { supabase } from '@root/client'
 import TabView from '@components/tabview'
 import { connect, disconnect, ResedaConnection, resumeConnection } from '@root/reseda-api'
 import styles from '@styles/Home.module.css'
-import { platform } from 'os'
 import ip from "ip"
 import PlatformControls from '../components/platform_controls'
 import { ipcRenderer } from 'electron'
+import { platform } from 'process';
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -49,7 +49,7 @@ const Home: NextPage = () => {
 	return (
 		<div className={styles.container}>
 			{
-				platform() !== "darwin" ?
+				platform !== "darwin" ?
 				<div className={styles.resedaFrame}>
 					<div>
 						Reseda VPN

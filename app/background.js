@@ -4306,6 +4306,17 @@ module.exports = require("electron");
 "use strict";
 module.exports = require("fs");
 
+/***/ }),
+
+/***/ "process":
+/*!**************************!*\
+  !*** external "process" ***!
+  \**************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
+
 /***/ })
 
 /******/ 	});
@@ -4403,6 +4414,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var wireguard_tools__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(wireguard_tools__WEBPACK_IMPORTED_MODULE_8__);
 /* harmony import */ var child_process__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! child_process */ "child_process");
 /* harmony import */ var child_process__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(child_process__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var process__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! process */ "process");
+/* harmony import */ var process__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(process__WEBPACK_IMPORTED_MODULE_10__);
 
 
 
@@ -4413,8 +4426,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-// require('@electron/remote/main').initialize()
+ // require('@electron/remote/main').initialize()
 // require("@electron/remote/main").enable(webContents)
+
 const run_loc = path__WEBPACK_IMPORTED_MODULE_4___default().join(process.cwd(), './', `/wireguard`);
 const isProd = "development" === 'production';
 
@@ -4431,7 +4445,7 @@ if (isProd) {
   const mainWindow = (0,_helpers__WEBPACK_IMPORTED_MODULE_7__.createWindow)('main', {
     minWidth: 1050,
     minHeight: 750,
-    frame: false,
+    frame: process__WEBPACK_IMPORTED_MODULE_10__.platform == 'win32' ? false : true,
     resizable: false,
     webPreferences: {
       // preload: path.join(__dirname, 'preload.js'),
@@ -4444,12 +4458,13 @@ if (isProd) {
     mainWindow.show();
     tray.destroy();
   });
+  console.log(process__WEBPACK_IMPORTED_MODULE_10__.platform);
   mainWindow.setMenuBarVisibility(false);
-  electron__WEBPACK_IMPORTED_MODULE_2__.app.setUserTasks([]);
+  if (process__WEBPACK_IMPORTED_MODULE_10__.platform == "win32") electron__WEBPACK_IMPORTED_MODULE_2__.app.setUserTasks([]);
   electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('minimize', () => mainWindow.minimize());
   electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('close', () => {
     mainWindow.hide();
-    tray = createTray(mainWindow);
+    if (process__WEBPACK_IMPORTED_MODULE_10__.platform == "win32") tray = createTray(mainWindow);
   });
 
   if (isProd) {
@@ -4493,6 +4508,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__.app.on('ready', async () => {
     isFirstTime = true;
   } catch (e) {
     if (e.code === 'EEXIST') {
+      console.log(e);
       isFirstTime = false;
     } else {
       // something gone wrong
@@ -4500,20 +4516,31 @@ electron__WEBPACK_IMPORTED_MODULE_2__.app.on('ready', async () => {
     }
   }
 
+  console.log(firstTimeFilePath);
+
   if (isFirstTime) {
     installConfig();
   } else {
-    ex(`sc query WireGuardTunnel$wg0`, false, out => {
+    if (process__WEBPACK_IMPORTED_MODULE_10__.platform == "win32") ex(`sc query WireGuardTunnel$wg0`, false, out => {
       if (_babel_runtime_corejs3_core_js_stable_instance_includes__WEBPACK_IMPORTED_MODULE_0___default()(out).call(out, 'does not exist')) {
         console.log('Not first time startup, service manually uninstalled or forcefully disconnected... reinstalling...');
         installConfig();
       } else {// Everything is looking good!
       }
-    });
+    });else console.log('Existing...');
+
+    try {
+      fs__WEBPACK_IMPORTED_MODULE_5___default().closeSync(fs__WEBPACK_IMPORTED_MODULE_5___default().openSync(path__WEBPACK_IMPORTED_MODULE_4___default().join(process.cwd(), './', '/wg0.conf'), 'wx'));
+    } catch (e) {
+      if (e.code == "EEXIST") {// All good! Starting...
+      } else {
+        installConfig(true);
+      }
+    }
   }
 });
 electron__WEBPACK_IMPORTED_MODULE_2__.app.on('before-quit', () => {
-  ex("sc stop WireGuardTunnel$wg0", false, () => {});
+  if (process__WEBPACK_IMPORTED_MODULE_10__.platform == "win32") ex("sc stop WireGuardTunnel$wg0", false, () => {});
 }); // From RESEDA-API due to import err.
 
 const ex = (command, with_sudo, callback) => {
@@ -4532,8 +4559,11 @@ const ex = (command, with_sudo, callback) => {
   }
 };
 
-const installConfig = async () => {
-  const filePath = path__WEBPACK_IMPORTED_MODULE_4___default().join(process.cwd(), './', '/wg0.conf'); // ex(`sc.exe create WireGuardTunnel$wg0 DisplayName= ResedaWireguard type= own start= auto error= normal depend= Nsi/TcpIp binPath= "${path.join(run_loc, './main.exe')} install wireguard/wg0.conf"  &&  sc.exe --% sidtype WireGuardTunnel$wg0 unrestricted  &&  sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {})
+const installConfig = async (wgInstalled = false) => {
+  var _key_win$substring;
+
+  const filePath = path__WEBPACK_IMPORTED_MODULE_4___default().join(process.cwd(), './', '/wg0.conf');
+  if (process__WEBPACK_IMPORTED_MODULE_10__.platform !== 'win32' && !wgInstalled) await (0,child_process__WEBPACK_IMPORTED_MODULE_9__.execSync)("brew install wireguard-tools"); // ex(`sc.exe create WireGuardTunnel$wg0 DisplayName= ResedaWireguard type= own start= auto error= normal depend= Nsi/TcpIp binPath= "${path.join(run_loc, './main.exe')} install wireguard/wg0.conf"  &&  sc.exe --% sidtype WireGuardTunnel$wg0 unrestricted  &&  sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {})
 
   const client_config = new wireguard_tools__WEBPACK_IMPORTED_MODULE_8__.WgConfig({
     wgInterface: {
@@ -4542,21 +4572,40 @@ const installConfig = async () => {
     },
     filePath
   }); // Generate Private Key for Client
+  // await client_config.generateKeys();
 
-  await client_config.generateKeys();
-  console.log("[CONN] >> Generated Client Configuration"); // Generate UNIQUE Public Key using wireguard (wg). public key -> pu-c-key
+  console.log("[CONN] >> Generated Client Configuration");
 
-  const puckey = (0,child_process__WEBPACK_IMPORTED_MODULE_9__.spawnSync)(path__WEBPACK_IMPORTED_MODULE_4___default().join(run_loc, './wg.exe'), ["pubkey"], {
-    input: client_config.wgInterface.privateKey
-  }).output;
-  const key = puckey.toString(); // Set the public key omitting /n and /t after '='.
+  switch (process__WEBPACK_IMPORTED_MODULE_10__.platform) {
+    case "win32":
+      await client_config.generateKeys(); // Generate UNIQUE Public Key using wireguard (wg). public key -> pu-c-key
 
-  client_config.publicKey = key.substring(0, _babel_runtime_corejs3_core_js_stable_instance_index_of__WEBPACK_IMPORTED_MODULE_1___default()(key).call(key, '=') + 1)?.substring(1);
-  console.log(client_config.publicKey);
-  client_config.writeToFile();
-  ex(`${path__WEBPACK_IMPORTED_MODULE_4___default().join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath} && sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {
-    console.log(`CONFIG INSTALLED & PUBLICIZED`);
-  });
+      const puckey_win = (0,child_process__WEBPACK_IMPORTED_MODULE_9__.spawnSync)(path__WEBPACK_IMPORTED_MODULE_4___default().join(run_loc, './wg.exe'), ["pubkey"], {
+        input: client_config.wgInterface.privateKey
+      }).output;
+      const key_win = puckey_win.toString(); // Set the public key omitting /n and /t after '='.
+
+      client_config.publicKey = (_key_win$substring = key_win.substring(0, _babel_runtime_corejs3_core_js_stable_instance_index_of__WEBPACK_IMPORTED_MODULE_1___default()(key_win).call(key_win, '=') + 1)) === null || _key_win$substring === void 0 ? void 0 : _key_win$substring.substring(1);
+      console.log(client_config.publicKey);
+      client_config.writeToFile();
+      ex(`${path__WEBPACK_IMPORTED_MODULE_4___default().join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath} && sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {
+        console.log(`CONFIG INSTALLED & PUBLICIZED`);
+      });
+      return;
+
+    default:
+      ex("sudo chmod u+s /usr/local/bin/wg", true, () => {});
+      ex("sudo chmod u+s /usr/local/bin/wg-quick", true, () => {});
+      (0,child_process__WEBPACK_IMPORTED_MODULE_9__.exec)("wg genkey", async (_, __, err) => {
+        client_config.wgInterface.privateKey = __;
+        console.log(client_config.toString());
+        await client_config.writeToFile();
+        ex("wg setconf wg0 ./wg0.conf", true, out => {
+          console.log(out);
+        }); // ex("wg-quick up wg0.conf", false, ()=>{});
+      });
+      return;
+  }
 };
 })();
 
