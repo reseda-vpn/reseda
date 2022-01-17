@@ -4560,8 +4560,6 @@ const ex = (command, with_sudo, callback) => {
 };
 
 const installConfig = async (wgInstalled = false) => {
-  var _key_win$substring;
-
   const filePath = path__WEBPACK_IMPORTED_MODULE_4___default().join(process.cwd(), './', '/wg0.conf');
   if (process__WEBPACK_IMPORTED_MODULE_10__.platform !== 'win32' && !wgInstalled) await (0,child_process__WEBPACK_IMPORTED_MODULE_9__.execSync)("brew install wireguard-tools"); // ex(`sc.exe create WireGuardTunnel$wg0 DisplayName= ResedaWireguard type= own start= auto error= normal depend= Nsi/TcpIp binPath= "${path.join(run_loc, './main.exe')} install wireguard/wg0.conf"  &&  sc.exe --% sidtype WireGuardTunnel$wg0 unrestricted  &&  sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {})
 
@@ -4585,7 +4583,7 @@ const installConfig = async (wgInstalled = false) => {
       }).output;
       const key_win = puckey_win.toString(); // Set the public key omitting /n and /t after '='.
 
-      client_config.publicKey = (_key_win$substring = key_win.substring(0, _babel_runtime_corejs3_core_js_stable_instance_index_of__WEBPACK_IMPORTED_MODULE_1___default()(key_win).call(key_win, '=') + 1)) === null || _key_win$substring === void 0 ? void 0 : _key_win$substring.substring(1);
+      client_config.publicKey = key_win.substring(0, _babel_runtime_corejs3_core_js_stable_instance_index_of__WEBPACK_IMPORTED_MODULE_1___default()(key_win).call(key_win, '=') + 1)?.substring(1);
       console.log(client_config.publicKey);
       client_config.writeToFile();
       ex(`${path__WEBPACK_IMPORTED_MODULE_4___default().join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath} && sc.exe sdset WireGuardTunnel$wg0 "D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"`, true, () => {

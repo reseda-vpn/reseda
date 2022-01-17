@@ -561,12 +561,13 @@ const init = async () => {
 const up = (cb: Function, conf?: WgConfig) => {
 	if(platform == 'win32')
 		ex("net start WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
-	else
+	else {
 		ex("ls", false, (out) => console.log(out));
 
 		ex(`wg-quick up ./wg0.conf`, true, (out) => {
 			cb(out)
 		});
+	}
 }
 
 const down = (cb: Function, conf?: WgConfig) => {
