@@ -14,7 +14,19 @@
     "buildDependenciesFromSource": true,
     "extraFiles": [
       "wireguard"
-    ]
+    ],
+    "mac": {
+      "icon": "./resources/icon_small.icns"
+    },
+    "win": {
+      "icon": "./resources/icon_small.png"
+    },
+    "files": [
+      "./**"
+    ],
+    "directories": {
+      "buildResources": "resources"
+    }
   },
   "dependencies": {
     "@electron/remote": "^2.0.1",

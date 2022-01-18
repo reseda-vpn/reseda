@@ -64,7 +64,7 @@ if (isProd) {
 })();
 
 function createTray(mainWindow) {
-  let appIcon = new Tray(path.join(process.cwd(), './', 'resources/icon.ico'));
+  let appIcon = new Tray(path.join(process.cwd(), './', 'resources/icon_small.ico'));
   const contextMenu = Menu.buildFromTemplate([
       {
           label: 'Show', click: function () {
