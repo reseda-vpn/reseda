@@ -41,6 +41,7 @@
     "node-gyp": "^8.4.1",
     "node-windows": "^1.0.0-beta.6",
     "path": "^0.12.7",
+    "public-ip": "^5.0.0",
     "react-feather": "^2.0.9",
     "sudo-js": "^1.0.2",
     "sudo-prompt": "^9.2.1",

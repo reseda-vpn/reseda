@@ -8,6 +8,7 @@ import ip from "ip"
 import PlatformControls from '../components/platform_controls'
 import { ipcRenderer } from 'electron'
 import { platform } from 'process';
+import publicIp from 'public-ip'
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -41,9 +42,14 @@ const Home: NextPage = () => {
 		server: null
 	});
     const [ currentTab, setCurrentTab ] = useState<"servers" | "settings">("servers");
+	const [ ip, setIP ] = useState(null); 
 
 	useEffect(() => {
 		resumeConnection(setConnection);
+
+		publicIp.v4().then(e => {
+			setIP(e);
+		})
 	}, [])
 
 	return (
@@ -101,7 +107,7 @@ const Home: NextPage = () => {
 					</div>
 					
 					<p>{connection?.location?.country ?? ""}</p>
-					<h6>{connection?.server ?? ip.address("public") }</h6>
+					<h6>{connection?.server ?? ip }</h6>
 				</div>
 
 				<div>
