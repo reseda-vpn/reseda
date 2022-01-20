@@ -1,6 +1,6 @@
 ## Reseda VPN Client
 A Client UI for the reseda-vpn network, allows anyone to connect to any publicically advertized `reseda-server` server. 
-Client and Server network improvements include dynamic usage handling and on-demand server spinup for user load distrobution.
+Client and Server network improvements include dynamic usage handling and on-demand server spinup for user load distribution.
 
 > Note: It is not intended for any user to install from this git repository as it may contain buggy code, which improperly handled can leave users stranded without internet where a tunnel is left open and not closed. Reseda encourages installing only the `lts` or `latest` version from . However, as the project client is open-source - you are free to browse the code and download any release versions of the code. However it is warned that any download of unreleased code is not release product of reseda.
 
