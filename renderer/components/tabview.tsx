@@ -66,6 +66,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                             onClick={() => {
                                                 if(connection?.server == e.id) return;
 
+
                                                 if(connection?.connected) {
                                                     disconnect(connection.connection_id, connectionCallback).then(() => {
                                                         connect(e, setConnectionTime, connectionCallback)
