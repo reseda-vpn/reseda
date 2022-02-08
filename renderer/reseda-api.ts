@@ -7,11 +7,12 @@ import child_process, { exec, execSync, spawnSync } from 'child_process'
 import { Server } from './components/tabview';
 import { platform } from "process"
 import { io, Socket } from "socket.io-client"
+import { DefaultEventsMap } from '@socket.io/component-emitter';
 
 const { generatePublicKey, keyToBase64 } = require('./wireguard_tooling')
-
-let socket: Socket;
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
+
+let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 
 type Packet = {
 	id: number,
@@ -56,7 +57,7 @@ export type ResedaConnection = {
 }
 
 type ResedaConnect = (location: Server, time_callback: Function, reference: Function) => Promise<ResedaConnection>;
-type ResedaDisconnect = (connection_id: number, reference: Function, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
+type ResedaDisconnect = (connection: ResedaConnection, reference: Function, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	time_callback(new Date().getTime());
@@ -197,14 +198,14 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 	});
 }
 
-const disconnect_pure: ResedaDisconnect = async (connection_id: number, reference: Function, _: boolean, config: WgConfig): Promise<any> => {
+const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, _: boolean, config: WgConfig): Promise<any> => {
 	if(platform == 'win32') 
 		ex(`${run_loc}/wireguard.exe /uninstalltunnelservice wg0`, true, () => {
 			reference({
 				protocol: "wireguard",
 				config: {},
 				as_string: "",
-				connection_id,
+				connection_id: connection.connection_id,
 				connected: false,
 				connection: 0,
 				location: null,
@@ -215,13 +216,13 @@ const disconnect_pure: ResedaDisconnect = async (connection_id: number, referenc
 				.from('open_connections')
 				.delete()
 				.match({
-					id: connection_id
+					id: connection.connection_id
 				}).then(e => {
 					reference({
 						protocol: "wireguard",
 						config: e.data,
 						as_string: JSON.stringify(e.data),
-						connection_id,
+						connection_id: connection.connection_id,
 						connected: false,
 						connection: 0,
 						location: null,
@@ -238,7 +239,7 @@ const disconnect_pure: ResedaDisconnect = async (connection_id: number, referenc
 				protocol: "wireguard",
 				config: {},
 				as_string: "",
-				connection_id,
+				connection_id: connection.connection_id,
 				connected: false,
 				connection: 0,
 				location: null,
@@ -249,13 +250,13 @@ const disconnect_pure: ResedaDisconnect = async (connection_id: number, referenc
 				.from('open_connections')
 				.delete()
 				.match({
-					id: connection_id
+					id: connection.connection_id
 				}).then(e => {
 					reference({
 						protocol: "wireguard",
 						config: e.data,
 						as_string: JSON.stringify(e.data),
-						connection_id,
+						connection_id: connection.connection_id,
 						connected: false,
 						connection: 0,
 						location: null,
@@ -292,6 +293,8 @@ const ex = (command: string, with_sudo: boolean, callback: Function) => {
 const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	if(platform !== "win32") return connect_pure(location, time_callback, reference);
 
+	console.time("wireguardSetup")
+
 	time_callback(new Date().getTime());
 
 	//@ts-expect-error
@@ -319,10 +322,16 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	// Set the public key omitting /n and /t after '='.
 	config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
 
+	console.timeLog("wireguardSetup")
+	console.timeEnd("wireguardSetup");
+
+	console.log(location.hostname);
+
 	socket = io(`http://${location.hostname}:6231/`, { auth: {
 		server: location.id,
 		client_pub_key: config.publicKey,
-		author: supabase.auth.user()?.id
+		author: supabase.auth.user()?.id,
+		type: "initial"
 	}});
 
 	socket.emit('request_connect', {
@@ -353,6 +362,19 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	
 		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
 		config.writeToFile();
+
+		const new_connection = io(`192.168.69.1:6231`, {
+			auth: {
+				server: location.id,
+				client_pub_key: config.publicKey,
+				author: supabase.auth.user()?.id,
+				type: "secondary"
+			}
+		});
+
+		new_connection.on("update_schema", (data) => {
+			console.log(data);
+		});
 
 		reference({
 			protocol: "wireguard",
@@ -397,7 +419,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 }
 
-const disconnect: ResedaDisconnect = async (connection_id: number, reference: Function, publish: boolean = true): Promise<any> => {
+const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, publish: boolean = true): Promise<any> => {
 
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
@@ -409,21 +431,27 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 		...client_config
 	});
 
-	if(platform !== 'win32') return disconnect_pure(connection_id, reference, false, config);
+	if(platform !== 'win32') return disconnect_pure(connection, reference, false, config);
 
-	socket.emit("request_disconnect", (reply) => {
-		console.log(reply);
-		socket.close();
-	});
+	if(socket) {
+		socket.disconnect();
+	}
 
 	scrapeConfig(config);
 
 	restart(() => {
+		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
+			server: connection.location.id,
+			client_pub_key: config.publicKey,
+			author: supabase.auth.user()?.id,
+			type: "close"
+		}});
+
 		reference({
 			protocol: "wireguard",
 			config: config.toJson(),
 			as_string: config.toString(),
-			connection_id,
+			connection_id: connection.connection_id,
 			connected: false,
 			connection: 0,
 			location: null,
@@ -444,7 +472,7 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 		protocol: "wireguard",
 		config: config.toJson(),
 		as_string: config.toString(),
-		connection_id,
+		connection_id: connection.connection_id,
 		connected: false,
 		connection: 4,
 		location: null,
@@ -456,7 +484,7 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 			.from('open_connections')
 			.delete({ returning: 'representation' })
 			.match({
-				id: connection_id
+				id: connection.connection_id
 			}).then(fufil => {
 				console.log(fufil);
 
@@ -465,7 +493,7 @@ const disconnect: ResedaDisconnect = async (connection_id: number, reference: Fu
 						protocol: "wireguard",
 						config: config.toJson(),
 						as_string: config.toString(),
-						connection_id,
+						connection_id: connection.connection_id,
 						connected: false,
 						connection: 0,
 						location: null,

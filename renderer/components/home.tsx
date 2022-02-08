@@ -45,7 +45,7 @@ const Home: NextPage = () => {
 	const [ ip, setIP ] = useState(null); 
 
 	useEffect(() => {
-		resumeConnection(setConnection);
+		// resumeConnection(setConnection);
 
 		publicIp.v4().then(e => {
 			setIP(e);

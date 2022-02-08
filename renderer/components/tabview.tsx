@@ -10,8 +10,7 @@ import { useDate } from './useDate';
 
 export type Server = {
     id: string,
-    created_at: string,
-    uptime: any,
+    serverUp: string,
     location: string,
     country: string,
     virtual: boolean,
@@ -26,25 +25,18 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
     const { today } = useDate();
 
     useEffect(() => {
-        supabase
-            .from('server_registry')
-            .select("*")
-            .then(e => {
-                setServerRegistry(e.data);
+        fetch('https://reseda.app/api/server/list', {
+            method: "GET",
+            redirect: 'follow'
+        })
+            .then(async e => {
+                const json = await e.json();
+                setServerRegistry(json);
                 setFetching(false);
-            });
-
-        const subscription = supabase
-            .from('server_registry')
-            .on('*', (e) => {
-                console.log(e);
-                // setServerRegistry(e.new)
             })
-            .subscribe();
-
-        return () => {
-            subscription.unsubscribe()
-        }
+            .catch(e => {
+                console.log(e)
+            })
     }, []);
 
 	return (
@@ -66,9 +58,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                             onClick={() => {
                                                 if(connection?.server == e.id) return;
 
-
                                                 if(connection?.connected) {
-                                                    disconnect(connection.connection_id, connectionCallback).then(() => {
+                                                    disconnect(connection, connectionCallback).then(() => {
                                                         connect(e, setConnectionTime, connectionCallback)
                                                     })
                                                 }else {
@@ -89,7 +80,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                         </div> 
                                                     :
                                                         <div className={styles.mono}>
-                                                            Running for { moment.duration(new Date().getTime() - new Date(e.created_at).getTime()).humanize() }
+                                                            Running for { moment.duration(new Date().getTime() - new Date(e.serverUp).getTime()).humanize() }
                                                         </div>
                                                 }
                                                 
@@ -118,9 +109,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         </div>
 
                                         <div style={{ backgroundColor: 'transparent', justifyContent: 'space-around' }}>
-                                            <Button onClick={() => { disconnect_pure(connection.connection_id, connectionCallback)} }>Uninstall Service</Button>
+                                            <Button onClick={() => { disconnect_pure(connection, connectionCallback)} }>Uninstall Service</Button>
 
-                                            <Button onClick={() => { disconnect(connection.connection_id, connectionCallback)} }>Force Disconnect</Button>
+                                            <Button onClick={() => { disconnect(connection, connectionCallback)} }>Force Disconnect</Button>
                                         </div>
                                     </div>
                                 )
@@ -259,19 +250,19 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                 case 1:
                                     return (
                                         <Button icon={false} onClick={() => {
-                                            disconnect(connection.connection_id, connectionCallback);
+                                            disconnect(connection, connectionCallback);
                                         }}>Disconnect</Button>
                                     )
                                 case 2:
                                     return (
                                         <Button icon={false} onClick={() => {
-                                            disconnect(connection.connection_id, connectionCallback);
+                                            disconnect(connection, connectionCallback);
                                         }}>Cancel</Button>
                                     )
                                 case 3:
                                     return (
                                         <Button icon={false} onClick={() => {
-                                            disconnect(connection.connection_id, connectionCallback).then(e => {
+                                            disconnect(connection, connectionCallback).then(e => {
                                                 if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback);
                                                 else return;
                                             })
