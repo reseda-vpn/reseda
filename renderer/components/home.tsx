@@ -1,6 +1,5 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
-import { supabase } from '@root/client'
 import TabView from '@components/tabview'
 import { connect, disconnect, ResedaConnection, resumeConnection } from '@root/reseda-api'
 import styles from '@styles/Home.module.css'
@@ -112,7 +111,7 @@ const Home: NextPage = () => {
 
 				<div>
 					{
-						supabase.auth.user().email
+						// supabase.auth.user().email
 					}
 				</div>
 			</div>

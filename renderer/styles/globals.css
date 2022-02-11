@@ -2,20 +2,62 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: "GT Walsheim Pro", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: white;
+  scroll-behavior: smooth;
 }
 
-@import url(../public/fonts/walsh/stylesheet.css);
+html {
+  background-color: white;
 
-@font-face {
-  font-family: "DM Mono";
-  src: url('../public/fonts/dm-mono/DMMono-Regular.ttf');
+  --tw-gradient-stops: rgb(156, 138, 236) 0%, rgb(250, 193, 128) 100%;
 }
 
 body {
-  margin: 0;
+  background-color: white;
 }
+
+/* @media screen and (max-width: 640px) {
+  #gradient-canvas {
+    height: 450px;
+  }
+} */
+
+#gradient-canvas {
+  width:  100%;
+
+  /* top: -25%; */
+  left: -0%;
+
+  z-index: 10;
+  /* image-rendering: pixelated; */
+
+  position: absolute;
+  /* transform: rotateZ(5deg) scale(1.2); */
+
+  /* Default 
+  --gradient-color-1: #a960ee; 
+  --gradient-color-2: #ff333d; 
+  --gradient-color-3: #90e0ff;  
+  --gradient-color-4: #ffcb57; */
+  
+  /* Light
+  --gradient-color-1: #9f92d6; 
+  --gradient-color-2: #eec697; 
+  --gradient-color-3: #EAE2FF;  
+  --gradient-color-4: #FDD5AF; */
+
+  --gradient-color-1: #907ceb; 
+  --gradient-color-2: #cfa370; 
+  --gradient-color-3: #bba7f0;  
+  --gradient-color-4: #ebbc90;
+}
+
+@import url(../public/fonts/walsh/stylesheet.css);
 
 a {
   color: inherit;
@@ -24,7 +66,52 @@ a {
 
 * {
   box-sizing: border-box;
-  color: var(--text-primary);
+}
+
+h1::before {
+  width: 1px;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @font-face {
+  font-family: "Public Sans";
+  src: url('../public/fonts/public_sans/PublicSans-VariableFont_wght.ttf');
+  font-weight: 1 999;
+}
+
+@font-face {
+  font-family: "Public Sans";
+  src: url('../public/fonts/public_sans/PublicSans-Italic-VariableFont_wght.ttf');
+  font-weight: 1 999;
+  font-style: italic;
+} */
+
+
+/* Loader/Spinner */
+:root {
+  --spinner-animation-speed: 4s;
+}
+
+#spinner {
+  animation: spinner-rotate calc(var(--spinner-animation-speed) / 3) linear infinite;
+}
+
+@keyframes spinner-rotate {
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-line {
+  animation: dash var(--spinner-animation-speed) ease-in-out infinite;
+}
+
+@keyframes dash {
+  75%, 100% {
+      stroke-dasharray: .5, 1;
+      stroke-dashoffset: -.8;
+  }
 }
 
 :root {

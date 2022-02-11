@@ -1,7 +1,6 @@
 import path from 'path'
 import { dir } from 'console'
 import sudo from "sudo-prompt"
-import { supabase } from './client'
 import { getConfigObjectFromFile, parseConfigString, WgConfig } from "wireguard-tools";
 import child_process, { exec, execSync, spawnSync } from 'child_process'
 import { Server } from './components/tabview';
@@ -86,108 +85,108 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 	// Client Event Id
 	let EVT_ID;
 
-	await supabase.removeAllSubscriptions();
+	// await supabase.removeAllSubscriptions();
 	
-	// Now await a server response, to the current.
-	await supabase
-		.from('open_connections')
-		.on("UPDATE", async (event) => {
-			const data: Packet = event.new;
+	// // Now await a server response, to the current.
+	// await supabase
+	// 	.from('open_connections')
+	// 	.on("UPDATE", async (event) => {
+	// 		const data: Packet = event.new;
 			
-			if(data.id !== EVT_ID || connected) {
-				reference({
-					protocol: "wireguard",
-					config: config.toJson(),
-					as_string: config.toString(),
-					connection_id: EVT_ID,
-					connected: false,
-					connection: 3,
-					location: location,
-					server: location.id
-				});
-			}
+	// 		if(data.id !== EVT_ID || connected) {
+	// 			reference({
+	// 				protocol: "wireguard",
+	// 				config: config.toJson(),
+	// 				as_string: config.toString(),
+	// 				connection_id: EVT_ID,
+	// 				connected: false,
+	// 				connection: 3,
+	// 				location: location,
+	// 				server: location.id
+	// 			});
+	// 		}
 		
-			console.log(`[CONN] >> Protocol to ${location.id} established.`);
+	// 		console.log(`[CONN] >> Protocol to ${location.id} established.`);
 		
-			config.addPeer({
-				publicKey: data.svr_pub_key,
-				allowedIps: [ "0.0.0.0/0" ],
-				endpoint: `${data.server_endpoint}:51820`
-			});
+	// 		config.addPeer({
+	// 			publicKey: data.svr_pub_key,
+	// 			allowedIps: [ "0.0.0.0/0" ],
+	// 			endpoint: `${data.server_endpoint}:51820`
+	// 		});
 		
-			config.wgInterface.address = [`192.168.69.${data.client_number}/24`]
-			// client_config.wgInterface.address = [`192.168.69.19/24`]
-			config.writeToFile();
+	// 		config.wgInterface.address = [`192.168.69.${data.client_number}/24`]
+	// 		// client_config.wgInterface.address = [`192.168.69.19/24`]
+	// 		config.writeToFile();
 
-			console.log(config.toString());
+	// 		console.log(config.toString());
 			
-			if(platform !== 'win32') {
-				up((out) => {
-					console.log(out);
+	// 		if(platform !== 'win32') {
+	// 			up((out) => {
+	// 				console.log(out);
 
-					time_callback(new Date().getTime());
+	// 				time_callback(new Date().getTime());
 
-					console.log("[CONN] >> Received! Connecting...");
-					connected = true;
+	// 				console.log("[CONN] >> Received! Connecting...");
+	// 				connected = true;
 
-					supabase.removeAllSubscriptions();
+	// 				supabase.removeAllSubscriptions();
 
-					reference({
-						protocol: "wireguard",
-						config: config.toJson(),
-						as_string: config.toString(),
-						connection_id: EVT_ID,
-						connected: true,
-						connection: 1,
-						location: location,
-						server: location.id
-					});
-				}, config);
-			}
-			else
-				sudo.exec(`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath}`, { //   ${filePath}
-					name: "Reseda Wireguard"
-				}, (e, out, err) => {
-					if(err) throw err;
+	// 				reference({
+	// 					protocol: "wireguard",
+	// 					config: config.toJson(),
+	// 					as_string: config.toString(),
+	// 					connection_id: EVT_ID,
+	// 					connected: true,
+	// 					connection: 1,
+	// 					location: location,
+	// 					server: location.id
+	// 				});
+	// 			}, config);
+	// 		}
+	// 		else
+	// 			sudo.exec(`${path.join(run_loc, './wireguard.exe')} /installtunnelservice ${filePath}`, { //   ${filePath}
+	// 				name: "Reseda Wireguard"
+	// 			}, (e, out, err) => {
+	// 				if(err) throw err;
 
-					time_callback(new Date().getTime());
+	// 				time_callback(new Date().getTime());
 
-					console.log("[CONN] >> Received! Connecting...");
-					connected = true;
+	// 				console.log("[CONN] >> Received! Connecting...");
+	// 				connected = true;
 
-					supabase.removeAllSubscriptions();
+	// 				supabase.removeAllSubscriptions();
 
-					reference({
-						protocol: "wireguard",
-						config: config.toJson(),
-						as_string: config.toString(),
-						connection_id: EVT_ID,
-						connected: true,
-						connection: 1,
-						location: location,
-						server: location.id
-					});
+	// 				reference({
+	// 					protocol: "wireguard",
+	// 					config: config.toJson(),
+	// 					as_string: config.toString(),
+	// 					connection_id: EVT_ID,
+	// 					connected: true,
+	// 					connection: 1,
+	// 					location: location,
+	// 					server: location.id
+	// 				});
 
-					return;
-				});
-		}).subscribe((e) => {
-			if(e == "SUBSCRIBED") {				
-				const public_key = keyToBase64(generatePublicKey(config.wgInterface.privateKey));
-				console.log(public_key)
+	// 				return;
+	// 			});
+	// 	}).subscribe((e) => {
+	// 		if(e == "SUBSCRIBED") {				
+	// 			const public_key = keyToBase64(generatePublicKey(config.wgInterface.privateKey));
+	// 			console.log(public_key)
 				
-				supabase
-					.from('open_connections')
-					.insert({
-						server: location.id,
-						client_pub_key: public_key.substring(0, public_key.indexOf('=')+1)?.substring(1),
-						author: supabase.auth.user()?.id
-					}).then(e => {
-						EVT_ID = e?.data?.[0]?.id;
+	// 			supabase
+	// 				.from('open_connections')
+	// 				.insert({
+	// 					server: location.id,
+	// 					client_pub_key: public_key.substring(0, public_key.indexOf('=')+1)?.substring(1),
+	// 					author: supabase.auth.user()?.id
+	// 				}).then(e => {
+	// 					EVT_ID = e?.data?.[0]?.id;
 
-						console.log("[CONN] >> Published Configuration, Awaiting Response");
-					});
-			}
-		})
+	// 					console.log("[CONN] >> Published Configuration, Awaiting Response");
+	// 				});
+	// 		}
+	// 	})
 
 	reference({
 		protocol: "wireguard",
@@ -215,25 +214,25 @@ const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, r
 				server: null
 			});
 
-			supabase
-				.from('open_connections')
-				.delete()
-				.match({
-					id: connection.connection_id
-				}).then(e => {
-					reference({
-						protocol: "wireguard",
-						config: e.data,
-						as_string: JSON.stringify(e.data),
-						connection_id: connection.connection_id,
-						connected: false,
-						connection: 0,
-						location: null,
-						server: null
-					});
+			// supabase
+			// 	.from('open_connections')
+			// 	.delete()
+			// 	.match({
+			// 		id: connection.connection_id
+			// 	}).then(e => {
+			// 		reference({
+			// 			protocol: "wireguard",
+			// 			config: e.data,
+			// 			as_string: JSON.stringify(e.data),
+			// 			connection_id: connection.connection_id,
+			// 			connected: false,
+			// 			connection: 0,
+			// 			location: null,
+			// 			server: null
+			// 		});
 
-					return {};
-				});
+			// 		return {};
+			// 	});
 		});
 	else {
 		scrapeConfig(config);
@@ -249,25 +248,25 @@ const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, r
 				server: null
 			});
 
-			supabase
-				.from('open_connections')
-				.delete()
-				.match({
-					id: connection.connection_id
-				}).then(e => {
-					reference({
-						protocol: "wireguard",
-						config: e.data,
-						as_string: JSON.stringify(e.data),
-						connection_id: connection.connection_id,
-						connected: false,
-						connection: 0,
-						location: null,
-						server: null
-					});
+			// supabase
+			// 	.from('open_connections')
+			// 	.delete()
+			// 	.match({
+			// 		id: connection.connection_id
+			// 	}).then(e => {
+			// 		reference({
+			// 			protocol: "wireguard",
+			// 			config: e.data,
+			// 			as_string: JSON.stringify(e.data),
+			// 			connection_id: connection.connection_id,
+			// 			connected: false,
+			// 			connection: 0,
+			// 			location: null,
+			// 			server: null
+			// 		});
 
-					return {};
-				});
+			// 		return {};
+			// 	});
 		}, config)
 	}
 }
@@ -337,7 +336,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	socket = io(`http://${location.hostname}:6231/`, { auth: {
 		server: location.id,
 		client_pub_key: config.publicKey,
-		author: supabase.auth.user()?.id,
+		author: "UID",
 		type: "initial"
 	}});
 
@@ -378,7 +377,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 			auth: {
 				server: location.id,
 				client_pub_key: config.publicKey,
-				author: supabase.auth.user()?.id,
+				author: "UID",
 				type: "secondary"
 			}
 		});
@@ -466,7 +465,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
 			server: connection.location.id,
 			client_pub_key: config.publicKey,
-			author: supabase.auth.user()?.id,
+			author: "UID",
 			type: "close"
 		}});
 
@@ -595,31 +594,31 @@ const resumeConnection = async (reference: Function) => {
 			config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
 
 			if(conn_ip) {
-				supabase
-					.from('open_connections')
-					.select("*")
-					.match({ 
-						client_pub_key: config.publicKey
-					})
-					.order('instantiation_time', {ascending: true})
-					.then(async e => {
-						const data = e.body[0];
+				// supabase
+				// 	.from('open_connections')
+				// 	.select("*")
+				// 	.match({ 
+				// 		client_pub_key: config.publicKey
+				// 	})
+				// 	.order('instantiation_time', {ascending: true})
+				// 	.then(async e => {
+				// 		const data = e.body[0];
 
-						const svr = await supabase.from('server_registry')
-							.select("*")
-							.match({ id: data.server });
+				// 		const svr = await supabase.from('server_registry')
+				// 			.select("*")
+				// 			.match({ id: data.server });
 
-						reference({
-							protocol: "wireguard",
-							config: config.toJson(),
-							as_string: config.toString(),
-							connection_id: data.id,
-							connected: true,
-							connection: 1,
-							location: svr.body[0],
-							server: data.server
-						});
-					})
+				// 		reference({
+				// 			protocol: "wireguard",
+				// 			config: config.toJson(),
+				// 			as_string: config.toString(),
+				// 			connection_id: data.id,
+				// 			connected: true,
+				// 			connection: 1,
+				// 			location: svr.body[0],
+				// 			server: data.server
+				// 		});
+				// 	})
 			}else {
 				reference({
 					protocol: "wireguard",

@@ -25,8 +25,8 @@ if (isProd) {
   await app.whenReady();
 
   const mainWindow = createWindow('main', {
-    minWidth: 1050,
-    minHeight: 750,
+    minWidth: 1250,
+    minHeight: 850,
     frame: platform == 'win32' ? false : true,
     resizable: false,
     webPreferences: {

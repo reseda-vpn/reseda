@@ -1,11 +1,10 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
-import { supabase } from '@root/client'
 import Home from '@components/home'
 import Auth from '@components/auth'
 import path from 'path'
-import { app } from 'electron'
 import fs from "fs"
+import { getCsrfToken, getSession } from 'next-auth/react'
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -13,6 +12,21 @@ const fetcher = (url, token) =>
     headers: new Headers({ 'Content-Type': 'application/json', token }),
     credentials: 'same-origin',
   }).then((res) => res.json())
+
+export const getServerSideProps = async ({ req, res }) => {
+	const session = await getSession({ req });
+	const csrfToken = await getCsrfToken({ req: req });
+
+	if (!session) return { props: {}, redirect: { destination: '/login', permanent: false } }
+	console.log(session, csrfToken);
+
+	return {
+		props: {
+			session,
+			csrfToken
+		},
+	}
+}
 
 type Packet = {
 	id: number,
@@ -26,9 +40,6 @@ type Packet = {
 }
 
 const Reseda: NextPage = () => {
-	const session = supabase.auth.session()
-
-	const [ user, setUser ] = useState(supabase.auth.user());
 	const [ authView, setAuthView ] = useState('sign_in')
 	const [ firstTime, setFirstTime ] = useState(false);
 
@@ -56,39 +67,8 @@ const Reseda: NextPage = () => {
 			setFirstTime(false);
 		}
 	}, [])
-
-	useEffect(() => {
-		// if(session)
-		// 	fetcher('/api/getUser', session.access_token).then(e => {
-		// 		setUser(e);
-		// 	});
-		
-		const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-			setUser(supabase.auth.user());
-
-			console.log("User Auth Changed!", supabase.auth.user());
-			setFirstTime(false);
-
-			// fetch('/api/auth', {
-			// 	method: 'POST',
-			// 	headers: new Headers({ 'Content-Type': 'application/json' }),
-			// 	credentials: 'same-origin',
-			// 	body: JSON.stringify({ event, session }),
-			// });
-		})
-
-		return () => {
-			authListener.unsubscribe()
-		}
-	}, []);
-
-	console.log(firstTime, user)
-
-	if(firstTime || !user) {
-		return ( <Auth></Auth> )
-	}else {
-		return ( <Home></Home> )
-	}
+	
+	return ( <Home></Home> )
 }
 
 export default Reseda

@@ -1,6 +1,5 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
-import { supabase } from '@root/client'
 import TabView from '@components/tabview'
 import { connect, disconnect, ResedaConnection } from '@root/reseda-api'
 import styles from '@styles/Home.module.css'
@@ -43,11 +42,11 @@ const Auth: NextPage = () => {
     }, [authState])
 
 	useEffect(() => {
-		const session = supabase.auth.session()
+		// const session = supabase.auth.session()
 
-		fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
-			console.log(e);
-		});
+		// fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
+		// 	console.log(e);
+		// });
 	}, []);
 
 	return (
@@ -108,17 +107,17 @@ const Auth: NextPage = () => {
 										}
 
 										<div>
-											<Button title={"Login"} onClick={(out, callback) => {
-												supabase.auth.signIn({
-													email: authInputState.email,
-													password: authInputState.password,
-												}).then(e => {
-													if(e.error) setAuthError(e.error.message)
-													else setAuthError(null)
+											{/* <Button title={"Login"} onClick={(out, callback) => {
+												// supabase.auth.signIn({
+												// 	email: authInputState.email,
+												// 	password: authInputState.password,
+												// }).then(e => {
+												// 	if(e.error) setAuthError(e.error.message)
+												// 	else setAuthError(null)
 
-													callback();
-												})
-											}}>Login</Button>
+												// 	callback();
+												// })
+											}}>Login</Button> */}
 											<p>Don't have an account? <a href="#" onClick={() => setAuthState('auth-signup')}>Sign Up</a></p> 
 										</div>
 									</div>
@@ -143,7 +142,7 @@ const Auth: NextPage = () => {
 										}
 
 										<div>
-											<Button title={"Sign Up"} onClick={async (out, callback) => {
+											{/* <Button title={"Sign Up"} onClick={async (out, callback) => {
 												if(authInputState.email && authInputState.password && authInputState.username) {
 													const usr = await supabase.auth.signUp({
 														email: authInputState.email,
@@ -175,7 +174,7 @@ const Auth: NextPage = () => {
 														console.error(e)
 													})
 												}   
-											}}>Sign Up</Button>
+											}}>Sign Up</Button> */}
 											<p>Already have an account? <a href="#" onClick={() => setAuthState('auth-login')}>Log in</a></p> 
 										</div>
 									</div>

@@ -4443,8 +4443,8 @@ if (isProd) {
 (async () => {
   await electron__WEBPACK_IMPORTED_MODULE_2__.app.whenReady();
   const mainWindow = (0,_helpers__WEBPACK_IMPORTED_MODULE_7__.createWindow)('main', {
-    minWidth: 1050,
-    minHeight: 750,
+    minWidth: 1250,
+    minHeight: 850,
     frame: process__WEBPACK_IMPORTED_MODULE_10__.platform == 'win32' ? false : true,
     resizable: false,
     webPreferences: {
