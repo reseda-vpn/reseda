@@ -272,7 +272,7 @@ const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, r
 	}
 }
 
-const ex = (command: string, with_sudo: boolean, callback: Function) => {
+const ex = async (command: string, with_sudo: boolean, callback: Function) => {
 	if(with_sudo) {
 		sudo.exec(command, {
 			name: "Reseda VPN"
@@ -284,7 +284,7 @@ const ex = (command: string, with_sudo: boolean, callback: Function) => {
 			return __;
 		});
 	}else {
-		exec(command, (_, __, err) => {
+		await exec(command, (_, __, err) => {
 			if(err) throw err;
 			callback(__);
 
@@ -295,6 +295,8 @@ const ex = (command: string, with_sudo: boolean, callback: Function) => {
 
 const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	if(platform !== "win32") return connect_pure(location, time_callback, reference);
+
+	if(socket) socket.disconnect();
 
 	console.time("wireguardSetup")
 
@@ -312,10 +314,6 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 	scrapeConfig(config);
 
-	isUp((up) => {
-		if(up) down(() => {});
-	});
-
 	// Client Event Id
 	let EVT_ID;
 
@@ -327,6 +325,14 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 	console.timeEnd("wireguardSetup");
 	console.time("createSocket");
+
+	isUp(async (up) => {
+		if(up) {
+			await down(() => {})
+		}
+	});
+
+	console.log("Starting Socket");
 
 	socket = io(`http://${location.hostname}:6231/`, { auth: {
 		server: location.id,
@@ -456,16 +462,18 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		socket.disconnect();
 	}
 
-	socket = io(`http://192.168.69.1:6231/`, { auth: {
-		server: connection.location.id,
-		client_pub_key: config.publicKey,
-		author: supabase.auth.user()?.id,
-		type: "close"
-	}});
+	if(connection.connection == 1) {
+		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
+			server: connection.location.id,
+			client_pub_key: config.publicKey,
+			author: supabase.auth.user()?.id,
+			type: "close"
+		}});
 
-	socket.on("OK", () => {
-		socket.disconnect();
-	});
+		socket.on("OK", () => {
+			socket.disconnect();
+		});
+	}
 
 	scrapeConfig(config);
 
@@ -530,11 +538,11 @@ const up = (cb: Function, conf?: WgConfig) => {
 	}
 }
 
-const down = (cb: Function, conf?: WgConfig) => {
+const down = async (cb: Function, conf?: WgConfig) => {
 	if(platform == 'win32')
-		ex("net stop WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
+		await ex("net stop WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
 	else	
-		ex(`sudo wg-quick down ${filePath}`, true, (out) => cb(out))
+		await ex(`sudo wg-quick down ${filePath}`, true, (out) => cb(out))
 }
 
 const restart = (cb: Function) => {
