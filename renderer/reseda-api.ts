@@ -8,6 +8,9 @@ import { Server } from './components/tabview';
 import { platform } from "process"
 import { io, Socket } from "socket.io-client"
 import { DefaultEventsMap } from '@socket.io/component-emitter';
+import https, { Agent } from "https"
+import fetch from "node-fetch"
+import axios from "axios"
 
 const { generatePublicKey, keyToBase64 } = require('./wireguard_tooling')
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
@@ -322,10 +325,8 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	// Set the public key omitting /n and /t after '='.
 	config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
 
-	console.timeLog("wireguardSetup")
 	console.timeEnd("wireguardSetup");
-
-	console.log(location.hostname);
+	console.time("createSocket");
 
 	socket = io(`http://${location.hostname}:6231/`, { auth: {
 		server: location.id,
@@ -339,6 +340,8 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 
 	socket.on('request_accepted', (connection: Packet) => {
+		console.timeEnd("createSocket");
+		console.time("establishConnection");
 		console.log(connection);
 		console.log(`[CONN] >> Protocol to ${location.id} established.`);
 
@@ -362,6 +365,8 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	
 		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
 		config.writeToFile();
+
+		console.timeLog("establishConnection")
 
 		const new_connection = io(`192.168.69.1:6231`, {
 			auth: {
@@ -403,6 +408,10 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 				location: location,
 				server: location.id
 			});
+
+			socket.disconnect();
+
+			console.timeEnd("establishConnection")
 		});
 	})
 
@@ -420,6 +429,16 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 }
 
 const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, publish: boolean = true): Promise<any> => {
+	reference({
+		protocol: "wireguard",
+		config: connection.config,
+		as_string: connection.config.toString(),
+		connection_id: connection.connection_id,
+		connected: false,
+		connection: 4,
+		location: null,
+		server: null
+	});
 
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
@@ -437,16 +456,20 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		socket.disconnect();
 	}
 
+	socket = io(`http://192.168.69.1:6231/`, { auth: {
+		server: connection.location.id,
+		client_pub_key: config.publicKey,
+		author: supabase.auth.user()?.id,
+		type: "close"
+	}});
+
+	socket.on("OK", () => {
+		socket.disconnect();
+	});
+
 	scrapeConfig(config);
 
 	restart(() => {
-		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
-			server: connection.location.id,
-			client_pub_key: config.publicKey,
-			author: supabase.auth.user()?.id,
-			type: "close"
-		}});
-
 		reference({
 			protocol: "wireguard",
 			config: config.toJson(),
@@ -458,50 +481,6 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 			server: null
 		});
 	});
-
-	return;
-
-	// TRANSFER OUTPUT
-	// ex("wg show wg0 transfer", false, (out) => {
-	// 	console.log(`OUTPUT >> ${out}`);
-	// })
-
-	scrapeConfig(config);
-
-	reference({
-		protocol: "wireguard",
-		config: config.toJson(),
-		as_string: config.toString(),
-		connection_id: connection.connection_id,
-		connected: false,
-		connection: 4,
-		location: null,
-		server: null
-	});
-
-	if(publish) {
-		supabase
-			.from('open_connections')
-			.delete({ returning: 'representation' })
-			.match({
-				id: connection.connection_id
-			}).then(fufil => {
-				console.log(fufil);
-
-				restart(() => {
-					reference({
-						protocol: "wireguard",
-						config: config.toJson(),
-						as_string: config.toString(),
-						connection_id: connection.connection_id,
-						connected: false,
-						connection: 0,
-						location: null,
-						server: null
-					});
-				});
-			});
-	}	
 }
 
 const scrapeConfig = (config: WgConfig) => {
