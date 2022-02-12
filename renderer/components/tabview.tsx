@@ -1,12 +1,12 @@
 import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
-import { supabase } from '../client';
 import { connect, disconnect, disconnect_pure, ResedaConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
 import { useDate } from './useDate';
+import { useSession } from 'next-auth/react';
 
 export type Server = {
     id: string,
@@ -23,6 +23,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
     const [ fetching, setFetching ] = useState<boolean>(true);
     const [ connectionTime, setConnectionTime ] = useState(null);
     const { today } = useDate();
+
+    const session = useSession();
 
     useEffect(() => {
         fetch('https://reseda.app/api/server/list', {
@@ -59,11 +61,11 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                 if(connection?.server == e.id) return;
 
                                                 if(connection?.connected) {
-                                                    disconnect(connection, connectionCallback).then(() => {
-                                                        connect(e, setConnectionTime, connectionCallback)
+                                                    disconnect(connection, connectionCallback, session.data).then(() => {
+                                                        connect(e, setConnectionTime, connectionCallback, session.data)
                                                     })
                                                 }else {
-                                                    connect(e, setConnectionTime, connectionCallback)
+                                                    connect(e, setConnectionTime, connectionCallback, session.data)
                                                 }
                                             }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
@@ -109,9 +111,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         </div>
 
                                         <div style={{ backgroundColor: 'transparent', justifyContent: 'space-around' }}>
-                                            <Button onClick={() => { disconnect_pure(connection, connectionCallback)} }>Uninstall Service</Button>
+                                            <Button onClick={() => { disconnect_pure(connection, connectionCallback, session.data)} }>Uninstall Service</Button>
 
-                                            <Button onClick={() => { disconnect(connection, connectionCallback)} }>Force Disconnect</Button>
+                                            <Button onClick={() => { disconnect(connection, connectionCallback, session.data)} }>Force Disconnect</Button>
                                         </div>
                                     </div>
                                 )
@@ -249,21 +251,21 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                     return <></>
                                 case 1:
                                     return (
-                                        <Button icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback);
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: 'bold' }}  icon={false} onClick={() => {
+                                            disconnect(connection, connectionCallback, session.data);
                                         }}>Disconnect</Button>
                                     )
                                 case 2:
                                     return (
-                                        <Button icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback);
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: 'bold' }} icon={false} onClick={() => {
+                                            disconnect(connection, connectionCallback, session.data);
                                         }}>Cancel</Button>
                                     )
                                 case 3:
                                     return (
-                                        <Button icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback).then(e => {
-                                                if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback);
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: 'bold' }} icon={false} onClick={() => {
+                                            disconnect(connection, connectionCallback, session.data).then(e => {
+                                                if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback, session.data);
                                                 else return;
                                             })
                                         }}>Retry</Button>

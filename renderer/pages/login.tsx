@@ -67,7 +67,7 @@ export default function Home({ providers }) {
                 setAuthSuccess("logged_in");
                 setAuthFailure("");
 
-                router.replace('./profile');
+                router.replace('./home');
             }
         }
     }
@@ -200,7 +200,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getSession(context);
   
     if (session) {
-      return { redirect: { permanent: false, destination: "/profile" } };
+      return { redirect: { permanent: false, destination: "/home" } };
     }
   
     const csrfToken = await getCsrfToken({ req: context.req });

@@ -186,7 +186,8 @@
 }
 
 .resedaContentCenter > div:first-of-type {
-  width: 60%;
+  flex: 1;
+  min-width: 60%;
 }
 
 .resedaRightBoxes {
@@ -195,7 +196,7 @@
   gap: 1rem;
   flex: 1;
 
-  width: 40%;
+  max-width: 400px;
 }
 
 /* .resedaRightBoxes * {
@@ -208,6 +209,7 @@
 
   padding: 1rem;
   height: 100%;
+
 
   display: flex;
   flex-direction: column;

@@ -8,6 +8,7 @@ import PlatformControls from '../components/platform_controls'
 import { ipcRenderer } from 'electron'
 import { platform } from 'process';
 import publicIp from 'public-ip'
+import { useSession } from 'next-auth/react'
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -30,6 +31,7 @@ type Packet = {
 const Home: NextPage = () => {
 	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
 	const [ actionTime, setActionTime ] = useState<number>();
+	const session = useSession();
 	const [ connection, setConnection ] = useState<ResedaConnection>({
 		protocol: "wireguard",
 		config: null,
@@ -50,6 +52,8 @@ const Home: NextPage = () => {
 			setIP(e);
 		})
 	}, [])
+
+	console.log(session);
 
 	return (
 		<div className={styles.container}>
@@ -111,7 +115,7 @@ const Home: NextPage = () => {
 
 				<div>
 					{
-						// supabase.auth.user().email
+						session?.data?.user?.email
 					}
 				</div>
 			</div>

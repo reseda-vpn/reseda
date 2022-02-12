@@ -10,6 +10,7 @@ import { DefaultEventsMap } from '@socket.io/component-emitter';
 import https, { Agent } from "https"
 import fetch from "node-fetch"
 import axios from "axios"
+import { Session } from 'next-auth';
 
 const { generatePublicKey, keyToBase64 } = require('./wireguard_tooling')
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
@@ -58,8 +59,8 @@ export type ResedaConnection = {
 	server: string
 }
 
-type ResedaConnect = (location: Server, time_callback: Function, reference: Function) => Promise<ResedaConnection>;
-type ResedaDisconnect = (connection: ResedaConnection, reference: Function, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
+type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session) => Promise<ResedaConnection>;
+type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	time_callback(new Date().getTime());
@@ -200,7 +201,7 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 	});
 }
 
-const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, _: boolean, config: WgConfig): Promise<any> => {
+const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session,  _: boolean, config: WgConfig): Promise<any> => {
 	if(platform == 'win32') 
 		ex(`${run_loc}/wireguard.exe /uninstalltunnelservice wg0`, true, () => {
 			reference({
@@ -292,8 +293,8 @@ const ex = async (command: string, with_sudo: boolean, callback: Function) => {
 	}
 }
 
-const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
-	if(platform !== "win32") return connect_pure(location, time_callback, reference);
+const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session): Promise<any> => {
+	if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
 
 	if(socket) socket.disconnect();
 
@@ -332,11 +333,12 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 
 	console.log("Starting Socket");
+	console.log(user);
 
 	socket = io(`http://${location.hostname}:6231/`, { auth: {
 		server: location.id,
 		client_pub_key: config.publicKey,
-		author: "UID",
+		author: user.id,
 		type: "initial"
 	}});
 
@@ -377,7 +379,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 			auth: {
 				server: location.id,
 				client_pub_key: config.publicKey,
-				author: "UID",
+				author: user.id,
 				type: "secondary"
 			}
 		});
@@ -433,7 +435,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 }
 
-const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, publish: boolean = true): Promise<any> => {
+const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, publish: boolean = true): Promise<any> => {
 	reference({
 		protocol: "wireguard",
 		config: connection.config,
@@ -455,7 +457,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		...client_config
 	});
 
-	if(platform !== 'win32') return disconnect_pure(connection, reference, false, config);
+	if(platform !== 'win32') return disconnect_pure(connection, reference, user, false, config);
 
 	if(socket) {
 		socket.disconnect();
@@ -465,7 +467,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
 			server: connection.location.id,
 			client_pub_key: config.publicKey,
-			author: "UID",
+			author: user.id,
 			type: "close"
 		}});
 
