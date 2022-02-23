@@ -7,6 +7,8 @@ import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
 import { useDate } from './useDate';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+import bgImage from "../public/images/reseda_bg.svg"
 
 export type Server = {
     id: string,
@@ -56,7 +58,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         return (
                                             <div 
                                             key={e.id}
-                                            className={connection?.server == e.id && connection.connected ? styles.resedaServerConnected : (connection?.server == e.id && !connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
+                                            className={connection?.server == e.id && connection.connected ? `bg-gray-900 ${styles.resedaServerConnected}` : (connection?.server == e.id && !connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
                                             onClick={() => {
                                                 if(connection?.server == e.id) return;
 
@@ -126,7 +128,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
             </div>
 
             <div className={styles.resedaRightBoxes}>
-                <div className={styles.resedaUsageBox}>
+                <div className={`bg-gray-900 ${styles.resedaUsageBox} relative`}>
                     {/* <h2>Connection</h2> */}
 
                     <div className={styles.resedaFancyConnection}>
@@ -151,7 +153,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                         <span style={{ backgroundSize: '400%', animationDuration: '10s' }} >
                                                             {
                                                                 connection.location ?
-                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))' }} className={`twa twa-${connection.location.flag}`}></span>
+                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))', height: '150px', width: '150px' }} className={`twa twa-${connection.location.flag}`}></span>
                                                                 :
                                                                 "R"
                                                             }
@@ -219,7 +221,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         return (
                                             <div>
                                                 <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{connection?.location?.id}</i>  </p>
-                                                <h2>{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
+                                                <h2 className="font-mono font-bold text-base">{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
                                                 <p style={{ opacity: 0.6 }} className={styles.mono}>{connection?.location?.hostname}</p>
                                                 {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
                                             </div>
@@ -248,22 +250,26 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                         (() => {
                             switch(connection?.connection) {
                                 case 0:
-                                    return <></>
+                                    return (
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
+                                            disconnect(connection, connectionCallback, session.data);
+                                        }}>Connect to {"Singapore"}</Button>
+                                    )
                                 case 1:
                                     return (
-                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: 'bold' }}  icon={false} onClick={() => {
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
                                             disconnect(connection, connectionCallback, session.data);
                                         }}>Disconnect</Button>
                                     )
                                 case 2:
                                     return (
-                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: 'bold' }} icon={false} onClick={() => {
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }} icon={false} onClick={() => {
                                             disconnect(connection, connectionCallback, session.data);
                                         }}>Cancel</Button>
                                     )
                                 case 3:
                                     return (
-                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: 'bold' }} icon={false} onClick={() => {
+                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }} icon={false} onClick={() => {
                                             disconnect(connection, connectionCallback, session.data).then(e => {
                                                 if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback, session.data);
                                                 else return;
@@ -275,6 +281,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                             }
                         })()
                     }
+                    <Image src={bgImage} height={500} width={500} className="absolute"/>
                     
                 </div>
             </div>

@@ -67,11 +67,6 @@
   border-radius: 7px;
 }
 
-.connected h4 {
-  color: var(--off-white);
-  font-weight: 400;
-}
-
 .disconnected {
   display: flex;
   flex-direction: row;
@@ -132,14 +127,14 @@
   text-transform: uppercase;
 }
 
-.reseda {
+/* .reseda {
   font-weight: 700;
   text-transform: uppercase;
   position: relative;
-}
+} */
 
 .reseda:after {
-  content: "ALPHA";
+  /* content: "ALPHA";
   color: var(--accent-blue);
   position: absolute;
   bottom: 0;
@@ -147,9 +142,9 @@
   bottom: -10%;
   font-size: .7rem;
 
-  background: linear-gradient(-45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%);
+  /* background: linear-gradient(-45deg, rgba(99,85,164,1) 0%, rgba(232,154,62,1) 33%, rgba(99,85,164,1) 66%, rgba(232,154,62,1) 100%); */
 
-  background-clip: text;
+  background-clip: text; 
   -webkit-text-fill-color: transparent;
 }
 
@@ -205,11 +200,9 @@
 
 .resedaUsageBox {
   border-radius: 13px;
-  background-color: var(--text-primary);
 
   padding: 1rem;
   height: 100%;
-
 
   display: flex;
   flex-direction: column;
@@ -255,7 +248,7 @@
   width: 100%;
 
   padding: .5rem 1rem;
-  background-color: var(--text-primary);
+  /* background-color: var(--text-primary); */
   color: var(--off-white);
 
   user-select: none;
@@ -342,7 +335,7 @@
 }
 
 .resedaServerConnected {
-  background-color: var(--text-primary);
+  /* background-color: var(--text-primary); */
   color: var(--off-white);
 
   width: 100%;

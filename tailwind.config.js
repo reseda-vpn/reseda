@@ -8,7 +8,8 @@ module.exports = {
         fontFamily: {
             sans: ["Public Sans", "DM Sans", "Roboto", "sans-serif"],
             serif: ["DM Serif", "serif"],
-            altSans: ["GT Walsheim Pro"]
+            altSans: ["GT Walsheim Pro"],
+            mono: ["DM Mono"]
         },
         extend: {},
     },

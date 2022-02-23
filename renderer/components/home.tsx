@@ -59,7 +59,7 @@ const Home: NextPage = () => {
 		<div className={styles.container}>
 			{
 				platform !== "darwin" ?
-				<div className={styles.resedaFrame}>
+				<div className={`bg-gray-900 ${styles.resedaFrame}`}>
 					<div>
 						Reseda VPN
 					</div>
@@ -83,7 +83,7 @@ const Home: NextPage = () => {
 					{/* Header - Title */}
 					<div>
 						{/* <div className={styles.title}>R.</div> */}
-						<div className={styles.reseda}>Reseda</div>
+						<div className={`font-bold uppercase relative after:content-['ALPHA'] text-slate-800 after:text-black after:absolute after:b-0 after:-right-10 after:-bottom-1 after:text-xs after:bg-clip-text after:bg-violet-600 select-none ${styles.reseda}`}>Reseda</div>
 					</div>
 
 					<div>
@@ -100,20 +100,20 @@ const Home: NextPage = () => {
 				</div>
 			</div>
 
-			<div className={styles.resedaBottom}>
+			<div className="h-16 flex flex-row justify-between w-full bg-gray-900 items-center gap-4 px-4 py-4 text-xs m-0 text-slate-200 select-none">
 				{/* Bottom Viewport (Small) */}
 
-				<div>
+				<div className="flex-1 flex flex-row items-center gap-4 w-full">
 					<div className={connection ? styles.connected : styles.disconnected}>
 						{/* <div className={styles.connectionStatus}></div> */}
-						<h4>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
+						<h4 className=" font-sans font-extrabold" style={{ fontSize: '0.9rem' }}>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
 					</div>
 					
 					<p>{connection?.location?.country ?? ""}</p>
-					<h6>{connection?.server ?? ip }</h6>
+					<h6 className="font-mono opacity-40">{connection?.server ?? ip }</h6>
 				</div>
 
-				<div>
+				<div className="w-fit opacity-80" style={{ fontSize: '0.88rem' }}>
 					{
 						session?.data?.user?.email
 					}
