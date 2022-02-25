@@ -6,8 +6,8 @@
   "build": {
     "distDir": "../out",
     "devPath": "http://localhost:3000",
-    "beforeDevCommand": "",
-    "beforeBuildCommand": ""
+    "beforeDevCommand": "yarn dev",
+    "beforeBuildCommand": "yarn build"
   },
   "tauri": {
     "bundle": {
@@ -50,7 +50,22 @@
       "active": false
     },
     "allowlist": {
-      "all": true
+      "fs": {
+        "all": true,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true
+      },
+      "shell": {
+        "all": true, 
+        "execute": true, 
+        "sidecar": true, 
+        "open": true
     },
     "windows": [
       {

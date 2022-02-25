@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Home from '@components/home'
 import Auth from '@components/auth'
 import path from 'path'
-import fs from "fs"
+import fs from "@tauri-apps/api/fs"
 import { getCsrfToken, getSession } from 'next-auth/react'
 
 const fetcher = (url, token) =>

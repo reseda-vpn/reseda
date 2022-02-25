@@ -5,7 +5,6 @@ import { connect, disconnect, ResedaConnection, resumeConnection } from '@root/r
 import styles from '@styles/Home.module.css'
 import ip from "ip"
 import PlatformControls from '../components/platform_controls'
-import { ipcRenderer } from 'electron'
 import { platform } from 'process';
 import publicIp from 'public-ip'
 import { useSession } from 'next-auth/react'
@@ -65,8 +64,8 @@ const Home: NextPage = () => {
 					</div>
 
 					<PlatformControls 
-						onClose={() => ipcRenderer.send('close')}
-						onMinimize={() => ipcRenderer.send('minimize')}	
+						// onClose={() => ipcRenderer.send('close')}
+						// onMinimize={() => ipcRenderer.send('minimize')}	
 						// onMaximize={() => {
 						// 	maximized == "maximized" ? remote.getCurrentWindow().unmaximize() : remote.getCurrentWindow().maximize();
 						//  	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
