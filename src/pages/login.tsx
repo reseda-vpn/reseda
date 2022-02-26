@@ -15,7 +15,6 @@ import { filter } from "lodash";
 import { hashPassword } from '@root/lib/crpyt';
 import { platform } from 'process';
 import PlatformControls from '@components/platform_controls';
-import { ipcRenderer } from 'electron';
 
 import styles from '@styles/Home.module.css'
 
@@ -26,6 +25,7 @@ export default function Home({ providers }) {
     });
 
     const router = useRouter();
+    const showFrame = false;
 
     const [ awaitingReply, setAwaitingReply ] = useState(false);
     const [ authFailure, setAuthFailure ] = useState("");
@@ -67,7 +67,7 @@ export default function Home({ providers }) {
                 setAuthSuccess("logged_in");
                 setAuthFailure("");
 
-                router.replace('./home');
+                router.replace('./');
             }
         }
     }
@@ -75,15 +75,15 @@ export default function Home({ providers }) {
 	return (
 		<div className="flex-col flex font-sans min-h-screen h-screen" > {/* style={{ background: 'linear-gradient(-45deg, rgba(99,85,164,0.2) 0%, rgba(232,154,62,.2) 100%)' }} */}
             {
-				platform !== "darwin" ?
+				platform !== "darwin" && showFrame ?
 				<div className={styles.resedaFrame}>
 					<div>
 						Reseda VPN
 					</div>
 
 					<PlatformControls 
-						onClose={() => ipcRenderer.send('close')}
-						onMinimize={() => ipcRenderer.send('minimize')}	
+						// onClose={() => ipcRenderer.send('close')}
+						// onMinimize={() => ipcRenderer.send('minimize')}	
 						// onMaximize={() => {
 						// 	maximized == "maximized" ? remote.getCurrentWindow().unmaximize() : remote.getCurrentWindow().maximize();
 						//  	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
@@ -200,7 +200,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getSession(context);
   
     if (session) {
-      return { redirect: { permanent: false, destination: "/home" } };
+      return { redirect: { permanent: false, destination: "/" } };
     }
   
     const csrfToken = await getCsrfToken({ req: context.req });

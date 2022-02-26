@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import Home from '@components/home'
 import Auth from '@components/auth'
 import path from 'path'
-import fs from "@tauri-apps/api/fs"
+import f from "@tauri-apps/api/fs"
+const fs = f;
 import { getCsrfToken, getSession } from 'next-auth/react'
 
 const fetcher = (url, token) =>
@@ -48,8 +49,10 @@ const Reseda: NextPage = () => {
 		let isFirstTime;
 
 		try {
-			fs.closeSync(fs.openSync(firstTimeFilePath, 'wx'));
-			isFirstTime = true;
+			console.log(fs);
+			fs.readTextFile(firstTimeFilePath).then(e => {
+				isFirstTime = true;
+			})
 		} catch(e) {
 			if (e.code === 'EEXIST') {
 				isFirstTime = false;

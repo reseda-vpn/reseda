@@ -9,27 +9,11 @@ import { platform } from 'process';
 import publicIp from 'public-ip'
 import { useSession } from 'next-auth/react'
 
-const fetcher = (url, token) =>
-  fetch(url, {
-    method: 'GET',
-    headers: new Headers({ 'Content-Type': 'application/json', token }),
-    credentials: 'same-origin',
-  }).then((res) => res.json())
-
-type Packet = {
-	id: number,
-	author: string,
-	server: string,
-	client_pub_key: string,
-	svr_pub_key: string,
-	client_number: number,
-	awaiting: boolean,
-	server_endpoint: string
-}
-
 const Home: NextPage = () => {
 	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
 	const [ actionTime, setActionTime ] = useState<number>();
+
+	const showFrame = false;
 	const session = useSession();
 	const [ connection, setConnection ] = useState<ResedaConnection>({
 		protocol: "wireguard",
@@ -57,7 +41,7 @@ const Home: NextPage = () => {
 	return (
 		<div className={styles.container}>
 			{
-				platform !== "darwin" ?
+				platform !== "darwin" && showFrame ?
 				<div className={`bg-gray-900 ${styles.resedaFrame}`}>
 					<div>
 						Reseda VPN

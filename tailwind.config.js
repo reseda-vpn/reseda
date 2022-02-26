@@ -1,8 +1,8 @@
 module.exports = {
     content: [
-      "./renderer/pages/**/*.{js,ts,jsx,tsx}",
-      "./renderer/components/*.{js,ts,jsx,tsx}",
-      "./renderer/components/un-ui/*.{js,ts,jsx,tsx}"
+      "./src/pages/**/*.{js,ts,jsx,tsx}",
+      "./src/components/*.{js,ts,jsx,tsx}",
+      "./src/components/un-ui/*.{js,ts,jsx,tsx}"
     ],
     theme: {
         fontFamily: {

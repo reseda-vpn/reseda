@@ -66,6 +66,7 @@
         "execute": true, 
         "sidecar": true, 
         "open": true
+      }
     },
     "windows": [
       {

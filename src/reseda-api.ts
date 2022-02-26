@@ -1,12 +1,13 @@
 import path from 'path'
-import sudo from "sudo-prompt"
-import { getConfigObjectFromFile, parseConfigString, WgConfig } from "wireguard-tools";
-import child_process, { exec, execSync, spawnSync } from '@tauri-apps/api/shell'
+// import sudo from "sudo-prompt"
+// import { getConfigObjectFromFile, parseConfigString, WgConfig } from "wireguard-tools";
+// import child_process, { exec, execSync, spawnSync } from '@tauri-apps/api/shell'
 import { Server } from './components/tabview';
 import { platform } from "process"
 import { io, Socket } from "socket.io-client"
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { Session } from 'next-auth';
+import { WgConfig } from './lib/wg-tools/src/index';
 
 const { generatePublicKey, keyToBase64 } = require('./wireguard_tooling')
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
@@ -269,24 +270,24 @@ const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, r
 }
 
 const ex = async (command: string, with_sudo: boolean, callback: Function) => {
-	if(with_sudo) {
-		sudo.exec(command, {
-			name: "Reseda VPN"
-		}, (_, __, err) => {
-			if(err) throw err;
-			if(_) throw _;
+	// if(with_sudo) {
+	// 	sudo.exec(command, {
+	// 		name: "Reseda VPN"
+	// 	}, (_, __, err) => {
+	// 		if(err) throw err;
+	// 		if(_) throw _;
 
-			callback(__);
-			return __;
-		});
-	}else {
-		await exec(command, (_, __, err) => {
-			if(err) throw err;
-			callback(__);
+	// 		callback(__);
+	// 		return __;
+	// 	});
+	// }else {
+	// 	await exec(command, (_, __, err) => {
+	// 		if(err) throw err;
+	// 		callback(__);
 
-			return __;
-		})
-	}
+	// 		return __;
+	// 	})
+	// }
 }
 
 const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session): Promise<any> => {
@@ -313,7 +314,8 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	// Client Event Id
 	let EVT_ID;
 
-	const puckey = spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
+	// REPAIR
+	const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
 	const key = puckey.toString();
 	
 	// Set the public key omitting /n and /t after '='.
@@ -511,7 +513,7 @@ const init = async () => {
 	console.log("[CONN] >> Generated Client Configuration");
 	
 	// Generate UNIQUE Public Key using wireguard (wg). public key -> pu-c-key
-	const puckey = child_process.spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: client_config.wgInterface.privateKey }).output;
+	const puckey = ""; //child_process.spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: client_config.wgInterface.privateKey }).output;
 	const key = puckey.toString();
 	
 	// Set the public key omitting /n and /t after '='.
@@ -585,7 +587,7 @@ const resumeConnection = async (reference: Function) => {
 
 	isUp((det) => {
 		if(det) {
-			const puckey = spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
+			const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
 			const key = puckey.toString();
 			
 			// Set the public key omitting /n and /t after '='.
