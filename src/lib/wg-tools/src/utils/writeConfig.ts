@@ -4,6 +4,7 @@ import path from 'path'
 import { WgConfigObject } from '../types/WgConfigObject'
 import { generateConfigString } from './configParser'
 import { makeSureDirExists } from './makeSureDirExists'
+import { invoke } from '@tauri-apps/api/tauri'
 
 interface Options {
   /** The full path to the file to write (use path.join to construct a full path before passing into this function) */
@@ -20,9 +21,11 @@ export const writeConfig = async (opts: Options) => {
   try {
     const { filePath, config } = opts
     const dir = path.dirname(filePath)
-    await makeSureDirExists(dir)
+    // await makeSureDirExists(dir)
     const configString = typeof config === 'string' ? config : generateConfigString(config)
-    await fs.writeFile({ path: filePath, contents: configString })
+
+    const output: string = await invoke('write_text_file', { fileName: "wg0.conf", text: configString });
+    // await fs.writeFile({ path: filePath, contents: configString })
     // await fs.chmod(filePath, '600')
   } catch (e) {
     const message = `Failed to write config at path: ${opts.filePath}`

@@ -1,13 +1,11 @@
 import path from 'path'
-// import sudo from "sudo-prompt"
-// import { getConfigObjectFromFile, parseConfigString, WgConfig } from "wireguard-tools";
-// import child_process, { exec, execSync, spawnSync } from '@tauri-apps/api/shell'
 import { Server } from './components/tabview';
 import { platform } from "process"
 import { io, Socket } from "socket.io-client"
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { Session } from 'next-auth';
-import { WgConfig } from './lib/wg-tools/src/index';
+import { WgConfig, getConfigObjectFromFile } from './lib/wg-tools/src/index';
+import { invoke } from '@tauri-apps/api/tauri'
 
 const { generatePublicKey, keyToBase64 } = require('./wireguard_tooling')
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
@@ -58,6 +56,378 @@ export type ResedaConnection = {
 
 type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session) => Promise<ResedaConnection>;
 type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
+
+const ex = async (command: string, with_sudo: boolean, callback: Function) => {
+	// if(with_sudo) {
+	// 	sudo.exec(command, {
+	// 		name: "Reseda VPN"
+	// 	}, (_, __, err) => {
+	// 		if(err) throw err;
+	// 		if(_) throw _;
+
+	// 		callback(__);
+	// 		return __;
+	// 	});
+	// }else {
+	// 	await exec(command, (_, __, err) => {
+	// 		if(err) throw err;
+	// 		callback(__);
+
+	// 		return __;
+	// 	})
+	// }
+}
+
+const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session): Promise<any> => {
+	// if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
+
+	if(socket) socket.disconnect();
+
+	console.time("wireguardSetup")
+
+	time_callback(new Date().getTime());
+
+	//@ts-expect-error
+	const client_config: WgConfig = await getConfigObjectFromFile({
+		filePath: "wg0.conf"
+	});
+
+	const config = new WgConfig({ 
+		filePath,
+		...client_config
+	});
+
+	scrapeConfig(config);
+
+	// Client Event Id
+	let EVT_ID;
+
+	// REPAIR
+	const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
+	const key = puckey.toString();
+	
+	// Set the public key omitting /n and /t after '='.
+	config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
+
+	console.timeEnd("wireguardSetup");
+	console.time("createSocket");
+
+	isUp(async (up) => {
+		if(up) {
+			await down(() => {})
+		}
+	});
+
+	console.log("Starting Socket");
+	console.log(user);
+
+	socket = io(`http://${location.hostname}:6231/`, { 
+		withCredentials: true,	
+		auth: {
+			server: location.id,
+			client_pub_key: config.publicKey,
+			author: user.id,
+			type: "initial"
+		}
+	});
+
+	socket.emit('request_connect', {
+		cPk: config.publicKey
+	});
+
+	socket.on('request_accepted', (connection: Packet) => {
+		console.timeEnd("createSocket");
+		console.time("establishConnection");
+		console.log(connection);
+		console.log(`[CONN] >> Protocol to ${location.id} established.`);
+
+		reference({
+			protocol: "wireguard",
+			connected: false,
+			connection: 2,
+			config: {},
+			message: "Adding Peer",
+			as_string: "",
+			connection_id: EVT_ID,
+			location: location,
+			server: location.id
+		});
+	
+		config.addPeer({
+			publicKey: connection.svr_pub_key,
+			allowedIps: [ "0.0.0.0/0" ],
+			endpoint: `${connection.server_endpoint}:51820`
+		});
+	
+		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
+		config.writeToFile();
+
+		console.timeLog("establishConnection")
+
+		const new_connection = io(`192.168.69.1:6231`, {
+			auth: {
+				server: location.id,
+				client_pub_key: config.publicKey,
+				author: user.id,
+				type: "secondary"
+			}
+		});
+
+		new_connection.on("update_schema", (data) => {
+			console.log(data);
+		});
+
+		reference({
+			protocol: "wireguard",
+			connected: false,
+			connection: 2,
+			config: {},
+			message: "Finishing",
+			as_string: "",
+			connection_id: EVT_ID,
+			location: location,
+			server: location.id
+		});
+
+		up(() => {
+			time_callback(new Date().getTime());
+			console.log("[CONN] >> Received! Connected!");
+			connected = true;
+
+			reference({
+				protocol: "wireguard",
+				config: config.toJson(),
+				as_string: config.toString(),
+				connection_id: EVT_ID,
+				connected: true,
+				connection: 1,
+				location: location,
+				server: location.id
+			});
+
+			socket.disconnect();
+
+			console.timeEnd("establishConnection")
+		});
+	})
+
+	reference({
+		protocol: "wireguard",
+		connected: false,
+		connection: 2,
+		message: "Publishing",
+		config: {},
+		as_string: "",
+		connection_id: EVT_ID,
+		location: location,
+		server: location.id
+	});
+}
+
+const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, publish: boolean = true): Promise<any> => {
+	reference({
+		protocol: "wireguard",
+		config: connection.config,
+		as_string: connection.config.toString(),
+		connection_id: connection.connection_id,
+		connected: false,
+		connection: 4,
+		location: null,
+		server: null
+	});
+
+	//@ts-expect-error
+	const client_config: WgConfig = await getConfigObjectFromFile({
+		filePath
+	});
+
+	const config = new WgConfig({ 
+		filePath,
+		...client_config
+	});
+
+	// if(platform !== 'win32') return disconnect_pure(connection, reference, user, false, config);
+
+	if(socket) {
+		socket.disconnect();
+	}
+
+	if(connection.connection == 1) {
+		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
+			server: connection.location.id,
+			client_pub_key: config.publicKey,
+			author: user.id,
+			type: "close"
+		}});
+
+		socket.on("OK", () => {
+			socket.disconnect();
+		});
+	}
+
+	scrapeConfig(config);
+
+	restart(() => {
+		reference({
+			protocol: "wireguard",
+			config: config.toJson(),
+			as_string: config.toString(),
+			connection_id: connection.connection_id,
+			connected: false,
+			connection: 0,
+			location: null,
+			server: null
+		});
+	});
+}
+
+const scrapeConfig = (config: WgConfig) => {
+	config.peers.forEach(e => {
+		config.removePeer(e.publicKey);
+	});
+
+	config.writeToFile();
+}
+
+const init = async () => {
+	// Create local client-configuration
+	const client_config = new WgConfig({
+		wgInterface: {
+			dns: ["1.1.1.1"],
+			address: ["192.168.69.2/24"]
+		},
+		filePath
+	})
+	
+	// Generate Private Key for Client
+	await client_config.generateKeys();
+	console.log("[CONN] >> Generated Client Configuration");
+	
+	// Generate UNIQUE Public Key using wireguard (wg). public key -> pu-c-key
+	const puckey = ""; //child_process.spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: client_config.wgInterface.privateKey }).output;
+	const key = puckey.toString();
+	
+	// Set the public key omitting /n and /t after '='.
+	client_config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
+	client_config.writeToFile();
+
+	restart(() => {});
+	
+	return client_config;
+}
+
+const up = async (cb: Function, conf?: WgConfig) => {
+	await invoke('start_wireguard_tunnel')
+}
+
+const down = async (cb: Function, conf?: WgConfig) => {
+	if(platform == 'win32')
+		await ex("net stop WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
+	else	
+		await ex(`sudo wg-quick down ${filePath}`, true, (out) => cb(out))
+}
+
+const restart = (cb: Function) => {
+	isUp((__up) => {
+		if(__up) {
+			down(() => up(() => cb()));
+		}else {
+			up(() => cb());
+		}
+	})
+} 
+
+const forceDown = (cb: Function) => {
+	ex("sc delete WireGuardTunnel$wg0", true, (out) => {console.log(out); cb(); });
+}
+
+const isUp = (cb: Function) => {
+	if(platform == 'win32')
+		ex("sc query WireGuardTunnel$wg0", false, (out) => {
+			const stopped = out.includes("STOPPED");
+			cb(!stopped);
+		})
+	else 
+		ex("wg show", false, (out) => {
+			const stopped = out.length < 1;
+			cb(!stopped);
+		})
+}
+
+const resumeConnection = async (reference: Function) => {
+	//@ts-expect-error
+	const client_config: WgConfig = await getConfigObjectFromFile({
+		filePath
+	});
+
+	const config = new WgConfig({ 
+		filePath,
+		...client_config
+	});
+
+	// Server was connected, but is it actually currently connected?
+	const conn_ip = config.peers?.[0]?.endpoint?.split(":")?.[0];
+
+	isUp((det) => {
+		if(det) {
+			const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
+			const key = puckey.toString();
+			
+			// Set the public key omitting /n and /t after '='.
+			config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
+
+			if(conn_ip) {
+				// supabase
+				// 	.from('open_connections')
+				// 	.select("*")
+				// 	.match({ 
+				// 		client_pub_key: config.publicKey
+				// 	})
+				// 	.order('instantiation_time', {ascending: true})
+				// 	.then(async e => {
+				// 		const data = e.body[0];
+
+				// 		const svr = await supabase.from('server_registry')
+				// 			.select("*")
+				// 			.match({ id: data.server });
+
+				// 		reference({
+				// 			protocol: "wireguard",
+				// 			config: config.toJson(),
+				// 			as_string: config.toString(),
+				// 			connection_id: data.id,
+				// 			connected: true,
+				// 			connection: 1,
+				// 			location: svr.body[0],
+				// 			server: data.server
+				// 		});
+				// 	})
+			}else {
+				reference({
+					protocol: "wireguard",
+					config: null,
+					as_string: "",
+					connection_id: null,
+					connected: false,
+					connection: 0,
+					location: null,
+					server: null
+				});
+			}
+		}else {
+			reference({
+				protocol: "wireguard",
+				config: null,
+				as_string: "",
+				connection_id: null,
+				connected: false,
+				connection: 0,
+				location: null,
+				server: null
+			});
+		}
+	});
+}
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
 	time_callback(new Date().getTime());
@@ -267,383 +637,6 @@ const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, r
 			// 	});
 		}, config)
 	}
-}
-
-const ex = async (command: string, with_sudo: boolean, callback: Function) => {
-	// if(with_sudo) {
-	// 	sudo.exec(command, {
-	// 		name: "Reseda VPN"
-	// 	}, (_, __, err) => {
-	// 		if(err) throw err;
-	// 		if(_) throw _;
-
-	// 		callback(__);
-	// 		return __;
-	// 	});
-	// }else {
-	// 	await exec(command, (_, __, err) => {
-	// 		if(err) throw err;
-	// 		callback(__);
-
-	// 		return __;
-	// 	})
-	// }
-}
-
-const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session): Promise<any> => {
-	if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
-
-	if(socket) socket.disconnect();
-
-	console.time("wireguardSetup")
-
-	time_callback(new Date().getTime());
-
-	//@ts-expect-error
-	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath
-	});
-
-	const config = new WgConfig({ 
-		filePath,
-		...client_config
-	});
-
-	scrapeConfig(config);
-
-	// Client Event Id
-	let EVT_ID;
-
-	// REPAIR
-	const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
-	const key = puckey.toString();
-	
-	// Set the public key omitting /n and /t after '='.
-	config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
-
-	console.timeEnd("wireguardSetup");
-	console.time("createSocket");
-
-	isUp(async (up) => {
-		if(up) {
-			await down(() => {})
-		}
-	});
-
-	console.log("Starting Socket");
-	console.log(user);
-
-	socket = io(`http://${location.hostname}:6231/`, { auth: {
-		server: location.id,
-		client_pub_key: config.publicKey,
-		author: user.id,
-		type: "initial"
-	}});
-
-	socket.emit('request_connect', {
-		cPk: config.publicKey
-	});
-
-	socket.on('request_accepted', (connection: Packet) => {
-		console.timeEnd("createSocket");
-		console.time("establishConnection");
-		console.log(connection);
-		console.log(`[CONN] >> Protocol to ${location.id} established.`);
-
-		reference({
-			protocol: "wireguard",
-			connected: false,
-			connection: 2,
-			config: {},
-			message: "Adding Peer",
-			as_string: "",
-			connection_id: EVT_ID,
-			location: location,
-			server: location.id
-		});
-	
-		config.addPeer({
-			publicKey: connection.svr_pub_key,
-			allowedIps: [ "0.0.0.0/0" ],
-			endpoint: `${connection.server_endpoint}:51820`
-		});
-	
-		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
-		config.writeToFile();
-
-		console.timeLog("establishConnection")
-
-		const new_connection = io(`192.168.69.1:6231`, {
-			auth: {
-				server: location.id,
-				client_pub_key: config.publicKey,
-				author: user.id,
-				type: "secondary"
-			}
-		});
-
-		new_connection.on("update_schema", (data) => {
-			console.log(data);
-		});
-
-		reference({
-			protocol: "wireguard",
-			connected: false,
-			connection: 2,
-			config: {},
-			message: "Finishing",
-			as_string: "",
-			connection_id: EVT_ID,
-			location: location,
-			server: location.id
-		});
-
-		up(() => {
-			time_callback(new Date().getTime());
-			console.log("[CONN] >> Received! Connected!");
-			connected = true;
-
-			reference({
-				protocol: "wireguard",
-				config: config.toJson(),
-				as_string: config.toString(),
-				connection_id: EVT_ID,
-				connected: true,
-				connection: 1,
-				location: location,
-				server: location.id
-			});
-
-			socket.disconnect();
-
-			console.timeEnd("establishConnection")
-		});
-	})
-
-	reference({
-		protocol: "wireguard",
-		connected: false,
-		connection: 2,
-		message: "Publishing",
-		config: {},
-		as_string: "",
-		connection_id: EVT_ID,
-		location: location,
-		server: location.id
-	});
-}
-
-const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, publish: boolean = true): Promise<any> => {
-	reference({
-		protocol: "wireguard",
-		config: connection.config,
-		as_string: connection.config.toString(),
-		connection_id: connection.connection_id,
-		connected: false,
-		connection: 4,
-		location: null,
-		server: null
-	});
-
-	//@ts-expect-error
-	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath
-	});
-
-	const config = new WgConfig({ 
-		filePath,
-		...client_config
-	});
-
-	if(platform !== 'win32') return disconnect_pure(connection, reference, user, false, config);
-
-	if(socket) {
-		socket.disconnect();
-	}
-
-	if(connection.connection == 1) {
-		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
-			server: connection.location.id,
-			client_pub_key: config.publicKey,
-			author: user.id,
-			type: "close"
-		}});
-
-		socket.on("OK", () => {
-			socket.disconnect();
-		});
-	}
-
-	scrapeConfig(config);
-
-	restart(() => {
-		reference({
-			protocol: "wireguard",
-			config: config.toJson(),
-			as_string: config.toString(),
-			connection_id: connection.connection_id,
-			connected: false,
-			connection: 0,
-			location: null,
-			server: null
-		});
-	});
-}
-
-const scrapeConfig = (config: WgConfig) => {
-	config.peers.forEach(e => {
-		config.removePeer(e.publicKey);
-	});
-
-	config.writeToFile();
-}
-
-const init = async () => {
-	// Create local client-configuration
-	const client_config = new WgConfig({
-		wgInterface: {
-			dns: ["1.1.1.1"],
-			address: ["192.168.69.2/24"]
-		},
-		filePath
-	})
-	
-	// Generate Private Key for Client
-	await client_config.generateKeys();
-	console.log("[CONN] >> Generated Client Configuration");
-	
-	// Generate UNIQUE Public Key using wireguard (wg). public key -> pu-c-key
-	const puckey = ""; //child_process.spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: client_config.wgInterface.privateKey }).output;
-	const key = puckey.toString();
-	
-	// Set the public key omitting /n and /t after '='.
-	client_config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
-	client_config.writeToFile();
-
-	restart(() => {});
-	
-	return client_config;
-}
-
-const up = (cb: Function, conf?: WgConfig) => {
-	if(platform == 'win32')
-		ex("net start WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
-	else {
-		ex("ls", false, (out) => console.log(out));
-
-		ex(`wg-quick up ./wg0.conf`, true, (out) => {
-			cb(out)
-		});
-	}
-}
-
-const down = async (cb: Function, conf?: WgConfig) => {
-	if(platform == 'win32')
-		await ex("net stop WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
-	else	
-		await ex(`sudo wg-quick down ${filePath}`, true, (out) => cb(out))
-}
-
-const restart = (cb: Function) => {
-	isUp((__up) => {
-		if(__up) {
-			down(() => up(() => cb()));
-		}else {
-			up(() => cb());
-		}
-	})
-} 
-
-const forceDown = (cb: Function) => {
-	ex("sc delete WireGuardTunnel$wg0", true, (out) => {console.log(out); cb(); });
-}
-
-const isUp = (cb: Function) => {
-	if(platform == 'win32')
-		ex("sc query WireGuardTunnel$wg0", false, (out) => {
-			const stopped = out.includes("STOPPED");
-			cb(!stopped);
-		})
-	else 
-		ex("wg show", false, (out) => {
-			const stopped = out.length < 1;
-			cb(!stopped);
-		})
-}
-
-const resumeConnection = async (reference: Function) => {
-	//@ts-expect-error
-	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath
-	});
-
-	const config = new WgConfig({ 
-		filePath,
-		...client_config
-	});
-
-	// Server was connected, but is it actually currently connected?
-	const conn_ip = config.peers?.[0]?.endpoint?.split(":")?.[0];
-
-	isUp((det) => {
-		if(det) {
-			const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
-			const key = puckey.toString();
-			
-			// Set the public key omitting /n and /t after '='.
-			config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
-
-			if(conn_ip) {
-				// supabase
-				// 	.from('open_connections')
-				// 	.select("*")
-				// 	.match({ 
-				// 		client_pub_key: config.publicKey
-				// 	})
-				// 	.order('instantiation_time', {ascending: true})
-				// 	.then(async e => {
-				// 		const data = e.body[0];
-
-				// 		const svr = await supabase.from('server_registry')
-				// 			.select("*")
-				// 			.match({ id: data.server });
-
-				// 		reference({
-				// 			protocol: "wireguard",
-				// 			config: config.toJson(),
-				// 			as_string: config.toString(),
-				// 			connection_id: data.id,
-				// 			connected: true,
-				// 			connection: 1,
-				// 			location: svr.body[0],
-				// 			server: data.server
-				// 		});
-				// 	})
-			}else {
-				reference({
-					protocol: "wireguard",
-					config: null,
-					as_string: "",
-					connection_id: null,
-					connected: false,
-					connection: 0,
-					location: null,
-					server: null
-				});
-			}
-		}else {
-			reference({
-				protocol: "wireguard",
-				config: null,
-				as_string: "",
-				connection_id: null,
-				connected: false,
-				connection: 0,
-				location: null,
-				server: null
-			});
-		}
-	});
 }
 
 export { connect, disconnect, resumeConnection, disconnect_pure };
