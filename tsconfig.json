@@ -19,16 +19,29 @@
     "isolatedModules": true,
     "baseUrl": "./",
     "paths": {
-      "@components/*": ["renderer/components/*"],
-      "@styles/*": ["renderer/styles/*"],
-      "@public/*": ["renderer/public/*"],
-      "@root/*": ["renderer/*"]
-    },
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@styles/*": [
+        "src/styles/*"
+      ],
+      "@public/*": [
+        "src/public/*"
+      ],
+      "@root/*": [
+        "src/*"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
     "renderer/next.config.js",
     "app",
     "dist"
+  ],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
   ]
 }

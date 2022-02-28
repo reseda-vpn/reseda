@@ -1,0 +1,11 @@
+export { WgConfigObject, WgConfigInterface, WgConfigPeer } from './types/WgConfigObject'
+
+export { WgConfig } from './WgConfig'
+export { writeConfig } from './utils/writeConfig'
+export { generateKeyPair } from './utils/generateKeyPair'
+export { createPeerPairs } from './utils/createPeerPairs'
+export { makeSureDirExists } from './utils/makeSureDirExists'
+export { makeSureFileExists } from './utils/makeSureFileExists'
+export { checkWgIsInstalled } from './utils/checkWgIsInstalled'
+export { generateConfigString, parseConfigString } from './utils/configParser'
+export { getConfigStringFromFile, getConfigObjectFromFile } from './utils/getConfigFromFile'
