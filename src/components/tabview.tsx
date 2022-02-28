@@ -281,8 +281,6 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                             }
                         })()
                     }
-                    <Image src={bgImage} height={500} width={500} className="absolute"/>
-                    
                 </div>
             </div>
         </div>

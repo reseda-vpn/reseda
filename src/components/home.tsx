@@ -60,7 +60,6 @@ const Home: NextPage = () => {
 				<></>
 			}
 			
-
 			<div className={styles.resedaCenter}>
 				<div className={styles.resedaHeader}>
 					{/* Header - Title */}

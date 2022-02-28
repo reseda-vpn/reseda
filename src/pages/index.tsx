@@ -45,30 +45,30 @@ const Reseda: NextPage = () => {
 	const [ firstTime, setFirstTime ] = useState(false);
 
 	useEffect(() => {
-		const firstTimeFilePath = path.join(process.cwd(), './', '.first-time');
-		let isFirstTime;
+		// const firstTimeFilePath = path.join(process.cwd(), './', '.first-time');
+		// let isFirstTime;
 
-		try {
-			console.log(fs);
-			fs.readTextFile(firstTimeFilePath).then(e => {
-				isFirstTime = true;
-			})
-		} catch(e) {
-			if (e.code === 'EEXIST') {
-				isFirstTime = false;
-			} else {
-				// something gone wrong
-				throw e;
-			}
-		}
+		// try {
+		// 	console.log(fs);
+		// 	fs.readTextFile(firstTimeFilePath).then(e => {
+		// 		isFirstTime = true;
+		// 	})
+		// } catch(e) {
+		// 	if (e.code === 'EEXIST') {
+		// 		isFirstTime = false;
+		// 	} else {
+		// 		// something gone wrong
+		// 		throw e;
+		// 	}
+		// }
 
-		if(isFirstTime) {
-			console.log(`FIRST TIME`);
-			setFirstTime(true);
-		}else {
-			console.log(`NOT THE FIRST TIME`);
+		// if(isFirstTime) {
+		// 	console.log(`FIRST TIME`);
+		// 	setFirstTime(true);
+		// }else {
+		// 	console.log(`NOT THE FIRST TIME`);
 			setFirstTime(false);
-		}
+		// }
 	}, [])
 	
 	return ( <Home></Home> )
