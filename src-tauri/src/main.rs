@@ -19,7 +19,7 @@ fn start_wireguard_tunnel() -> String {
 			.expect("failed to execute process");
 	} else {
 		Command::new("wg-quick")
-			.arg("up ./wg0.conf")
+			.arg("up ./lib/wg0.conf")
 			.output()
 			.expect("failed to execute process");
 	};
@@ -39,7 +39,7 @@ fn stop_wireguard_tunnel() -> String {
 			.expect("failed to execute process");
 	} else {
 		Command::new("wg-quick")
-			.arg("down ./wg0.conf")
+			.arg("down ./lib/wg0.conf")
 			.output()
 			.expect("failed to execute process");
 	};
@@ -51,7 +51,7 @@ fn stop_wireguard_tunnel() -> String {
 
 #[tauri::command]
 fn read_text_file(file_name: String) -> String  {
-	let contents = fs::read_to_string(format!("../bin/wireguard/{}", file_name.to_owned().clone()))
+	let contents = fs::read_to_string(format!("lib/{}", file_name.to_owned().clone()))
         .expect("Something went wrong reading the file");
 
 	return contents;
@@ -59,12 +59,12 @@ fn read_text_file(file_name: String) -> String  {
 
 #[tauri::command]
 fn write_text_file(file_name: String, text: String) {
-	fs::write(format!("../bin/wireguard/{}", file_name.to_owned().clone()), text);
+	fs::write(format!("lib/{}", file_name.to_owned().clone()), text);
 }
 
 #[tauri::command]
 fn generate_public_key(private_key: String) -> String {
-	let mut exec_process = Command::new("../bin/wireguard/wg.exe")
+	let mut exec_process = Command::new("lib/wg.exe")
 		.arg("pubkey")
 		.stdin(Stdio::piped())
 		.stdout(Stdio::piped())
@@ -82,7 +82,7 @@ fn generate_public_key(private_key: String) -> String {
 }
 
 fn generate_private_key() -> String {
-	let mut exec_process = Command::new("../bin/wireguard/wg.exe")
+	let mut exec_process = Command::new("lib/wg.exe")
 		.arg("genkey")
 		.stdin(Stdio::piped())
 		.stdout(Stdio::piped())
@@ -101,22 +101,24 @@ fn main() {
 
 		let path = std::env::current_dir().unwrap();
 
-		println!("{}/bin/wireguard/wg0.conf", &path.display());
+		let in_path = format!("{}/lib/wg0.conf", &path.display());
 
-		let relative_path = RelativePath::new(path.display());
-		let path = Path::new("../bin/wireguard/wg0.conf");
-		let full_path = relative_path.to_path(path);
-
-		Command::new("../bin/wireguard/wireguard.exe")
+		let service = runas::Command::new("lib\\wireguard.exe")
 			.arg("/installtunnelservice")
-			.arg(full_path) 
-			.output()
-			.expect("failed to execute process");
+			.arg(in_path)
+			.status()
+			.unwrap();
 
-		Command::new("sc.exe")
-			.arg("sdset WireGuardTunnel$wg0 \"D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
-			.output()
-			.expect("failed to execute process");
+		println!("{:?}", service);
+
+		let service_perms = runas::Command::new("sc.exe")
+			.arg("sdset")
+			.arg("WireGuardTunnel$wg0") 
+			.arg("\"D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
+			.status()
+			.unwrap();
+
+		println!("{:?}", service_perms);
 	}
 
 	// Then Build TAURI.

@@ -580,74 +580,18 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 }
 
 const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session,  _: boolean, config: WgConfig): Promise<any> => {
-	if(platform == 'win32') 
-		ex(`${run_loc}/wireguard.exe /uninstalltunnelservice wg0`, true, () => {
-			reference({
-				protocol: "wireguard",
-				config: {},
-				as_string: "",
-				connection_id: connection.connection_id,
-				connected: false,
-				connection: 0,
-				location: null,
-				server: null
-			});
-
-			// supabase
-			// 	.from('open_connections')
-			// 	.delete()
-			// 	.match({
-			// 		id: connection.connection_id
-			// 	}).then(e => {
-			// 		reference({
-			// 			protocol: "wireguard",
-			// 			config: e.data,
-			// 			as_string: JSON.stringify(e.data),
-			// 			connection_id: connection.connection_id,
-			// 			connected: false,
-			// 			connection: 0,
-			// 			location: null,
-			// 			server: null
-			// 		});
-
-			// 		return {};
-			// 	});
+	down(() => {
+		reference({
+			protocol: "wireguard",
+			config: {},
+			as_string: "",
+			connection_id: connection.connection_id,
+			connected: false,
+			connection: 0,
+			location: null,
+			server: null
 		});
-	else {
-		scrapeConfig(config);
-		down(() => {
-			reference({
-				protocol: "wireguard",
-				config: {},
-				as_string: "",
-				connection_id: connection.connection_id,
-				connected: false,
-				connection: 0,
-				location: null,
-				server: null
-			});
-
-			// supabase
-			// 	.from('open_connections')
-			// 	.delete()
-			// 	.match({
-			// 		id: connection.connection_id
-			// 	}).then(e => {
-			// 		reference({
-			// 			protocol: "wireguard",
-			// 			config: e.data,
-			// 			as_string: JSON.stringify(e.data),
-			// 			connection_id: connection.connection_id,
-			// 			connected: false,
-			// 			connection: 0,
-			// 			location: null,
-			// 			server: null
-			// 		});
-
-			// 		return {};
-			// 	});
-		}, config)
-	}
+	}, config)
 }
 
 export { connect, disconnect, resumeConnection, disconnect_pure };
