@@ -102,12 +102,17 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	// Client Event Id
 	let EVT_ID;
 
-	// REPAIR
-	const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
+	const puckey: string = await invoke('generate_public_key', {
+		privateKey: config.wgInterface.privateKey
+	}); 
+	console.log(puckey);
+	// should be 44 long
+	console.log(puckey.length)
+	// spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
 	const key = puckey.toString();
 	
 	// Set the public key omitting /n and /t after '='.
-	config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
+	config.publicKey = key.substring(0, key.indexOf('=')+1);
 
 	console.timeEnd("wireguardSetup");
 	console.time("createSocket");
@@ -119,7 +124,6 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 
 	console.log("Starting Socket");
-	console.log(user);
 
 	socket = io(`http://${location.hostname}:6231/`, { 
 		withCredentials: true,	
@@ -158,13 +162,16 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 			allowedIps: [ "0.0.0.0/0" ],
 			endpoint: `${connection.server_endpoint}:51820`
 		});
+
+		console.log(config);
 	
 		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
 		config.writeToFile();
 
 		console.timeLog("establishConnection")
 
-		const new_connection = io(`192.168.69.1:6231`, {
+		const new_connection = io(`http://192.168.69.1:6231`, {
+			withCredentials: true,	
 			auth: {
 				server: location.id,
 				client_pub_key: config.publicKey,
@@ -188,6 +195,8 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 			location: location,
 			server: location.id
 		});
+
+		console.log("Starting [UP].");
 
 		up(() => {
 			time_callback(new Date().getTime());
@@ -317,14 +326,16 @@ const init = async () => {
 }
 
 const up = async (cb: Function, conf?: WgConfig) => {
-	await invoke('start_wireguard_tunnel')
+	await invoke('start_wireguard_tunnel').then(e => {
+		console.log(e);
+		cb();
+	})
 }
 
 const down = async (cb: Function, conf?: WgConfig) => {
-	if(platform == 'win32')
-		await ex("net stop WireGuardTunnel$wg0", false, (out) => {console.log(out); cb(); });
-	else	
-		await ex(`sudo wg-quick down ${filePath}`, true, (out) => cb(out))
+	await invoke('stop_wireguard_tunnel').then(e => {
+		cb();
+	})
 }
 
 const restart = (cb: Function) => {

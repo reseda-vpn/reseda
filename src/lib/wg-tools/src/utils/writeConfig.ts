@@ -22,7 +22,9 @@ export const writeConfig = async (opts: Options) => {
     const { filePath, config } = opts
     const dir = path.dirname(filePath)
     // await makeSureDirExists(dir)
-    const configString = typeof config === 'string' ? config : generateConfigString(config)
+    const configString = typeof config === 'string' ? config : generateConfigString(config);
+
+    console.log(configString);
 
     const output: string = await invoke('write_text_file', { fileName: "wg0.conf", text: configString });
     // await fs.writeFile({ path: filePath, contents: configString })
