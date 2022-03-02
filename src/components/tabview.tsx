@@ -113,9 +113,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         </div>
 
                                         <div style={{ backgroundColor: 'transparent', justifyContent: 'space-around' }}>
-                                            <Button onClick={() => { disconnect_pure(connection, connectionCallback, session.data)} }>Uninstall Service</Button>
+                                            <Button className="text-black" onClick={() => { disconnect_pure(connection, connectionCallback, session.data)} }>Uninstall Service</Button>
 
-                                            <Button onClick={() => { disconnect(connection, connectionCallback, session.data)} }>Force Disconnect</Button>
+                                            <Button className="text-black" onClick={() => { disconnect(connection, connectionCallback, session.data)} }>Force Disconnect</Button>
                                         </div>
                                     </div>
                                 )
@@ -237,6 +237,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         )
                                     case 4:
                                         return <p>{ "Disconnecting..." }</p>
+                                    case 5:
+                                        return <p>{ "Finishing..."}</p>
                                     default:
                                         return <p>Not Connected</p>
                                 }

@@ -7,21 +7,48 @@ use std::process::{Command, Stdio};
 use std::fs;
 use std::io::{BufWriter, Write};
 use relative_path::RelativePath;
+use std::path::Path;
+
+
+#[tauri::command]
+fn is_wireguard_up() -> String {
+	let mut output = if cfg!(target_os = "windows") {
+		Command::new("sc")
+			.arg("query")
+			.arg("WireGuardTunnel$wg0")
+			.stdout(Stdio::piped())
+			.spawn()
+			.unwrap()
+			.wait_with_output()
+			.expect("Failed to read stdout")
+			
+	} else {
+		Command::new("wg-quick")
+			.arg("up ./lib/wg0.conf")
+			.stdout(Stdio::piped())
+			.spawn()
+			.unwrap()
+			.wait_with_output()
+			.expect("Failed to read stdout")
+	};
+
+	String::from_utf8(output.stdout.to_vec()).unwrap()
+}
 
 #[tauri::command]
 fn start_wireguard_tunnel() -> String {
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
-		Command::new("net")
+		runas::Command::new("net")
 			.arg("start")
 			.arg("WireGuardTunnel$wg0")
-			.output()
-			.expect("failed to execute process");
+			.status()
+			.unwrap();
 	} else {
-		Command::new("wg-quick")
+		runas::Command::new("wg-quick")
 			.arg("up ./lib/wg0.conf")
-			.output()
-			.expect("failed to execute process");
+			.status()
+			.unwrap();
 	};
 
 	println!("Starting Tunnel: {:?}", output);
@@ -32,16 +59,16 @@ fn start_wireguard_tunnel() -> String {
 fn stop_wireguard_tunnel() -> String {
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
-		Command::new("net")
+		runas::Command::new("net")
 			.arg("stop")
 			.arg("WireGuardTunnel$wg0")
-			.output()
-			.expect("failed to execute process");
+			.status()
+			.unwrap();
 	} else {
-		Command::new("wg-quick")
+		runas::Command::new("wg-quick")
 			.arg("down ./lib/wg0.conf")
-			.output()
-			.expect("failed to execute process");
+			.status()
+			.unwrap();
 	};
 
 	println!("Stopping Tunnel: {:?}", output);
@@ -82,7 +109,7 @@ fn generate_public_key(private_key: String) -> String {
 }
 
 fn generate_private_key() -> String {
-	let mut exec_process = Command::new("lib/wg.exe")
+	let exec_process = Command::new("lib/wg.exe")
 		.arg("genkey")
 		.stdin(Stdio::piped())
 		.stdout(Stdio::piped())
@@ -93,37 +120,68 @@ fn generate_private_key() -> String {
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
 
-fn main() {
-	// Is it initial setup?
-	if true {
-		// let private_key = generate_private_key();
-		// println!("{:?}", private_key);
+#[tauri::command]
+fn remove_windows_service(private_key: String) -> String {
+	let mut exec_process = Command::new("sc")
+		.arg("delete")
+		.arg("WireGuardTunnel$wg0")
+		.spawn()
+		.unwrap();
 
-		let path = std::env::current_dir().unwrap();
+	let output = exec_process.wait_with_output().expect("Failed to read stdout");
+	String::from_utf8(output.stdout.to_vec()).unwrap()
+}
+
+fn main() {
+	let path = std::env::current_dir().unwrap();
+	let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &path.display()));
+
+	let exists_ = match wireguard_config_path_exists {
+		Ok(inner) => true,
+		Err(ref e) => false 
+	};
+
+	println!("{:?}", exists_);
+	
+	if !exists_ {
+		let private_key = generate_private_key();
+		println!("{:?}", private_key);
+
+		write_text_file(
+			(&"wg0.conf").to_string(), 
+			format!("[Interface]\nAddress = 10.0.0.0/24\nListenPort = 51820\nPrivateKey = {}", private_key)
+		);
 
 		let in_path = format!("{}/lib/wg0.conf", &path.display());
 
-		let service = runas::Command::new("lib\\wireguard.exe")
-			.arg("/installtunnelservice")
-			.arg(in_path)
-			.status()
-			.unwrap();
+		if cfg!(target_os = "windows") {
+			println!("Performing first time setup on WINDOWS");
+			let service = runas::Command::new("lib\\wireguard.exe")
+				.arg("/installtunnelservice")
+				.arg(in_path)
+				.status()
+				.unwrap();
 
-		println!("{:?}", service);
+			println!("{:?}", service);
 
-		let service_perms = runas::Command::new("sc.exe")
-			.arg("sdset")
-			.arg("WireGuardTunnel$wg0") 
-			.arg("\"D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
-			.status()
-			.unwrap();
+			let service_perms = runas::Command::new("sc.exe")
+				.arg("sdset")
+				.arg("WireGuardTunnel$wg0") 
+				.arg("D:(A;;CCLCSWLORC;;;AU)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCLCSWLORC;;;BU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
+				.status()
+				.unwrap();
 
-		println!("{:?}", service_perms);
+			println!("{:?}", service_perms);
+		}else {
+			println!("Exec.OS is not currently a supported operating system.");
+		}
+	}else {
+		println!("Configuration already exists, performing non-first time setups.");
 	}
 
 	// Then Build TAURI.
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key])
+		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }

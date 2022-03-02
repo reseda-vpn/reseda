@@ -45,8 +45,9 @@ export type ResedaConnection = {
 	 * 2: Connecting
 	 * 3: Error
 	 * 4: Disconnecting
+	 * 5: Finishing
 	 */
-	connection: 0 | 1 | 2 | 3 | 4,
+	connection: 0 | 1 | 2 | 3 | 4 | 5
 	config: {},
 	as_string: string,
 	connection_id: number,
@@ -117,7 +118,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	console.timeEnd("wireguardSetup");
 	console.time("createSocket");
 
-	isUp(async (up) => {
+	await isUp(async (up) => {
 		if(up) {
 			await down(() => {})
 		}
@@ -139,7 +140,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 		cPk: config.publicKey
 	});
 
-	socket.on('request_accepted', (connection: Packet) => {
+	socket.on('request_accepted', async (connection: Packet) => {
 		console.timeEnd("createSocket");
 		console.time("establishConnection");
 		console.log(connection);
@@ -166,7 +167,9 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 		console.log(config);
 	
 		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
-		config.writeToFile();
+		await config.writeToFile().then(e => {
+			console.log("Written!")
+		})
 
 		console.timeLog("establishConnection")
 
@@ -196,7 +199,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 			server: location.id
 		});
 
-		console.log("Starting [UP].");
+		console.log("Starting [UP]");
 
 		up(() => {
 			time_callback(new Date().getTime());
@@ -237,7 +240,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 	reference({
 		protocol: "wireguard",
 		config: connection.config,
-		as_string: connection.config.toString(),
+		as_string: "",
 		connection_id: connection.connection_id,
 		connected: false,
 		connection: 4,
@@ -276,11 +279,22 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 
 	scrapeConfig(config);
 
+	reference({
+		protocol: "wireguard",
+		config: connection.config,
+		as_string: "",
+		connection_id: connection.connection_id,
+		connected: false,
+		connection: 4,
+		location: null,
+		server: null
+	});
+
 	restart(() => {
 		reference({
 			protocol: "wireguard",
 			config: config.toJson(),
-			as_string: config.toString(),
+			as_string: "",
 			connection_id: connection.connection_id,
 			connected: false,
 			connection: 0,
@@ -290,12 +304,12 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 	});
 }
 
-const scrapeConfig = (config: WgConfig) => {
+const scrapeConfig = async (config: WgConfig) => {
 	config.peers.forEach(e => {
 		config.removePeer(e.publicKey);
 	});
 
-	config.writeToFile();
+	await config.writeToFile();
 }
 
 const init = async () => {
@@ -349,20 +363,28 @@ const restart = (cb: Function) => {
 } 
 
 const forceDown = (cb: Function) => {
-	ex("sc delete WireGuardTunnel$wg0", true, (out) => {console.log(out); cb(); });
+	invoke('remove_windows_service').then(e => {
+		cb();
+	})
+	
+	// ex("sc delete WireGuardTunnel$wg0", true, (out) => {console.log(out); cb(); });
 }
 
-const isUp = (cb: Function) => {
-	if(platform == 'win32')
-		ex("sc query WireGuardTunnel$wg0", false, (out) => {
-			const stopped = out.includes("STOPPED");
-			cb(!stopped);
-		})
-	else 
-		ex("wg show", false, (out) => {
-			const stopped = out.length < 1;
-			cb(!stopped);
-		})
+const isUp = async (cb: Function) => {
+	const data: string = await invoke('is_wireguard_up');
+	const stopped = data.includes("STOPPED");
+	cb(!stopped);
+
+	// if(platform == 'win32')
+	// 	ex("sc query WireGuardTunnel$wg0", false, (out) => {
+	// 		const stopped = out.includes("STOPPED");
+	// 		cb(!stopped);
+	// 	})
+	// else 
+	// 	ex("wg show", false, (out) => {
+	// 		const stopped = out.length < 1;
+	// 		cb(!stopped);
+	// 	})
 }
 
 const resumeConnection = async (reference: Function) => {
