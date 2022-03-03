@@ -290,7 +290,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		server: null
 	});
 
-	restart(() => {
+	down(() => {
 		reference({
 			protocol: "wireguard",
 			config: config.toJson(),
@@ -375,8 +375,10 @@ const forceDown = (cb: Function) => {
 
 const isUp = async (cb: Function) => {
 	const data: string = await invoke('is_wireguard_up');
+	console.log(data, data.includes("STOPPED"));
+
 	const stopped = data.includes("STOPPED");
-	cb(!stopped);
+	cb(stopped);
 
 	// if(platform == 'win32')
 	// 	ex("sc query WireGuardTunnel$wg0", false, (out) => {

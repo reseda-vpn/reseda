@@ -32,6 +32,8 @@ fn is_wireguard_up() -> String {
 			.expect("Failed to read stdout")
 	};
 
+	println!("Status Check:: Wireguard is {}", String::from_utf8(output.stdout.to_vec()).unwrap());
+
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
 
@@ -39,16 +41,15 @@ fn is_wireguard_up() -> String {
 fn start_wireguard_tunnel() -> String {
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
-		runas::Command::new("net")
+		Command::new("net")
 			.arg("start")
 			.arg("WireGuardTunnel$wg0")
-			.status()
-			.unwrap();
+			.output()
+
 	} else {
-		runas::Command::new("wg-quick")
+		Command::new("wg-quick")
 			.arg("up ./lib/wg0.conf")
-			.status()
-			.unwrap();
+			.output()
 	};
 
 	println!("Starting Tunnel: {:?}", output);
@@ -59,13 +60,13 @@ fn start_wireguard_tunnel() -> String {
 fn stop_wireguard_tunnel() -> String {
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
-		runas::Command::new("net")
+		Command::new("net")
 			.arg("stop")
 			.arg("WireGuardTunnel$wg0")
 			.status()
 			.unwrap();
 	} else {
-		runas::Command::new("wg-quick")
+		Command::new("wg-quick")
 			.arg("down ./lib/wg0.conf")
 			.status()
 			.unwrap();
@@ -167,11 +168,13 @@ fn main() {
 			let service_perms = runas::Command::new("sc.exe")
 				.arg("sdset")
 				.arg("WireGuardTunnel$wg0") 
-				.arg("D:(A;;CCLCSWLORC;;;AU)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCLCSWLORC;;;BU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
+				.arg("D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;RPWPDTRC;;;BU)S:AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
 				.status()
 				.unwrap();
 
 			println!("{:?}", service_perms);
+
+			stop_wireguard_tunnel().await;
 		}else {
 			println!("Exec.OS is not currently a supported operating system.");
 		}
