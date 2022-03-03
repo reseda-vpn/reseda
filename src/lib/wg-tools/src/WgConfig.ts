@@ -3,7 +3,7 @@ import { WgConfigObject, WgConfigPeer } from './types/WgConfigObject'
 import { getConfigObjectFromFile } from './utils/getConfigFromFile'
 import { generateKeyPair } from './utils/generateKeyPair'
 import { writeConfig } from './utils/writeConfig'
-import mergeWith from 'lodash.mergewith'
+// import mergeWith from 'lodash'
 import { exec } from './utils/exec'
 
 interface GenerateKeysOptions {
@@ -100,11 +100,12 @@ export class WgConfig implements WgConfigObject {
     if (i === -1) {
       this.peers.push(peer)
     } else {
-      mergeWith(this.peers[i], peer, (objValue, srcValue, key) => {
-        if (key === 'allowedIps' && Array.isArray(objValue) && Array.isArray(srcValue)) {
-          return mergeAllowedIps ? [...new Set([...objValue, ...srcValue])] : srcValue
-        }
-      })
+      console.log("CRITICAL FAILURE - UNABLE TO ADD PEER")
+      // mergeWith(this.peers[i], peer, (objValue: any, srcValue: any, key: any) => {
+      //   if (key === 'allowedIps' && Array.isArray(objValue) && Array.isArray(srcValue)) {
+      //     return mergeAllowedIps ? [...new Set([...objValue, ...srcValue])] : srcValue
+      //   }
+      // })
     }
   }
 

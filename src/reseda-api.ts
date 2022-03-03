@@ -355,7 +355,10 @@ const down = async (cb: Function, conf?: WgConfig) => {
 const restart = (cb: Function) => {
 	isUp((__up) => {
 		if(__up) {
-			down(() => up(() => cb()));
+			down(() => 
+				cb()
+				// up(() => cb())
+			);
 		}else {
 			up(() => cb());
 		}

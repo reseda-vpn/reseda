@@ -149,7 +149,7 @@ fn main() {
 
 		write_text_file(
 			(&"wg0.conf").to_string(), 
-			format!("[Interface]\nAddress = 10.0.0.0/24\nListenPort = 51820\nPrivateKey = {}", private_key)
+			format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
 		);
 
 		let in_path = format!("{}/lib/wg0.conf", &path.display());
