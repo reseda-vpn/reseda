@@ -58,27 +58,6 @@ export type ResedaConnection = {
 type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session) => Promise<ResedaConnection>;
 type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
 
-const ex = async (command: string, with_sudo: boolean, callback: Function) => {
-	// if(with_sudo) {
-	// 	sudo.exec(command, {
-	// 		name: "Reseda VPN"
-	// 	}, (_, __, err) => {
-	// 		if(err) throw err;
-	// 		if(_) throw _;
-
-	// 		callback(__);
-	// 		return __;
-	// 	});
-	// }else {
-	// 	await exec(command, (_, __, err) => {
-	// 		if(err) throw err;
-	// 		callback(__);
-
-	// 		return __;
-	// 	})
-	// }
-}
-
 const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session): Promise<any> => {
 	// if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
 
@@ -392,7 +371,7 @@ const isUp = async (cb: Function) => {
 	// 	})
 }
 
-const resumeConnection = async (reference: Function) => {
+const resumeConnection = async (reference: Function, server_pool: Server[]) => {
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
 		filePath
@@ -406,65 +385,62 @@ const resumeConnection = async (reference: Function) => {
 	// Server was connected, but is it actually currently connected?
 	const conn_ip = config.peers?.[0]?.endpoint?.split(":")?.[0];
 
-	isUp((det) => {
-		if(det) {
-			const puckey = ""; // spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
-			const key = puckey.toString();
-			
-			// Set the public key omitting /n and /t after '='.
-			config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
+	console.log(`Already Connected ${conn_ip}`);
 
-			if(conn_ip) {
-				// supabase
-				// 	.from('open_connections')
-				// 	.select("*")
-				// 	.match({ 
-				// 		client_pub_key: config.publicKey
-				// 	})
-				// 	.order('instantiation_time', {ascending: true})
-				// 	.then(async e => {
-				// 		const data = e.body[0];
-
-				// 		const svr = await supabase.from('server_registry')
-				// 			.select("*")
-				// 			.match({ id: data.server });
-
-				// 		reference({
-				// 			protocol: "wireguard",
-				// 			config: config.toJson(),
-				// 			as_string: config.toString(),
-				// 			connection_id: data.id,
-				// 			connected: true,
-				// 			connection: 1,
-				// 			location: svr.body[0],
-				// 			server: data.server
-				// 		});
-				// 	})
-			}else {
-				reference({
-					protocol: "wireguard",
-					config: null,
-					as_string: "",
-					connection_id: null,
-					connected: false,
-					connection: 0,
-					location: null,
-					server: null
-				});
-			}
-		}else {
+	console.log(server_pool);
+	server_pool.forEach(e => {
+		if(e.hostname == conn_ip) {
 			reference({
 				protocol: "wireguard",
-				config: null,
-				as_string: "",
-				connection_id: null,
 				connected: false,
-				connection: 0,
-				location: null,
-				server: null
+				connection: 1,
+				config: {},
+				message: "Finishing",
+				as_string: "",
+				connection_id: "--",
+				location: e,
+				server: e.id
 			});
 		}
-	});
+	})
+
+	// isUp(async (det) => {
+	// 	if(det) {
+	// 		const puckey: string = await invoke('generate_public_key', {
+	// 			privateKey: config.wgInterface.privateKey
+	// 		}); 
+	// 		const key = puckey.toString();
+			
+	// 		// Set the public key omitting /n and /t after '='.
+	// 		config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
+
+	// 		if(conn_ip) {
+	// 			//...
+	// 		}else {
+	// 			reference({
+	// 				protocol: "wireguard",
+	// 				config: null,
+	// 				as_string: "",
+	// 				connection_id: null,
+	// 				connected: false,
+	// 				connection: 0,
+	// 				location: null,
+	// 				server: null
+	// 			});
+	// 		}
+	// 	}else {
+	// 		reference({
+	// 			protocol: "wireguard",
+	// 			config: null,
+	// 			as_string: "",
+	// 			connection_id: null,
+	// 			connected: false,
+	// 			connection: 0,
+	// 			location: null,
+	// 			server: null
+	// 		});
+	// 	}
+	// });
 }
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {

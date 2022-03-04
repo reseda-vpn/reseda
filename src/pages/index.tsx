@@ -6,6 +6,8 @@ import path from 'path'
 import f from "@tauri-apps/api/fs"
 const fs = f;
 import { getCsrfToken, getSession } from 'next-auth/react'
+import { invoke } from '@tauri-apps/api/tauri'
+import { WgConfig } from '@root/lib/wg-tools/src'
 
 const fetcher = (url, token) =>
   fetch(url, {
@@ -45,30 +47,16 @@ const Reseda: NextPage = () => {
 	const [ firstTime, setFirstTime ] = useState(false);
 
 	useEffect(() => {
-		// const firstTimeFilePath = path.join(process.cwd(), './', '.first-time');
-		// let isFirstTime;
+		// First Time Reader.
+		// invoke("read_text_file", { fileName: ".first_time" }).then((e) => {
+		// 	console.log(e);
 
-		// try {
-		// 	console.log(fs);
-		// 	fs.readTextFile(firstTimeFilePath).then(e => {
-		// 		isFirstTime = true;
-		// 	})
-		// } catch(e) {
-		// 	if (e.code === 'EEXIST') {
-		// 		isFirstTime = false;
-		// 	} else {
-		// 		// something gone wrong
-		// 		throw e;
+		// 	if(e) {
+		// 		setFirstTime(false)
+		// 	}else {
+		// 		setFirstTime(true);
 		// 	}
-		// }
-
-		// if(isFirstTime) {
-		// 	console.log(`FIRST TIME`);
-		// 	setFirstTime(true);
-		// }else {
-		// 	console.log(`NOT THE FIRST TIME`);
-			setFirstTime(false);
-		// }
+		// })
 	}, [])
 	
 	return ( <Home></Home> )

@@ -1,7 +1,7 @@
 import moment from 'moment';
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
-import { connect, disconnect, disconnect_pure, ResedaConnection } from '../reseda-api';
+import { connect, disconnect, disconnect_pure, ResedaConnection, resumeConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
 import Button from "./un-ui/button"
 import { CornerDownRight, Link, Loader } from 'react-feather';
@@ -37,6 +37,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                 const json = await e.json();
                 setServerRegistry(json);
                 setFetching(false);
+                resumeConnection(connectionCallback, json);
             })
             .catch(e => {
                 console.log(e)
@@ -78,7 +79,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                 <p className={styles.mono}>{e.hostname}</p>
                                                 {
                                                     connection?.server == e.id && connection.connection == 1 ?
-                                                        <div>
+                                                        <div className='flex flex-row items-center gap-4'>
                                                             <p className={styles.mono}>Connected</p>
                                                             <Link size={16}></Link>
                                                         </div> 

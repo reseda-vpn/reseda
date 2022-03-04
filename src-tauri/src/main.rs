@@ -153,6 +153,11 @@ fn main() {
 			format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
 		);
 
+		write_text_file(
+			(&".first_time").to_string(), 
+			format!("YES")
+		);
+
 		let in_path = format!("{}/lib/wg0.conf", &path.display());
 
 		if cfg!(target_os = "windows") {
@@ -174,7 +179,7 @@ fn main() {
 
 			println!("{:?}", service_perms);
 
-			stop_wireguard_tunnel().await;
+			stop_wireguard_tunnel();
 		}else {
 			println!("Exec.OS is not currently a supported operating system.");
 		}
