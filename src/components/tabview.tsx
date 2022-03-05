@@ -37,7 +37,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                 const json = await e.json();
                 setServerRegistry(json);
                 setFetching(false);
-                resumeConnection(connectionCallback, json);
+                resumeConnection(connectionCallback, setConnectionTime, json, session.data);
             })
             .catch(e => {
                 console.log(e)

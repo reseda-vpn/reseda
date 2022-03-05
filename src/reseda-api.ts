@@ -20,7 +20,8 @@ type Packet = {
 	svr_pub_key: string,
 	client_number: number,
 	awaiting: boolean,
-	server_endpoint: string
+	server_endpoint: string,
+	start_time?: number
 }
 
 const filePath = path.join(process.cwd(), './', '/wg0.conf');
@@ -371,7 +372,7 @@ const isUp = async (cb: Function) => {
 	// 	})
 }
 
-const resumeConnection = async (reference: Function, server_pool: Server[]) => {
+const resumeConnection = async (reference: Function, timeCallback: Function, server_pool: Server[], user: Session) => {
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
 		filePath
@@ -382,65 +383,69 @@ const resumeConnection = async (reference: Function, server_pool: Server[]) => {
 		...client_config
 	});
 
+	const public_key: string = await invoke('generate_public_key', {
+		privateKey: config.wgInterface.privateKey
+	})
+	
+	const key = public_key.substring(0, public_key.indexOf('=')+1);
+
 	// Server was connected, but is it actually currently connected?
 	const conn_ip = config.peers?.[0]?.endpoint?.split(":")?.[0];
 
 	console.log(`Already Connected ${conn_ip}`);
 
-	console.log(server_pool);
-	server_pool.forEach(e => {
-		if(e.hostname == conn_ip) {
-			reference({
-				protocol: "wireguard",
-				connected: false,
-				connection: 1,
-				config: {},
-				message: "Finishing",
-				as_string: "",
-				connection_id: "--",
-				location: e,
-				server: e.id
-			});
+	socket = io(`http://${conn_ip}:6231/`, { 
+		withCredentials: true,	
+		auth: {
+			server: conn_ip,
+			client_pub_key: key,
+			author: user.id,
+			type: "secondary"
 		}
+	});
+
+	socket.on('request_response', (data: { connection: Packet }) => {
+		const conn: Packet = data.connection;
+		console.log(data.connection, {
+			server: conn_ip,
+			client_pub_key: key,
+			author: user.id,
+			type: "secondary"
+		});
+
+		timeCallback(conn.start_time);
+
+		console.log("set time ", data);
+		console.log("[CONN] >> Received! Connected!");
+		connected = true;
+
+		server_pool.forEach(e => {
+			if(e.hostname == conn_ip) {
+				reference({
+					protocol: "wireguard",
+					config: config.toJson(),
+					as_string: config.toString(),
+					connection_id: conn.client_number,
+					connected: true,
+					connection: 1,
+					location: e,
+					server: e.id
+				});
+			}
+		})
 	})
 
-	// isUp(async (det) => {
-	// 	if(det) {
-	// 		const puckey: string = await invoke('generate_public_key', {
-	// 			privateKey: config.wgInterface.privateKey
-	// 		}); 
-	// 		const key = puckey.toString();
-			
-	// 		// Set the public key omitting /n and /t after '='.
-	// 		config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
-
-	// 		if(conn_ip) {
-	// 			//...
-	// 		}else {
-	// 			reference({
-	// 				protocol: "wireguard",
-	// 				config: null,
-	// 				as_string: "",
-	// 				connection_id: null,
-	// 				connected: false,
-	// 				connection: 0,
-	// 				location: null,
-	// 				server: null
-	// 			});
-	// 		}
-	// 	}else {
-	// 		reference({
-	// 			protocol: "wireguard",
-	// 			config: null,
-	// 			as_string: "",
-	// 			connection_id: null,
-	// 			connected: false,
-	// 			connection: 0,
-	// 			location: null,
-	// 			server: null
-	// 		});
-	// 	}
-	// });
+	reference({
+		protocol: "wireguard",
+		connected: false,
+		connection: 1,
+		config: {},
+		message: "Finishing",
+		as_string: "",
+		connection_id: "--",
+		location: {},
+		server: conn_ip
+	});
 }
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
