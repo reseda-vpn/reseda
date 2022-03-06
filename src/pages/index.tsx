@@ -45,19 +45,6 @@ type Packet = {
 const Reseda: NextPage = () => {
 	const [ authView, setAuthView ] = useState('sign_in')
 	const [ firstTime, setFirstTime ] = useState(false);
-
-	useEffect(() => {
-		// First Time Reader.
-		// invoke("read_text_file", { fileName: ".first_time" }).then((e) => {
-		// 	console.log(e);
-
-		// 	if(e) {
-		// 		setFirstTime(false)
-		// 	}else {
-		// 		setFirstTime(true);
-		// 	}
-		// })
-	}, [])
 	
 	return ( <Home></Home> )
 }

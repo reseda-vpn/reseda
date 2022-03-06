@@ -29,8 +29,6 @@ const Home: NextPage = () => {
 	const [ ip, setIP ] = useState(null); 
 
 	useEffect(() => {
-		// resumeConnection(setConnection);
-
 		publicIp.v4().then(e => {
 			setIP(e);
 		});
@@ -105,7 +103,6 @@ const Home: NextPage = () => {
 
 				<div className="flex-1 flex flex-row items-center gap-4 w-full">
 					<div className={connection ? styles.connected : styles.disconnected}>
-						{/* <div className={styles.connectionStatus}></div> */}
 						<h4 className=" font-sans font-extrabold" style={{ fontSize: '0.9rem' }}>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
 					</div>
 					

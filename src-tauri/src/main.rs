@@ -9,7 +9,6 @@ use std::io::{BufWriter, Write};
 use relative_path::RelativePath;
 use std::path::Path;
 
-
 #[tauri::command]
 fn is_wireguard_up() -> String {
 	let mut output = if cfg!(target_os = "windows") {
