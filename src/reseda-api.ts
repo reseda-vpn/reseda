@@ -435,17 +435,17 @@ const resumeConnection = async (reference: Function, timeCallback: Function, ser
 		})
 	})
 
-	reference({
-		protocol: "wireguard",
-		connected: false,
-		connection: 1,
-		config: {},
-		message: "Finishing",
-		as_string: "",
-		connection_id: "--",
-		location: {},
-		server: conn_ip
-	});
+	// reference({
+	// 	protocol: "wireguard",
+	// 	connected: false,
+	// 	connection: 1,
+	// 	config: {},
+	// 	message: "Finishing",
+	// 	as_string: "",
+	// 	connection_id: "--",
+	// 	location: {},
+	// 	server: conn_ip
+	// });
 }
 
 const connect_pure: ResedaConnect = async (location: Server, time_callback: Function, reference: Function): Promise<any> => {
