@@ -1,4 +1,4 @@
-import f from '@tauri-apps/api/fs'
+import * as f from '@tauri-apps/api/fs'
 const fs = f
 
 /** Make sure a directory exists on the file system */

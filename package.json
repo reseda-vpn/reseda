@@ -1,16 +1,17 @@
 {
   "private": true,
   "name": "Reseda",
-  "description": "My application description",
+  "description": "Virtual Private Network",
   "version": "1.0.0",
   "author": "unrealg",
   "main": "app/background.js",
   "scripts": {
-    "dev": "yarn run next dev",
+    "dev": "next dev",
     "build": "yarn run next build && yarn run next export",
-    "start": "yarn run next start",
-    "lint": "eslint --ignore-path .gitignore .",
-    "tauri": "tauri"
+    "start": "next start",
+    "lint": "next lint",
+    "tauri": "tauri",
+    "tauri-dev": "tauri dev"
   },
   "build": {
     "buildDependenciesFromSource": true,

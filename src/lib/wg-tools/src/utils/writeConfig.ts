@@ -1,5 +1,6 @@
-import f from '@tauri-apps/api/fs'
+import * as f from '@tauri-apps/api/fs'
 const fs = f
+
 import path from 'path'
 import { WgConfigObject } from '../types/WgConfigObject'
 import { generateConfigString } from './configParser'

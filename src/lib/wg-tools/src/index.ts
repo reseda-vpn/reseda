@@ -1,4 +1,4 @@
-export { WgConfigObject, WgConfigInterface, WgConfigPeer } from './types/WgConfigObject'
+export type { WgConfigObject, WgConfigInterface, WgConfigPeer } from './types/WgConfigObject'
 
 export { WgConfig } from './WgConfig'
 export { writeConfig } from './utils/writeConfig'

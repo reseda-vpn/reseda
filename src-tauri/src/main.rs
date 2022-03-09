@@ -5,13 +5,11 @@
 
 use std::process::{Command, Stdio};
 use std::fs;
-use std::io::{BufWriter, Write};
-use relative_path::RelativePath;
-use std::path::Path;
+use std::io::{Write};
 
 #[tauri::command]
 fn is_wireguard_up() -> String {
-	let mut output = if cfg!(target_os = "windows") {
+	let output = if cfg!(target_os = "windows") {
 		Command::new("sc")
 			.arg("query")
 			.arg("WireGuardTunnel$wg0")
@@ -121,8 +119,8 @@ fn generate_private_key() -> String {
 }
 
 #[tauri::command]
-fn remove_windows_service(private_key: String) -> String {
-	let mut exec_process = Command::new("sc")
+fn remove_windows_service() -> String {
+	let exec_process = Command::new("sc")
 		.arg("delete")
 		.arg("WireGuardTunnel$wg0")
 		.spawn()
@@ -137,8 +135,8 @@ fn main() {
 	let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &path.display()));
 
 	let exists_ = match wireguard_config_path_exists {
-		Ok(inner) => true,
-		Err(ref e) => false 
+		Ok(_inner) => true,
+		Err(ref _e) => false 
 	};
 
 	println!("{:?}", exists_);
@@ -186,8 +184,26 @@ fn main() {
 		println!("Configuration already exists, performing non-first time setups.");
 	}
 
+	let port = 5523;
+
 	// Then Build TAURI.
 	tauri::Builder::default()
+		// .plugin(tauri_plugin_localhost::Localhost::new(port))
+		// .setup(move |app| {
+		// 	app
+		// 		.create_window(
+		// 		"main",
+		// 		WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
+		// 		|window_builder, webview_attributes| {
+		// 			(
+		// 			window_builder.title("Reseda"),
+		// 			webview_attributes,
+		// 			)
+		// 		},
+		// 		)
+		// 		.unwrap();
+		// 	Ok(())
+		// })
 		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
