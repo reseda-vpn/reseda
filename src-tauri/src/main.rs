@@ -183,27 +183,9 @@ fn main() {
 	}else {
 		println!("Configuration already exists, performing non-first time setups.");
 	}
-
-	let port = 5523;
-
+	
 	// Then Build TAURI.
 	tauri::Builder::default()
-		// .plugin(tauri_plugin_localhost::Localhost::new(port))
-		// .setup(move |app| {
-		// 	app
-		// 		.create_window(
-		// 		"main",
-		// 		WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap()),
-		// 		|window_builder, webview_attributes| {
-		// 			(
-		// 			window_builder.title("Reseda"),
-		// 			webview_attributes,
-		// 			)
-		// 		},
-		// 		)
-		// 		.unwrap();
-		// 	Ok(())
-		// })
 		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
