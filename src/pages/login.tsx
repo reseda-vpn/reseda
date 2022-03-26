@@ -196,22 +196,20 @@ export default function Home({ providers }) {
 	)
 }
 
-// export async function getServerSideProps(context: GetServerSidePropsContext) {
-//     const session = await getSession(context);
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+    const session = await getSession(context);
   
-//     if (session) {
-//       return { redirect: { permanent: false, destination: "/" } };
-//     }
+    if (session) {
+      return { redirect: { permanent: false, destination: "/" } };
+    }
   
-//     const csrfToken = await getCsrfToken({ req: context.req });
-//     const providers = filter(await getProviders(), (provider) => {
-//       return provider.type !== "credentials";
-//     });
+    const providers = filter(await getProviders(), (provider) => {
+      return provider.type !== "credentials";
+    });
   
-//     return {
-//         props: { 
-//             csrfToken,
-//             providers 
-//         },
-//     };
-// }
+    return {
+        props: { 
+            providers 
+        },
+    };
+}

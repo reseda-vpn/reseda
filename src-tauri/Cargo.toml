@@ -2,7 +2,7 @@
 name = "app"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["Ben White"]
 license = ""
 repository = ""
 default-run = "app"
@@ -12,12 +12,12 @@ rust-version = "1.57"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.3", features = [] }
+tauri-build = { version = "1.0.0-rc.4", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.0.0-rc.3", features = ["fs-all", "path-all", "shell-all"] }
+tauri = { version = "1.0.0-rc.4", features = ["fs-all", "path-all", "shell-all"] }
 relative-path = "1.6.1"
 runas = "0.2.1"
 # tauri-plugin-localhost = { path = "~/../../../../../tauri-plugin-localhost" }

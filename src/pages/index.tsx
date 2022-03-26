@@ -3,20 +3,20 @@ import { useState } from 'react'
 import Home from '@components/home'
 import { getCsrfToken, getSession } from 'next-auth/react'
 
-// export const getServerSideProps = async ({ req, res }) => {
-// 	const session = await getSession({ req });
-// 	const csrfToken = await getCsrfToken({ req: req });
+export const getServerSideProps = async ({ req, res }) => {
+	const session = await getSession({ req });
+	const csrfToken = await getCsrfToken({ req: req });
 
-// 	if (!session) return { props: {}, redirect: { destination: '/login', permanent: false } }
-// 	console.log(session, csrfToken);
+	if (!session) return { props: {}, redirect: { destination: '/login', permanent: false } }
+	console.log(session, csrfToken);
 
-// 	return {
-// 		props: {
-// 			session,
-// 			csrfToken
-// 		},
-// 	}
-// }
+	return {
+		props: {
+			session,
+			csrfToken
+		},
+	}
+}
 
 type Packet = {
 	id: number,
