@@ -84,7 +84,7 @@ fn read_text_file(file_name: String) -> String  {
 
 #[tauri::command]
 fn write_text_file(file_name: String, text: String) {
-	fs::write(format!("lib/{}", file_name.to_owned().clone()), text);
+	fs::write(format!("lib/{}", file_name.to_owned().clone()), text).unwrap();
 }
 
 #[tauri::command]
@@ -131,62 +131,66 @@ fn remove_windows_service() -> String {
 }
 
 fn main() {
-	let path = std::env::current_dir().unwrap();
-	let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &path.display()));
-
-	let exists_ = match wireguard_config_path_exists {
-		Ok(_inner) => true,
-		Err(ref _e) => false 
-	};
-
-	println!("{:?}", exists_);
-	
-	if !exists_ {
-		let private_key = generate_private_key();
-		println!("{:?}", private_key);
-
-		write_text_file(
-			(&"wg0.conf").to_string(), 
-			format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
-		);
-
-		write_text_file(
-			(&".first_time").to_string(), 
-			format!("YES")
-		);
-
-		let in_path = format!("{}/lib/wg0.conf", &path.display());
-
-		if cfg!(target_os = "windows") {
-			println!("Performing first time setup on WINDOWS");
-			let service = runas::Command::new("lib\\wireguard.exe")
-				.arg("/installtunnelservice")
-				.arg(in_path)
-				.status()
-				.unwrap();
-
-			println!("{:?}", service);
-
-			let service_perms = runas::Command::new("sc.exe")
-				.arg("sdset")
-				.arg("WireGuardTunnel$wg0") 
-				.arg("D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;RPWPDTRC;;;BU)S:AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
-				.status()
-				.unwrap();
-
-			println!("{:?}", service_perms);
-
-			stop_wireguard_tunnel();
-		}else {
-			println!("Exec.OS is not currently a supported operating system.");
-		}
-	}else {
-		println!("Configuration already exists, performing non-first time setups.");
-	}
-	
 	// Then Build TAURI.
 	tauri::Builder::default()
 		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service])
+		.setup(|app| {
+			let path = std::env::current_dir().unwrap();
+			let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &path.display()));
+
+			let exists_ = match wireguard_config_path_exists {
+				Ok(_inner) => true,
+				Err(ref _e) => false 
+			};
+
+			println!("{:?}", exists_);
+			
+			if !exists_ {
+				let private_key = generate_private_key();
+				println!("{:?}", private_key);
+
+				write_text_file(
+					(&"wg0.conf").to_string(), 
+					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
+				);
+
+				write_text_file(
+					(&".first_time").to_string(), 
+					format!("YES")
+				);
+
+				let in_path = format!("{}/lib/wg0.conf", &path.display());
+
+				if cfg!(target_os = "windows") {
+					println!("Performing first time setup on WINDOWS");
+					
+					let service = runas::Command::new("lib\\wireguard.exe")
+						.arg("/installtunnelservice")
+						.arg(in_path)
+						.status()
+						.unwrap();
+
+					println!("{:?}", service);
+
+					let service_perms = runas::Command::new("sc.exe")
+						.arg("sdset")
+						.arg("WireGuardTunnel$wg0") 
+						.arg("D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;RPWPDTRC;;;BU)S:AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
+						.status()
+						.unwrap();
+
+					println!("{:?}", service_perms);
+
+					stop_wireguard_tunnel();
+				}else {
+					println!("Exec.OS is not currently a supported operating system.");
+				}
+			}else {
+				println!("Configuration already exists, performing non-first time setups.");
+			}	
+
+			Ok(())
+		})
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }

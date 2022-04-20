@@ -1,13 +1,14 @@
 {
   "package": {
-    "productName": "Reseda",
+    "productName": "reseda",
     "version": "0.1.0"
   },
   "build": {
     "distDir": "../out",
-    "devPath": "http://localhost:3000",
-    "beforeDevCommand": "yarn dev",
-    "beforeBuildCommand": "yarn build"
+    "devPath": "http://localhost:3001",
+    "beforeDevCommand": "yarn dev -p 3001",
+    "beforeBuildCommand": "",
+    "withGlobalTauri": true
   },
   "tauri": {
     "bundle": {
@@ -21,7 +22,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": [],
+      "resources": ["./lib"],
       "externalBin": [],
       "copyright": "",
       "category": "DeveloperTool",
@@ -33,7 +34,6 @@
       },
       "macOS": {
         "frameworks": [],
-        "minimumSystemVersion": "",
         "useBootstrapper": false,
         "exceptionDomain": "",
         "signingIdentity": null,
@@ -50,38 +50,19 @@
       "active": false
     },
     "allowlist": {
-      "fs": {
-        "all": true,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "copyFile": true,
-        "createDir": true,
-        "removeDir": true,
-        "removeFile": true,
-        "renameFile": true
-      },
-      "shell": {
-        "all": true, 
-        "execute": true, 
-        "sidecar": true, 
-        "open": true
-      },
-      "path": {
-        "all": true
-      }
+      "all": true
     },
     "windows": [
       {
-        "title": "Reseda",
-        "width": 1200,
-        "height": 800,
+        "title": "reseda",
+        "width": 1050,
+        "height": 700,
         "resizable": true,
         "fullscreen": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'"
     }
   }
 }
