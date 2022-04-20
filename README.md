@@ -19,4 +19,4 @@ Upcomming Support:
 
 -------
 
-Built with Electron and NextJS, the wireguard protocol and coffee in New Zealand ☕. 
+Built with Tauri and NextJS, the wireguard protocol and coffee ☕. 
