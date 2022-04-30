@@ -127,15 +127,35 @@ fn generate_private_key() -> String {
 }
 
 #[tauri::command]
-fn remove_windows_service() -> String {
-	let exec_process = Command::new("sc")
+fn remove_windows_service() -> Result<String, &'static str> {
+	let exec_process = runas::Command::new("sc.exe")
 		.arg("delete")
 		.arg("WireGuardTunnel$wg0")
-		.spawn()
+		.status()
 		.unwrap();
 
-	let output = exec_process.wait_with_output().expect("Failed to read stdout");
-	String::from_utf8(output.stdout.to_vec()).unwrap()
+	let conf_removal_success = match fs::remove_file("lib/wg0.conf") {
+		Ok(_) => true,
+		Err(e) => {
+			println!("Failed to remove configuration (wg0.conf) when removing windows service. Err:\t{}", e);
+			false
+		}
+	};
+
+	let ft_removal_success = match fs::remove_file("lib/.first_time") {
+		Ok(_) => true,
+		Err(e) => {
+			println!("Failed to remove first time marker (.first_time) when removing windows service. Err:\t{}", e);
+			false
+		}
+	};
+
+	if !conf_removal_success || !ft_removal_success {
+		return Err("Unable to complete windows service removal, failed to remove indicator files.");
+	}
+
+	let output = exec_process.to_string();
+	Ok(output)
 }
 
 fn main() {
