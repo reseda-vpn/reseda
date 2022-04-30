@@ -4,21 +4,6 @@ import Home from '@components/home'
 import { getCsrfToken, getSession } from 'next-auth/react'
 import { invoke } from '@tauri-apps/api/tauri'
 
-export const getServerSideProps = async ({ req, res }) => {
-	const session = await getSession({ req });
-	const csrfToken = await getCsrfToken({ req: req });
-
-	if (!session) return { props: {}, redirect: { destination: 'https://reseda.app/login', permanent: false } }
-	console.log(session, csrfToken);
-
-	return {
-		props: {
-			session,
-			csrfToken
-		},
-	}
-}
-
 type Packet = {
 	id: number,
 	author: string,

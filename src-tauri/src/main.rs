@@ -76,6 +76,8 @@ fn stop_wireguard_tunnel() -> String {
 
 #[tauri::command]
 fn read_text_file(file_name: String) -> String  {
+	println!("Reading script from file.. {}", file_name);
+
 	let contents = fs::read_to_string(format!("lib/{}", file_name.to_owned().clone()))
         .expect("Something went wrong reading the file");
 
@@ -84,7 +86,13 @@ fn read_text_file(file_name: String) -> String  {
 
 #[tauri::command]
 fn write_text_file(file_name: String, text: String) {
+	println!("Writing script to file.. {}", file_name);
 	fs::write(format!("lib/{}", file_name.to_owned().clone()), text).unwrap();
+}
+
+#[tauri::command]
+fn log_to_console(content: String) {
+	println!("[INFO]: {}", content);
 }
 
 #[tauri::command]
@@ -133,8 +141,8 @@ fn remove_windows_service() -> String {
 fn main() {
 	// Then Build TAURI.
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service])
-		.setup(|app| {
+		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
+		.setup(| _app | {
 			let path = std::env::current_dir().unwrap();
 			let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &path.display()));
 
@@ -156,7 +164,7 @@ fn main() {
 
 				write_text_file(
 					(&".first_time").to_string(), 
-					format!("YES")
+					"YES".to_string()
 				);
 
 				let in_path = format!("{}/lib/wg0.conf", &path.display());
