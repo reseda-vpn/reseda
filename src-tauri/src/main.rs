@@ -9,6 +9,8 @@ use std::io::{Write};
 
 #[tauri::command]
 fn is_wireguard_up() -> String {
+	println!("Starting Status Check... ");
+
 	let output = if cfg!(target_os = "windows") {
 		Command::new("sc")
 			.arg("query")
@@ -36,42 +38,47 @@ fn is_wireguard_up() -> String {
 
 #[tauri::command]
 fn start_wireguard_tunnel() -> String {
+	println!("Starting Tunnel... ");
+
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
 		Command::new("net")
 			.arg("start")
 			.arg("WireGuardTunnel$wg0")
 			.output()
+			.expect("Failed to start wireguard!");
 
 	} else {
 		Command::new("wg-quick")
 			.arg("up ./lib/wg0.conf")
 			.output()
+			.expect("Failed to start wireguard!");
 	};
 
-	println!("Starting Tunnel: {:?}", output);
+	println!("Started Tunnel: {:?}", output);
 	return (&"Y").to_string();
 }
 
 #[tauri::command]
 fn stop_wireguard_tunnel() -> String {
+	println!("Stopping Tunnel... ");
+
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
 		Command::new("net")
 			.arg("stop")
 			.arg("WireGuardTunnel$wg0")
-			.status()
-			.unwrap();
+			.output()
+			.expect("Failed to stop wireguard!")
 	} else {
 		Command::new("wg-quick")
 			.arg("down ./lib/wg0.conf")
-			.status()
-			.unwrap();
+			.output()
+			.expect("Failed to stop wireguard!")
 	};
 
-	println!("Stopping Tunnel: {:?}", output);
-
-	return (&"Y").to_string();
+	println!("Stopped Tunnel: {:?}", output);
+	"Y".to_string()
 }
 
 #[tauri::command]
@@ -81,6 +88,8 @@ fn read_text_file(file_name: String) -> String  {
 	let contents = fs::read_to_string(format!("lib/{}", file_name.to_owned().clone()))
         .expect("Something went wrong reading the file");
 
+	println!("Read script {} successfully.", file_name);
+	
 	return contents;
 }
 
@@ -88,6 +97,7 @@ fn read_text_file(file_name: String) -> String  {
 fn write_text_file(file_name: String, text: String) {
 	println!("Writing script to file.. {}", file_name);
 	fs::write(format!("lib/{}", file_name.to_owned().clone()), text).unwrap();
+	println!("Wrote script {} successfully.", file_name);
 }
 
 #[tauri::command]
@@ -97,6 +107,8 @@ fn log_to_console(content: String) {
 
 #[tauri::command]
 fn generate_public_key(private_key: String) -> String {
+	println!("Generating Public Key... ");
+
 	let mut exec_process = Command::new("lib/wg.exe")
 		.arg("pubkey")
 		.stdin(Stdio::piped())
@@ -110,11 +122,15 @@ fn generate_public_key(private_key: String) -> String {
 		stdin.write_all(private_key.as_bytes()).expect("Failed to write to stdin");
 	});
 
+	println!("Generated Private Key.");
+
 	let output = exec_process.wait_with_output().expect("Failed to read stdout");
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
 
 fn generate_private_key() -> String {
+	println!("Generating Private Key... ");
+
 	let exec_process = Command::new("lib/wg.exe")
 		.arg("genkey")
 		.stdin(Stdio::piped())
@@ -122,12 +138,16 @@ fn generate_private_key() -> String {
 		.spawn()
 		.unwrap();
 
+	println!("Generated Private Key.");
+
 	let output = exec_process.wait_with_output().expect("Failed to read stdout");
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
 
 #[tauri::command]
 fn remove_windows_service() -> Result<String, &'static str> {
+	println!("Removing Window Service... ");
+
 	let exec_process = runas::Command::new("sc.exe")
 		.arg("delete")
 		.arg("WireGuardTunnel$wg0")
@@ -153,6 +173,8 @@ fn remove_windows_service() -> Result<String, &'static str> {
 	if !conf_removal_success || !ft_removal_success {
 		return Err("Unable to complete windows service removal, failed to remove indicator files.");
 	}
+
+	println!("Removed Windows Service.");
 
 	let output = exec_process.to_string();
 	Ok(output)

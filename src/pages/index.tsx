@@ -29,7 +29,7 @@ const Reseda: NextPage = () => {
 		if(window.navigator) {
 			const listener = (event) => {
 				const msg = JSON.parse(event.data);
-				console.log(`invoke(${msg.message}, ${msg.data})`);
+				console.log(`invoke(${msg.message}, ${JSON.stringify(msg.data)} )})`,);
 	
 				if(msg.data) 
 					invoke(msg.message, msg.data).then(e => {
@@ -40,7 +40,7 @@ const Reseda: NextPage = () => {
 							nonce: msg.nonce
 						}), "*");
 
-						console.log(e);
+						console.log(">> ", e);
 					})
 	
 				else 
