@@ -60,6 +60,8 @@ const Reseda: NextPage = () => {
 	
 			console.log("Event Listener Added");
 		}
+
+		console.log(window.localStorage.getItem("reseda.jwt"))
 	}, [])
 
 	return ( 
