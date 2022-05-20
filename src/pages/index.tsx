@@ -47,7 +47,7 @@ export default function Home({ providers }) {
             // });
             alert('Unable to access '+provider);
         else {
-            const res = await fetch('http://localhost:3001/api/rauth/login', {
+            const res = await fetch('https://reseda.app/api/rauth/login', {
                 body:  JSON.stringify({ ...authInformation }),
                 method: 'POST'
             });

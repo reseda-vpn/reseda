@@ -65,7 +65,6 @@ const Reseda: NextPage = () => {
 
 	return ( 
 		<>
-			{/* <iframe src="http://localhost:3000" sandbox="allow-scripts allow-same-origin" frameBorder={0} style={{ display: loading ? 'none' : 'inherit', height: '100vh', width: '100vw' }} ref={iframe_ref}></iframe> */}
 			<a href="./login">APP</a>
 			{
 				loading ?
