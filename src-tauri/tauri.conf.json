@@ -5,8 +5,8 @@
   },
   "build": {
     "distDir": "../out",
-    "devPath": "http://localhost:3001",
-    "beforeDevCommand": "yarn dev -p 3001",
+    "devPath": "http://localhost:3000",
+    "beforeDevCommand": "yarn dev -p 3000",
     "beforeBuildCommand": "",
     "withGlobalTauri": true
   },

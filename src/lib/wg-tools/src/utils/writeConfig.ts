@@ -20,18 +20,23 @@ interface Options {
  */
 export const writeConfig = async (opts: Options) => {
   try {
-    const { filePath, config } = opts
-    const dir = path.dirname(filePath)
-    // await makeSureDirExists(dir)
-    const configString = typeof config === 'string' ? config : generateConfigString(config);
+	const { filePath, config } = opts
+	const dir = path.dirname(filePath)
+	// await makeSureDirExists(dir)
+	const configString = typeof config === 'string' ? config : generateConfigString(config);
 
-    console.log(configString);
+	console.log(configString);
 
-    const output: string = await invoke('write_text_file', { fileName: "wg0.conf", text: configString });
-    // await fs.writeFile({ path: filePath, contents: configString })
-    // await fs.chmod(filePath, '600')
+	fs.writeFile({
+		contents: configString,
+		path: "lib/wg0.conf"
+	});
+
+	// await invoke('write_text_file', { fileName: "wg0.conf", text: configString });
+	// await fs.writeFile({ path: filePath, contents: configString })
+	// await fs.chmod(filePath, '600')
   } catch (e) {
-    const message = `Failed to write config at path: ${opts.filePath}`
-    throw new Error(`${message}\n${e}`)
+	const message = `Failed to write config at path: ${opts.filePath}`
+	throw new Error(`${message}\n${e}`)
   }
 }

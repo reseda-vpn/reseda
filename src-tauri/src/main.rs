@@ -3,6 +3,7 @@
   windows_subsystem = "windows"
 )]
 
+use std::fs::File;
 use std::process::{Command, Stdio};
 use std::fs;
 use std::io::{Write};
@@ -95,9 +96,16 @@ fn read_text_file(file_name: String) -> String  {
 
 #[tauri::command]
 fn write_text_file(file_name: String, text: String) {
-	println!("Writing script to file.. {}", file_name);
-	fs::write(format!("lib/{}", file_name.to_owned().clone()), text).unwrap();
-	println!("Wrote script {} successfully.", file_name);
+	println!("Writing script to file.. {}\n\n{}", format!("lib/{}", file_name.to_owned().clone()), text);
+
+	match fs::write(format!("lib/{}", file_name.to_owned().clone()), text) {
+		Result::Err(_) => {
+			println!("Unable to write!");
+		},
+		Result::Ok(_) => {
+			println!("Wrote script {} successfully.", file_name);
+		}
+	}
 }
 
 #[tauri::command]
@@ -217,19 +225,31 @@ fn main() {
 					let service = runas::Command::new("lib\\wireguard.exe")
 						.arg("/installtunnelservice")
 						.arg(in_path)
-						.status()
-						.unwrap();
+						.status();
 
-					println!("{:?}", service);
+					match service {
+						Result::Err(_) => {
+							println!("Failed to install tunnel service for wg0.");
+						},
+						Result::Ok(_) => {
+							println!("Installed tunnel service: windows.")
+						}
+					};
 
 					let service_perms = runas::Command::new("sc.exe")
 						.arg("sdset")
 						.arg("WireGuardTunnel$wg0") 
 						.arg("D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;RPWPDTRC;;;BU)S:AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
-						.status()
-						.unwrap();
+						.status();
 
-					println!("{:?}", service_perms);
+					match service_perms {
+						Result::Err(_) => {
+							println!("Failed to install tunnel service for wg0.");
+						},
+						Result::Ok(_) => {
+							println!("Installed tunnel service: windows.")
+						}
+					};
 
 					stop_wireguard_tunnel();
 				}else {

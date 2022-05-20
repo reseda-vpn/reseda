@@ -56,12 +56,12 @@ export type ResedaConnection = {
 	server: string
 }
 
-type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session) => Promise<ResedaConnection>;
+type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session) => void;
 type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
 
-const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session): Promise<any> => {
+const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session) => {
 	// if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
-
+	
 	if(socket) socket.disconnect();
 
 	console.time("wireguardSetup")
@@ -73,12 +73,10 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 		filePath: "wg0.conf"
 	});
 
-	const config = new WgConfig({ 
+	const config = scrapeConfig(new WgConfig({ 
 		filePath,
 		...client_config
-	});
-
-	scrapeConfig(config);
+	}));
 
 	// Client Event Id
 	let EVT_ID;
@@ -86,9 +84,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	const puckey: string = await invoke('generate_public_key', {
 		privateKey: config.wgInterface.privateKey
 	}); 
-	console.log(puckey);
-	// should be 44 long
-	console.log(puckey.length)
+
 	// spawnSync(path.join(run_loc, './wg.exe'), ["pubkey"], { input: config.wgInterface.privateKey }).output;
 	const key = puckey.toString();
 	
@@ -146,7 +142,10 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 		console.log(config);
 	
-		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`]
+		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`];
+
+		// await invoke('write_text_file', { fileName: "wg0.conf", text: config.toString() });
+
 		await config.writeToFile().then(e => {
 			console.log("Written!")
 		})
@@ -233,12 +232,10 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		filePath
 	});
 
-	const config = new WgConfig({ 
+	const config = scrapeConfig(new WgConfig({ 
 		filePath,
 		...client_config
-	});
-
-	// if(platform !== 'win32') return disconnect_pure(connection, reference, user, false, config);
+	}));
 
 	if(socket) {
 		socket.disconnect();
@@ -256,8 +253,6 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 			socket.disconnect();
 		});
 	}
-
-	scrapeConfig(config);
 
 	reference({
 		protocol: "wireguard",
@@ -284,12 +279,14 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 	});
 }
 
-const scrapeConfig = async (config: WgConfig) => {
+const scrapeConfig = (config: WgConfig): WgConfig => {
 	config.peers.forEach(e => {
 		config.removePeer(e.publicKey);
 	});
 
-	await config.writeToFile();
+	console.log(config);
+
+	return config;
 }
 
 const init = async () => {
@@ -392,6 +389,7 @@ const resumeConnection = async (reference: Function, timeCallback: Function, ser
 	// Server was connected, but is it actually currently connected?
 	const conn_ip = config.peers?.[0]?.endpoint?.split(":")?.[0];
 
+	if(!user?.id || !key || !conn_ip) return;
 	console.log(`Already Connected ${conn_ip}`);
 
 	socket = io(`http://${conn_ip}:6231/`, { 

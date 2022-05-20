@@ -26,9 +26,13 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
     const [ connectionTime, setConnectionTime ] = useState(null);
     const { today } = useDate();
 
-    const session = useSession();
+    const [ session, setSession ] = useState(null);
+    // const session = useSession();
 
     useEffect(() => {
+        const sess = JSON.parse(localStorage.getItem("reseda.safeguard"));
+        setSession(sess);
+
         fetch('https://reseda.app/api/server/list', {
             method: "GET",
             redirect: 'follow'
@@ -37,7 +41,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                 const json = await e.json();
                 setServerRegistry(json);
                 setFetching(false);
-                resumeConnection(connectionCallback, setConnectionTime, json, session.data);
+                resumeConnection(connectionCallback, setConnectionTime, json, sess);
             })
             .catch(e => {
                 console.log(e)
@@ -64,11 +68,11 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                 if(connection?.server == e.id) return;
 
                                                 if(connection?.connected) {
-                                                    disconnect(connection, connectionCallback, session.data).then(() => {
-                                                        connect(e, setConnectionTime, connectionCallback, session.data)
+                                                    disconnect(connection, connectionCallback, session).then(() => {
+                                                        connect(e, setConnectionTime, connectionCallback, session)
                                                     })
                                                 }else {
-                                                    connect(e, setConnectionTime, connectionCallback, session.data)
+                                                    connect(e, setConnectionTime, connectionCallback, session)
                                                 }
                                             }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
@@ -114,9 +118,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         </div>
 
                                         <div style={{ backgroundColor: 'transparent', justifyContent: 'space-around' }}>
-                                            <Button className="text-black" onClick={() => { disconnect_pure(connection, connectionCallback, session.data)} }>Uninstall Service</Button>
+                                            <Button className="text-black" onClick={() => { disconnect_pure(connection, connectionCallback, session)} }>Uninstall Service</Button>
 
-                                            <Button className="text-black" onClick={() => { disconnect(connection, connectionCallback, session.data)} }>Force Disconnect</Button>
+                                            <Button className="text-black" onClick={() => { disconnect(connection, connectionCallback, session)} }>Force Disconnect</Button>
                                         </div>
                                     </div>
                                 )
@@ -255,26 +259,26 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                 case 0:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session.data);
+                                            disconnect(connection, connectionCallback, session);
                                         }}>Connect to {"Singapore"}</Button>
                                     )
                                 case 1:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session.data);
+                                            disconnect(connection, connectionCallback, session);
                                         }}>Disconnect</Button>
                                     )
                                 case 2:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }} icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session.data);
+                                            disconnect(connection, connectionCallback, session);
                                         }}>Cancel</Button>
                                     )
                                 case 3:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }} icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session.data).then(e => {
-                                                if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback, session.data);
+                                            disconnect(connection, connectionCallback, session).then(e => {
+                                                if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback, session);
                                                 else return;
                                             })
                                         }}>Retry</Button>
