@@ -1,11 +1,11 @@
 import * as f from '@tauri-apps/api/fs'
+import { appDir, executableDir, publicDir, resourceDir, runtimeDir } from "@tauri-apps/api/path"
 const fs = f
 
 import path from 'path'
 import { WgConfigObject } from '../types/WgConfigObject'
 import { generateConfigString } from './configParser'
-import { makeSureDirExists } from './makeSureDirExists'
-import { invoke } from '@tauri-apps/api/tauri'
+import { execPath } from 'process'
 
 interface Options {
   /** The full path to the file to write (use path.join to construct a full path before passing into this function) */
@@ -27,10 +27,12 @@ export const writeConfig = async (opts: Options) => {
 
 	console.log(configString);
 
-	fs.writeFile({
+	const write = fs.writeFile({
 		contents: configString,
-		path: "lib/wg0.conf"
+		path: await resourceDir() + "lib\\wg0.conf"
 	});
+
+	console.log("Written?", write, execPath);
 
 	// await invoke('write_text_file', { fileName: "wg0.conf", text: configString });
 	// await fs.writeFile({ path: filePath, contents: configString })

@@ -32,24 +32,6 @@ const Home: NextPage = () => {
 		publicIp.v4().then(e => {
 			setIP(e);
 		});
-
-		// invoke("read_text_file", { fileName: "wg0.conf" }).then(async (e: String) => {
-		// 	console.log("Contents::", e);
-
-		// 	if(e.includes("Interface")) {
-		// 		const filePath = path.join(process.cwd(), './', '/wg0.conf');
-
-		// 		//@ts-expect-error	
-		// 		const client_config: WgConfig = await getConfigObjectFromFile({
-		// 			filePath: "wg0.conf"
-		// 		});
-
-		// 		const config = new WgConfig({ 
-		// 			filePath,
-		// 			...client_config
-		// 		});
-		// 	}
-		// });
 	}, [])
 
 	console.log(session);

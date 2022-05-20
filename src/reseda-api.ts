@@ -24,7 +24,7 @@ type Packet = {
 	start_time?: number
 }
 
-const filePath = path.join(process.cwd(), './', '/wg0.conf');
+// const filePath = path.join(process.cwd(), './', '/wg0.conf');
 let connected = false;
 
 export type ResedaConnection = {
@@ -74,7 +74,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 
 	const config = scrapeConfig(new WgConfig({ 
-		filePath,
+		filePath: "wg0.conf",
 		...client_config
 	}));
 
@@ -229,11 +229,11 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath
+		filePath: "wg0.conf"
 	});
 
 	const config = scrapeConfig(new WgConfig({ 
-		filePath,
+		filePath: "wg0.conf",
 		...client_config
 	}));
 
@@ -296,7 +296,7 @@ const init = async () => {
 			dns: ["1.1.1.1"],
 			address: ["192.168.69.2/24"]
 		},
-		filePath
+		filePath: "wg0.conf"
 	})
 	
 	// Generate Private Key for Client
@@ -372,11 +372,11 @@ const isUp = async (cb: Function) => {
 const resumeConnection = async (reference: Function, timeCallback: Function, server_pool: Server[], user: Session) => {
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath
+		filePath: "wg0.conf"
 	});
 
 	const config = new WgConfig({ 
-		filePath,
+		filePath: "wg0.conf",
 		...client_config
 	});
 
@@ -451,11 +451,11 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath
+		filePath: "wg0.conf"
 	});
 
 	const config = new WgConfig({ 
-		filePath,
+		filePath: "wg0.conf",
 		...client_config
 	});
 

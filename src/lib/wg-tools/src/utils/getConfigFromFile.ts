@@ -1,5 +1,8 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { parseConfigString } from './configParser'
+import * as f from '@tauri-apps/api/fs'
+import { appDir, executableDir, publicDir, resourceDir, runtimeDir } from "@tauri-apps/api/path"
+const fs = f
 
 interface Options {
   /** Full, absolute path to file including file name and extension */
@@ -18,9 +21,12 @@ export const getConfigStringFromFile = async (opts: Options) => {
  * Get a wireguard config file as a parsed object
  */
 export const getConfigObjectFromFile = async (opts: Options) => {
-  const output: string = await invoke('read_text_file', { fileName: opts.filePath });
-  console.log(output);
+  const file = fs.readTextFile(`${await resourceDir()}lib\\${opts.filePath}`)
+    .then(e => {
+      console.log(e);
+      const obj = parseConfigString(e)
+      return obj;
+    });
   
-  const obj = parseConfigString(output)
-  return obj
+  return file;
 }

@@ -4,6 +4,7 @@
 )]
 
 use std::fs::File;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
 use std::io::{Write};
@@ -82,11 +83,10 @@ fn stop_wireguard_tunnel() -> String {
 	"Y".to_string()
 }
 
-#[tauri::command]
-fn read_text_file(file_name: String) -> String  {
+fn read_text_file(path: PathBuf, file_name: String) -> String  {
 	println!("Reading script from file.. {}", file_name);
 
-	let contents = fs::read_to_string(format!("lib/{}", file_name.to_owned().clone()))
+	let contents = fs::read_to_string(format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()))
         .expect("Something went wrong reading the file");
 
 	println!("Read script {} successfully.", file_name);
@@ -94,11 +94,10 @@ fn read_text_file(file_name: String) -> String  {
 	return contents;
 }
 
-#[tauri::command]
-fn write_text_file(file_name: String, text: String) {
-	println!("Writing script to file.. {}\n\n{}", format!("lib/{}", file_name.to_owned().clone()), text);
+fn write_text_file(path: &PathBuf, file_name: String, text: String) {
+	println!("Writing script to file.. {}\n\n{}", format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()), text);
 
-	match fs::write(format!("lib/{}", file_name.to_owned().clone()), text) {
+	match fs::write(format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()), text) {
 		Result::Err(_) => {
 			println!("Unable to write!");
 		},
@@ -191,10 +190,12 @@ fn remove_windows_service() -> Result<String, &'static str> {
 fn main() {
 	// Then Build TAURI.
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, read_text_file, write_text_file, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
+		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
 		.setup(| _app | {
-			let path = std::env::current_dir().unwrap();
-			let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &path.display()));
+			let path = _app.path_resolver().resource_dir().expect("Unable to access resources directory.");
+			let wireguard_config_path_exists = fs::metadata(format!("{}\\lib\\wg0.conf", &path.display()));
+
+			println!("Dir: {}", format!("{}\\lib\\wg0.conf", &path.display()));
 
 			let exists_ = match wireguard_config_path_exists {
 				Ok(_inner) => true,
@@ -208,16 +209,18 @@ fn main() {
 				println!("{:?}", private_key);
 
 				write_text_file(
+					&path,
 					(&"wg0.conf").to_string(), 
 					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
 				);
 
 				write_text_file(
+					&path,
 					(&".first_time").to_string(), 
 					"YES".to_string()
 				);
 
-				let in_path = format!("{}/lib/wg0.conf", &path.display());
+				let in_path = format!("{}\\lib\\wg0.conf", &path.display());
 
 				if cfg!(target_os = "windows") {
 					println!("Performing first time setup on WINDOWS");
