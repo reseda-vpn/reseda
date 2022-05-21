@@ -26,7 +26,7 @@ export default function Home({ providers }) {
     const [ authSuccess, setAuthSuccess ] = useState<"logged_out" | "logged_in" | "login_failure">("logged_out");
 
 	useEffect(() => {
-        if(JSON.parse(localStorage.getItem("reseda.safeguard")).email) router.push('./app');
+        if(JSON.parse(localStorage.getItem("reseda.safeguard"))?.email) router.push('./app');
         
         // Create your instance
         const gradient = new Gradient()

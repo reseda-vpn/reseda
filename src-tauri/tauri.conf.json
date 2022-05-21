@@ -7,7 +7,7 @@
     "distDir": "../out",
     "devPath": "http://localhost:3000",
     "beforeDevCommand": "yarn dev -p 3000",
-    "beforeBuildCommand": "",
+    "beforeBuildCommand": "yarn build",
     "withGlobalTauri": true
   },
   "tauri": {
@@ -63,7 +63,7 @@
       }
     ],
     "security": {
-      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'"
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' upgrade-insecure-requests"
     }
   }
 }

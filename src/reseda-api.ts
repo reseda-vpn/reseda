@@ -56,10 +56,10 @@ export type ResedaConnection = {
 	server: string
 }
 
-type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session) => void;
-type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, publish?: boolean, config?: WgConfig) => Promise<ResedaConnection>;
+type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session, filePath: string) => void;
+type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, filePath: string, config?: WgConfig) => Promise<ResedaConnection>;
 
-const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session) => {
+const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session, filePath: string) => {
 	// if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
 	
 	if(socket) socket.disconnect();
@@ -70,11 +70,11 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath: "wg0.conf"
+		filePath: filePath
 	});
 
 	const config = scrapeConfig(new WgConfig({ 
-		filePath: "wg0.conf",
+		filePath,
 		...client_config
 	}));
 
@@ -102,7 +102,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 	console.log("Starting Socket");
 
-	socket = io(`http://${location.hostname}:6231/`, { 
+	socket = io(`https://${location.hostname}:6231/`, { 
 		withCredentials: true,	
 		auth: {
 			server: location.id,
@@ -146,13 +146,13 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 		// await invoke('write_text_file', { fileName: "wg0.conf", text: config.toString() });
 
-		await config.writeToFile().then(e => {
+		await config.writeToFile(filePath).then(e => {
 			console.log("Written!")
 		})
 
 		console.timeLog("establishConnection")
 
-		const new_connection = io(`http://192.168.69.1:6231`, {
+		const new_connection = io(`https://192.168.69.1:6231`, {
 			withCredentials: true,	
 			auth: {
 				server: location.id,
@@ -215,7 +215,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	});
 }
 
-const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, publish: boolean = true): Promise<any> => {
+const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, filePath: string): Promise<any> => {
 	reference({
 		protocol: "wireguard",
 		config: connection.config,
@@ -229,11 +229,11 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath: "wg0.conf"
+		filePath
 	});
 
 	const config = scrapeConfig(new WgConfig({ 
-		filePath: "wg0.conf",
+		filePath: filePath,
 		...client_config
 	}));
 
@@ -309,7 +309,8 @@ const init = async () => {
 	
 	// Set the public key omitting /n and /t after '='.
 	client_config.publicKey = key.substring(0, key.indexOf('=')+1)?.substring(1);
-	client_config.writeToFile();
+	// if readding, writetofile requires filepath
+	// client_config.writeToFile();
 
 	restart(() => {});
 	
@@ -369,14 +370,14 @@ const isUp = async (cb: Function) => {
 	// 	})
 }
 
-const resumeConnection = async (reference: Function, timeCallback: Function, server_pool: Server[], user: Session) => {
+const resumeConnection = async (reference: Function, timeCallback: Function, server_pool: Server[], user: Session, filePath: string) => {
 	//@ts-expect-error
 	const client_config: WgConfig = await getConfigObjectFromFile({
-		filePath: "wg0.conf"
+		filePath
 	});
 
 	const config = new WgConfig({ 
-		filePath: "wg0.conf",
+		filePath,
 		...client_config
 	});
 
@@ -585,7 +586,7 @@ const connect_pure: ResedaConnect = async (location: Server, time_callback: Func
 	});
 }
 
-const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session,  _: boolean, config: WgConfig): Promise<any> => {
+const disconnect_pure: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, filePath: string, config: WgConfig): Promise<any> => {
 	down(() => {
 		reference({
 			protocol: "wireguard",
