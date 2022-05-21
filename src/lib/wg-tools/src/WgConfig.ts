@@ -67,7 +67,7 @@ export class WgConfig implements WgConfigObject {
   }
 
   /** Write this WgConfig object as a WireGuard config file to a file in the system */
-  async writeToFile(filePath?: string) {
+  async writeToFile(filePath: string) {
     filePath = filePath || this.filePath
     if (!filePath) throw new Error(`No filePath found for WgConfig`)
     await writeConfig({ filePath, config: this })
@@ -186,8 +186,8 @@ export class WgConfig implements WgConfigObject {
   }
 
   /** Saves the config to file and restarts it unless `{ noUp: true }` is passed */
-  async save(opts?: { filePath?: string, noUp: boolean }) {
-    await this.writeToFile(opts?.filePath)
+  async save(opts: { filePath: string, noUp?: boolean }) {
+    await this.writeToFile(opts.filePath)
     if (!opts?.noUp) {
       await this.restart(opts?.filePath)
     }

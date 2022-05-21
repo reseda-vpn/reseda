@@ -1,5 +1,4 @@
 import * as f from '@tauri-apps/api/fs'
-import { appDir, executableDir, publicDir, resourceDir, runtimeDir } from "@tauri-apps/api/path"
 const fs = f
 
 import path from 'path'
@@ -21,7 +20,6 @@ interface Options {
 export const writeConfig = async (opts: Options) => {
   try {
 	const { filePath, config } = opts
-	const dir = path.dirname(filePath)
 	// await makeSureDirExists(dir)
 	const configString = typeof config === 'string' ? config : generateConfigString(config);
 
@@ -29,8 +27,9 @@ export const writeConfig = async (opts: Options) => {
 
 	const write = fs.writeFile({
 		contents: configString,
-		path: await resourceDir() + "lib\\wg0.conf"
+		path: filePath
 	});
+
 
 	console.log("Written?", write, execPath);
 
