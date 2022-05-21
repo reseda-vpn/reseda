@@ -102,7 +102,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 	console.log("Starting Socket");
 
-	socket = io(`https://${location.hostname}:6231/`, { 
+	socket = io(`https://${location.id}.reseda.app:443/`, { 
 		withCredentials: true,	
 		auth: {
 			server: location.id,
@@ -152,7 +152,7 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 
 		console.timeLog("establishConnection")
 
-		const new_connection = io(`https://192.168.69.1:6231`, {
+		const new_connection = io(`https://192.168.69.1:443`, {
 			withCredentials: true,	
 			auth: {
 				server: location.id,
@@ -242,7 +242,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 	}
 
 	if(connection.connection == 1) {
-		socket = io(`http://${connection.location.hostname}:6231/`, { auth: {
+		socket = io(`https://${connection.location.id}.reseda.app:443/`, { auth: {
 			server: connection.location.id,
 			client_pub_key: config.publicKey,
 			author: user.id,
@@ -393,7 +393,7 @@ const resumeConnection = async (reference: Function, timeCallback: Function, ser
 	if(!user?.id || !key || !conn_ip) return;
 	console.log(`Already Connected ${conn_ip}`);
 
-	socket = io(`http://${conn_ip}:6231/`, { 
+	socket = io(`https://192.168.69.1:443`, { 
 		withCredentials: true,	
 		auth: {
 			server: conn_ip,

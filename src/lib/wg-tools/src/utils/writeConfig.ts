@@ -30,6 +30,7 @@ export const writeConfig = async (opts: Options) => {
 		path: filePath
 	});
 
+
 	console.log("Written?", write, execPath);
 
 	// await invoke('write_text_file', { fileName: "wg0.conf", text: configString });

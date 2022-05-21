@@ -192,10 +192,13 @@ fn main() {
 	tauri::Builder::default()
 		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
 		.setup(| _app | {
-			let path = _app.path_resolver().resource_dir().expect("Unable to access resources directory.");
-			let wireguard_config_path_exists = fs::metadata(format!("{}\\lib\\wg0.conf", &path.display()));
+			let rpath = _app.path_resolver().resource_dir().expect("Unable to access resources directory.");
+			let apath = _app.path_resolver().app_dir().expect("Unable to access app directory...");
+			let wireguard_config_path_exists = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()));
 
-			println!("Dir: {}", format!("{}\\lib\\wg0.conf", &path.display()));
+			fs::create_dir_all(apath.clone().join("lib"))?;
+
+			println!("Dir: {}", format!("{}\\lib\\wg0.conf", &apath.display()));
 
 			let exists_ = match wireguard_config_path_exists {
 				Ok(_inner) => true,
@@ -209,23 +212,27 @@ fn main() {
 				println!("{:?}", private_key);
 
 				write_text_file(
-					&path,
+					&apath,
 					(&"wg0.conf").to_string(), 
 					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
 				);
 
+				// let mut perms = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()))?.permissions();
+				// perms.set_readonly(false);
+				// fs::set_permissions(format!("{}\\lib\\wg0.conf", &apath.display()), perms)?;
+
 				write_text_file(
-					&path,
+					&apath,
 					(&".first_time").to_string(), 
 					"YES".to_string()
 				);
 
-				let in_path = format!("{}\\lib\\wg0.conf", &path.display());
+				let in_path = format!("{}\\lib\\wg0.conf", &apath.display());
 
 				if cfg!(target_os = "windows") {
 					println!("Performing first time setup on WINDOWS");
 					
-					let service = runas::Command::new("lib\\wireguard.exe")
+					let service = runas::Command::new(format!("{}\\lib\\wireguard.exe", &rpath.display()))
 						.arg("/installtunnelservice")
 						.arg(in_path)
 						.status();

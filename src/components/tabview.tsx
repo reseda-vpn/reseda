@@ -33,8 +33,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
     useEffect(() => {
         if(typeof navigator !== 'undefined') {
             (async () => {
-                const { resourceDir } = await import('@tauri-apps/api/path');
-                setFP(await resourceDir() + "lib\\wg0.conf");
+                const { appDir } = await import('@tauri-apps/api/path');
+                setFP(await appDir() + "lib\\wg0.conf");
             })();
         }
 
