@@ -56,8 +56,8 @@
     "windows": [
       {
         "title": "reseda",
-        "width": 1050,
-        "height": 700,
+        "width": 1150,
+        "height": 900,
         "resizable": true,
         "fullscreen": false
       }
