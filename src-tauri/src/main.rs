@@ -3,7 +3,6 @@
   windows_subsystem = "windows"
 )]
 
-use std::fs::File;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
@@ -217,9 +216,9 @@ fn main() {
 					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
 				);
 
-				// let mut perms = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()))?.permissions();
-				// perms.set_readonly(false);
-				// fs::set_permissions(format!("{}\\lib\\wg0.conf", &apath.display()), perms)?;
+				let mut perms = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()))?.permissions();
+				perms.set_readonly(false);
+				fs::set_permissions(format!("{}\\lib\\wg0.conf", &apath.display()), perms)?;
 
 				write_text_file(
 					&apath,
@@ -249,7 +248,8 @@ fn main() {
 					let service_perms = runas::Command::new("sc.exe")
 						.arg("sdset")
 						.arg("WireGuardTunnel$wg0") 
-						.arg("D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;RPWPDTRC;;;BU)S:AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
+						// .arg("\"D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWRPWPDTLOCRRC;;;WD)(A;;CCLCSWLOCRRC;;;IU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)\"")
+						.arg("D:AR(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;RPWPDTRC;;;BU)(A;;CCLCSWRPWPDTLOCRRC;;;WD)S:AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)")
 						.status();
 
 					match service_perms {
