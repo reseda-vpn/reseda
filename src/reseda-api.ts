@@ -1,16 +1,14 @@
 import path from 'path'
 import { Server } from './components/tabview';
-import { platform } from "process"
-import { io, Socket } from "socket.io-client"
-import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { Session } from 'next-auth';
 import { WgConfig, getConfigObjectFromFile } from './lib/wg-tools/src/index';
 import { invoke } from '@tauri-apps/api/tauri'
+import { ok } from 'assert';
 
 const { generatePublicKey, keyToBase64 } = require('./wireguard_tooling')
 const run_loc = path.join(process.cwd(), './', `/wireguard`);
 
-let socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+let socket: WebSocket;
 
 type Packet = {
 	id: number,
@@ -56,13 +54,20 @@ export type ResedaConnection = {
 	server: string
 }
 
+type Incoming = {
+	message: string | object,
+	type: "update" | "message" | "error"
+}
+
+type Verification =  { server_public_key: string, client_address: string, endpoint: string };
+
 type ResedaConnect = (location: Server, time_callback: Function, reference: Function, user: Session, filePath: string) => void;
 type ResedaDisconnect = (connection: ResedaConnection, reference: Function, user: Session, filePath: string, config?: WgConfig) => Promise<ResedaConnection>;
 
 const connect: ResedaConnect = async (location: Server, time_callback: Function, reference: Function, user: Session, filePath: string) => {
 	// if(platform !== "win32") return connect_pure(location, time_callback, reference, user);
 	
-	if(socket) socket.disconnect();
+	if(socket) socket.close();
 
 	console.time("wireguardSetup")
 
@@ -91,115 +96,58 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 	// Set the public key omitting /n and /t after '='.
 	config.publicKey = key.substring(0, key.indexOf('=')+1);
 
-	console.timeEnd("wireguardSetup");
-	console.time("createSocket");
+	socket = new WebSocket(`wss://${location.id}.reseda.app:443/?author=${user.id}&public_key=${config.publicKey}`)
 
-	await isUp(async (up) => {
-		if(up) {
-			await down(() => {})
+	socket.addEventListener('open', () => {
+		socket.send(JSON.stringify({
+			query_type: "open"
+		}));
+	})
+
+	socket.addEventListener('message', async (connection) => {
+		const connection_notes: Incoming = JSON.parse(connection.data);
+		console.log(connection_notes);
+
+		switch (connection_notes.type) {
+			case "message":
+				if (typeof connection_notes.message == "object") {
+					const message: Verification = connection_notes.message as Verification;
+					// Received Information;
+					reference({
+						protocol: "wireguard",
+						connected: false,
+						connection: 2,
+						config: {},
+						message: "Adding Peer",
+						as_string: "",
+						connection_id: EVT_ID,
+						location: location,
+						server: location.id
+					});
+
+					await addPeer(message.server_public_key, message.endpoint);
+
+					reference({
+						protocol: "wireguard",
+						config: config.toJson(),
+						as_string: config.toString(),
+						connection_id: EVT_ID,
+						connected: true,
+						connection: 1,
+						location: location,
+						server: location.id
+					});
+
+					time_callback(new Date().getTime());
+				}
+				break;
+			case "error": 
+				break;
+			case "update":
+				break;
 		}
-	});
 
-	console.log("Starting Socket");
-
-	socket = io(`https://${location.id}.reseda.app:443/`, { 
-		withCredentials: true,	
-		auth: {
-			server: location.id,
-			client_pub_key: config.publicKey,
-			author: user.id,
-			type: "initial"
-		}
-	});
-
-	socket.emit('request_connect', {
-		cPk: config.publicKey
-	});
-
-	socket.on('request_accepted', async (connection: Packet) => {
-		console.timeEnd("createSocket");
-		console.time("establishConnection");
-		console.log(connection);
-		console.log(`[CONN] >> Protocol to ${location.id} established.`);
-
-		reference({
-			protocol: "wireguard",
-			connected: false,
-			connection: 2,
-			config: {},
-			message: "Adding Peer",
-			as_string: "",
-			connection_id: EVT_ID,
-			location: location,
-			server: location.id
-		});
-	
-		config.addPeer({
-			publicKey: connection.svr_pub_key,
-			allowedIps: [ "0.0.0.0/0" ],
-			endpoint: `${connection.server_endpoint}:51820`
-		});
-
-		console.log(config);
-	
-		config.wgInterface.address = [`192.168.69.${connection.client_number}/24`];
-
-		// await invoke('write_text_file', { fileName: "wg0.conf", text: config.toString() });
-
-		await config.writeToFile(filePath).then(e => {
-			console.log("Written!")
-		})
-
-		console.timeLog("establishConnection")
-
-		const new_connection = io(`https://192.168.69.1:443`, {
-			withCredentials: true,	
-			auth: {
-				server: location.id,
-				client_pub_key: config.publicKey,
-				author: user.id,
-				type: "secondary"
-			}
-		});
-
-		new_connection.on("update_schema", (data) => {
-			console.log(data);
-		});
-
-		reference({
-			protocol: "wireguard",
-			connected: false,
-			connection: 2,
-			config: {},
-			message: "Finishing",
-			as_string: "",
-			connection_id: EVT_ID,
-			location: location,
-			server: location.id
-		});
-
-		console.log("Starting [UP]");
-
-		up(() => {
-			time_callback(new Date().getTime());
-			console.log("[CONN] >> Received! Connected!");
-			connected = true;
-
-			reference({
-				protocol: "wireguard",
-				config: config.toJson(),
-				as_string: config.toString(),
-				connection_id: EVT_ID,
-				connected: true,
-				connection: 1,
-				location: location,
-				server: location.id
-			});
-
-			socket.disconnect();
-
-			console.timeEnd("establishConnection")
-		});
+		return;
 	})
 
 	reference({
@@ -214,6 +162,20 @@ const connect: ResedaConnect = async (location: Server, time_callback: Function,
 		server: location.id
 	});
 }
+
+const addPeer = async (pk: string, endpoint: string) => {
+	await invoke('add_peer', {
+		publicKey: pk,
+		endpoint: endpoint
+	}); 
+}
+
+const removePeer = async (pk: string) => {
+	await invoke('remove_peer', {
+		publicKey: pk
+	}); 
+}
+
 
 const disconnect: ResedaDisconnect = async (connection: ResedaConnection, reference: Function, user: Session, filePath: string): Promise<any> => {
 	reference({
@@ -237,21 +199,11 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		...client_config
 	}));
 
-	if(socket) {
-		socket.disconnect();
-	}
-
 	if(connection.connection == 1) {
-		socket = io(`https://${connection.location.id}.reseda.app:443/`, { auth: {
-			server: connection.location.id,
-			client_pub_key: config.publicKey,
-			author: user.id,
-			type: "close"
-		}});
-
-		socket.on("OK", () => {
-			socket.disconnect();
-		});
+		// TODO, Disconnect?
+		socket.send(JSON.stringify({
+			query_type: "close"
+		}));
 	}
 
 	reference({
@@ -265,7 +217,9 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 		server: null
 	});
 
-	down(() => {
+	// await removePeer()
+
+	// down(() => {
 		reference({
 			protocol: "wireguard",
 			config: config.toJson(),
@@ -276,7 +230,7 @@ const disconnect: ResedaDisconnect = async (connection: ResedaConnection, refere
 			location: null,
 			server: null
 		});
-	});
+	// });
 }
 
 const scrapeConfig = (config: WgConfig): WgConfig => {
@@ -393,15 +347,9 @@ const resumeConnection = async (reference: Function, timeCallback: Function, ser
 	if(!user?.id || !key || !conn_ip) return;
 	console.log(`Already Connected ${conn_ip}`);
 
-	socket = io(`https://192.168.69.1:443`, { 
-		withCredentials: true,	
-		auth: {
-			server: conn_ip,
-			client_pub_key: key,
-			author: user.id,
-			type: "secondary"
-		}
-	});
+	socket = new WebSocket(`wss://192.168.69.1:443/?author=${user.id}&public_key=${config.publicKey}`)
+	
+	return;
 
 	socket.on('request_response', (data: { connection: Packet }) => {
 		const conn: Packet = data.connection;

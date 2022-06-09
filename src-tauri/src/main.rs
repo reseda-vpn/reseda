@@ -37,6 +37,7 @@ fn is_wireguard_up() -> String {
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
 
+
 #[tauri::command]
 fn start_wireguard_tunnel() -> String {
 	println!("Starting Tunnel... ");
@@ -80,6 +81,32 @@ fn stop_wireguard_tunnel() -> String {
 
 	println!("Stopped Tunnel: {:?}", output);
 	"Y".to_string()
+}
+
+#[tauri::command]
+fn add_peer(public_key: String, endpoint: String) -> String {
+	println!("Adding Peer");
+
+	let output = Command::new("wg")
+		.args(["set", "wg0", "peer", &public_key, "allowed-ips", "0.0.0.0/0", "endpoint", &endpoint])
+		.output()
+		.expect("Failed to start wireguard!");
+
+	println!("{:?}", output);
+	
+	"Yes".to_string()
+}
+
+#[tauri::command]
+fn remove_peer(public_key: String) -> String {
+	println!("Adding Peer");
+
+	Command::new("wg")
+		.args(["set", "wg0", "peer", &public_key, "remove"])
+		.output()
+		.expect("Failed to start wireguard!");
+
+	"Yes".to_string()
 }
 
 fn read_text_file(path: PathBuf, file_name: String) -> String  {
@@ -134,6 +161,7 @@ fn generate_public_key(private_key: String) -> String {
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
 
+#[tauri::command]
 fn generate_private_key() -> String {
 	println!("Generating Private Key... ");
 
@@ -189,7 +217,7 @@ fn remove_windows_service() -> Result<String, &'static str> {
 fn main() {
 	// Then Build TAURI.
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
+		.invoke_handler(tauri::generate_handler![generate_private_key, add_peer, remove_peer, start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
 		.setup(| _app | {
 			let rpath = _app.path_resolver().resource_dir().expect("Unable to access resources directory.");
 			let apath = _app.path_resolver().app_dir().expect("Unable to access app directory...");
