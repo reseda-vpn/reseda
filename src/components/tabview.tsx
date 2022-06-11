@@ -12,7 +12,7 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
     const [ connectionTime, setConnectionTime ] = useState(null);
     const { today } = useDate();
 
-	return (
+	return configuration ? (
 		<div className={styles.resedaContentCenter}>
             <div>
                 <h4>{tab.toUpperCase()}</h4>
@@ -255,7 +255,9 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                 </div>
             </div>
         </div>
-	)
+	) : <div>
+        <p>loading...</p>
+    </div>
 }
 
 export default TabView

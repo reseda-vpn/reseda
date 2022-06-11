@@ -22,7 +22,8 @@ type Incoming = {
 type Verification =  { 
     server_public_key: string, 
     client_address: string, 
-    endpoint: string 
+    endpoint: string,
+    subdomain: string,
 };
 
 type State = {
@@ -42,6 +43,11 @@ type State = {
     message: string
 }
 
+type Usage = {
+    up: number,
+    down: number
+}
+
 class WireGuard {
     state: {
         connection: State,
@@ -58,6 +64,7 @@ class WireGuard {
     };
     socket: WebSocket;
     user: Session;
+    usage: Usage;
 
     constructor(file_path: string, user: Session) {
         this.user = user;
@@ -72,7 +79,7 @@ class WireGuard {
             },
             path: file_path,
             fetching: false
-        }
+        };
 
         this.config = {
             keys: {
@@ -82,15 +89,29 @@ class WireGuard {
             wg: new WgConfig({
                 filePath: file_path
             })
-        }
+        };
 
-        console.log(this.config.wg.parseFile());
+        this.usage = {
+            up: 0,
+            down: 0
+        };
 
-        this.generate_keys();
+        getConfigObjectFromFile({ filePath: file_path }).then((e) => {
+            const config = new WgConfig({ 
+                filePath: file_path,
+                ...e
+            });
+
+            this.config.wg = config;
+            this.scrapeConfig();
+            this.generate_keys();
+        });
     }
 
     async generate_keys() {
-        const privkey: string = await invoke('generate_private_key'); 
+        console.log(this.config.wg);
+
+        const privkey: string = this.config.wg.wgInterface.privateKey;
 
         const puckey: string = await invoke('generate_public_key', {
             privateKey: privkey
@@ -98,6 +119,14 @@ class WireGuard {
 
         this.config.keys.public_key  = puckey.toString().substring(0, puckey.indexOf('=')+1);
         this.config.keys.private_key = privkey;
+    }
+
+    setUser(user: Session) {
+        this.user = user;
+    }
+
+    setPath(path: string) {
+        this.state.path = path;
     }
 
     getRegistry() {
@@ -113,7 +142,7 @@ class WireGuard {
     }
 
     setState(state: State) {
-
+        this.state.connection = state;
     }
 
     connect(location: Server, callback_time: Function) {
@@ -149,7 +178,7 @@ class WireGuard {
                     server: location.id
                 });
 
-                await this.addPeer(message.server_public_key, message.endpoint);
+                await this.addPeer(message.server_public_key, message.endpoint, message.subdomain, callback_time);
 
                 this.setState({
                     connected: true,
@@ -173,6 +202,8 @@ class WireGuard {
             const data = JSON.parse(event.data);
             console.log(`Disconnect handler posted: ${data}`);
 
+            this.removePeer()
+
             this.setState({
                 connected: false,
                 connection_type: 0,
@@ -184,27 +215,100 @@ class WireGuard {
     }
 
     async uninstallService() {
-        //... remove_windows_service
         await invoke('remove_windows_service'); 
     }
 
     resumeConnection() {
-        //... 
+        const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0];
+
+        if(!this?.user?.id || !this?.config?.keys?.public_key || !conn_ip) return;
+        this.socket = new WebSocket(`wss://${conn_ip}:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+
+        this.socket.addEventListener('message', async (connection) => {
+            const connection_notes: Incoming = JSON.parse(connection.data);
+            console.log(connection_notes);
+
+            if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
+                this.registry.forEach(e => {
+                    if(e.hostname == conn_ip) {
+                        this.setState({
+                            connected: true,
+                            connection_type: 1,
+                            location: e,
+                            server: e.id,
+                            message: "Connected."
+                        });
+                    }
+                })
+            }
+        })
     }
 
-    async addPeer(public_key: string, endpoint: string) {
+    async addPeer(public_key: string, endpoint: string, subdomain: string, callback_time: Function) {
+        console.log(`Adding ${public_key} ${endpoint} @ ${subdomain}`);
+        console.log({
+			publicKey: public_key,
+			allowedIps: [ "0.0.0.0/0" ],
+			endpoint: endpoint
+		});
+
         // this.state.connected.endpoint = endpoint;
+        this.config.wg.addPeer({
+			publicKey: public_key,
+			allowedIps: [ "0.0.0.0/0" ],
+			endpoint: endpoint
+		});
 
-        await invoke('add_peer', {
-            publicKey: public_key,
-            endpoint: endpoint
-        }); 
+        this.config.wg.wgInterface.address = [`192.168.${subdomain}/24`];
+
+        await this.config.wg.writeToFile(this.state.path).then(e => {
+			console.log("Written!")
+		})
+
+        await this.up(() => {
+            callback_time(new Date().getTime());
+        })
     }
 
-    async removePeer(public_key: string) {
-        await invoke('remove_peer', {
-            publicKey: public_key
-        }); 
+    async removePeer() {
+        this.setState({
+            connected: false,
+            connection_type: 4,
+            location: null,
+            server: null,
+            message: "Disconnecting..."
+        });
+
+        this.scrapeConfig();
+
+        this.down(() => {
+            this.setState({
+                connected: false,
+                connection_type: 0,
+                location: null,
+                server: null,
+                message: "Disconnected."
+            });
+        });
+    }
+
+    async up(cb: Function) {
+        await invoke('start_wireguard_tunnel').then(e => {
+            console.log(e);
+            cb();
+        })
+    }
+    
+    async down(cb: Function) {
+        await invoke('stop_wireguard_tunnel').then(e => {
+            cb();
+        })
+    }
+
+    scrapeConfig() {
+        this.config.wg.peers.forEach(e => {
+            this.config.wg.removePeer(e.publicKey);
+        });
     }
 }
 
