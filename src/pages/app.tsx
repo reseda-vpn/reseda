@@ -7,45 +7,51 @@ import PlatformControls from '@components/platform_controls'
 import { platform } from 'process';
 import publicIp from "public-ip"
 import Button from '@components/un-ui/button'
+import WireGuard from '@root/reseda'
 
 const Home: NextPage = () => {
-	const [ maximized, setMaximized ] = useState<"maximized" | "unmaximized">("unmaximized");
-	const [ actionTime, setActionTime ] = useState<number>();
-
-    const [ isTauri, setIsTauri ] = useState(false);
     const [ session, setSession ] = useState(null);
+    const [ config, setConfig ] = useState<WireGuard>(null);
+
+    const [ currentTab, setCurrentTab ] = useState<"servers" | "settings">("servers");
+	const [ ip, setIP ] = useState(null); 
+    const [ filePath, setFilePath ] = useState(null);
 
     useEffect(() => {
         setSession(JSON.parse(localStorage.getItem("reseda.safeguard")));
 
-        //@ts-expect-error
-        setIsTauri(!!window.__TAURI_METADATA__);
-    }, [])
-
-	const showFrame = false;
-	const [ connection, setConnection ] = useState<ResedaConnection>({
-		protocol: "wireguard",
-		config: null,
-		as_string: "",
-		connection_id: null,
-		connected: false,
-		connection: 0,
-		location: null,
-		server: null
-	});
-    const [ currentTab, setCurrentTab ] = useState<"servers" | "settings">("servers");
-	const [ ip, setIP ] = useState(null); 
-
-	useEffect(() => {
-		publicIp.v4().then(e => {
+        publicIp.v4().then(e => {
 			setIP(e);
 		});
-	}, [])
 
-	return isTauri ?
+        if(typeof navigator !== 'undefined') {
+            (async () => {
+                const { appDir } = await import('@tauri-apps/api/path');
+                setFilePath(await appDir() + "lib\\wg0.conf");
+            })();
+        }
+
+        setConfig(new WireGuard(filePath, session));
+
+        fetch('https://reseda.app/api/server/list', {
+            method: "GET",
+            redirect: 'follow'
+        })
+            .then(async e => {
+                const json = await e.json();
+                config.setRegistry(json);
+                config.setFetching(false);
+                config.resumeConnection();
+            })
+            .catch(e => {
+                console.log(e)
+            })
+    }, [])
+
+	return (
             <div className={styles.container}>
                 {
-                    platform !== "darwin" && showFrame ?
+                    platform !== "darwin" ?
                     <div className={`bg-gray-900 ${styles.resedaFrame}`}>
                         <div>
                             Reseda VPN
@@ -82,7 +88,7 @@ const Home: NextPage = () => {
 
                     <div className={styles.resedaBody}>
                         {/* Body */}
-                        <TabView connectionCallback={setConnection} tab={currentTab} connection={connection} />
+                        <TabView configuration={config} tab={currentTab} />
                     </div>
                 </div>
 
@@ -90,12 +96,12 @@ const Home: NextPage = () => {
                     {/* Bottom Viewport (Small) */}
 
                     <div className="flex-1 flex flex-row items-center gap-4 w-full">
-                        <div className={connection ? styles.connected : styles.disconnected}>
-                            <h4 className=" font-sans font-extrabold" style={{ fontSize: '0.9rem' }}>{connection.connection == 1 ? "CONNECTED" : connection.connection == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
+                        <div className={config.state.connection ? styles.connected : styles.disconnected}>
+                            <h4 className=" font-sans font-extrabold" style={{ fontSize: '0.9rem' }}>{config.state.connection.connection_type == 1 ? "CONNECTED" : config.state.connection.connection_type == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
                         </div>
                         
-                        <p>{connection?.location?.country ?? ""}</p>
-                        <h6 className="font-mono opacity-40">{connection?.server ?? ip }</h6>
+                        <p>{config.state.connection.location?.country ?? ""}</p>
+                        <h6 className="font-mono opacity-40">{config.state.connection?.server ?? ip }</h6>
                     </div>
 
                     <div className="w-fit opacity-80" style={{ fontSize: '0.88rem' }}>
@@ -105,15 +111,7 @@ const Home: NextPage = () => {
                     </div>
                 </div>
             </div>
-            :
-            <div className="flex flex-col items-center justify-center flex-1 h-screen w-screen">
-                <p className="text-2xl font-bold font-sans">404</p>
-                <p>We{"\'"}re not sure how you got here..</p>
-
-                <br />
-                <p className="text-center">If you think you{"\'"}re in the right place, <br /> you may need to download the reseda client to access this endpoint.</p> 
-                <Button className="text-violet-500" href="./download">Download</Button>    
-            </div>
+    )
 }
 
 export default Home

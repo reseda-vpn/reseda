@@ -25,20 +25,36 @@ type Verification =  {
     endpoint: string 
 };
 
+type State = {
+    location: Server,
+    server: string,
+    connected: boolean,
+    /**
+     * States are as follows:
+     * - 0 is Disconnected
+     * - 1 is Connected 
+     * - 2 is Connecting...
+     * - 3 is Connection FAILED
+     * - 4 is Disconnecting
+     * - 5 is Finishing (Either Way)
+     */
+    connection_type: 0 | 1 | 2 | 3 | 4 | 5,
+    message: string
+}
+
 class WireGuard {
     state: {
-        connected: {
-            location: string,
-            endpoint: string,
-            conn: false
-        },
-        path: string
+        connection: State,
+        path: string,
+        fetching: boolean
     };
+    registry: Server[];
     config: {
         keys: {
             public_key: string,
             private_key: string
-        }
+        },
+        wg: WgConfig
     };
     socket: WebSocket;
     user: Session;
@@ -47,12 +63,15 @@ class WireGuard {
         this.user = user;
 
         this.state = {
-            connected: {
-                location: "def",
-                endpoint: "0.0.0.0",
-                conn: false
+            connection: {
+                location: null,
+                connected: false,
+                connection_type: 0,
+                server: "def-1",
+                message: "Disconnected..."
             },
-            path: file_path
+            path: file_path,
+            fetching: false
         }
 
         this.config = {
@@ -60,7 +79,12 @@ class WireGuard {
                 public_key: "",
                 private_key: ""
             },
+            wg: new WgConfig({
+                filePath: file_path
+            })
         }
+
+        console.log(this.config.wg.parseFile());
 
         this.generate_keys();
     }
@@ -76,7 +100,23 @@ class WireGuard {
         this.config.keys.private_key = privkey;
     }
 
-    connect(location: Server, callback_time: Function, callback_inform: Function) {
+    getRegistry() {
+        return this.registry;
+    }
+
+    setRegistry(register: any[]) {
+        this.registry = register;
+    }
+
+    setFetching(fetching: boolean) {
+        this.state.fetching = fetching;
+    }
+
+    setState(state: State) {
+
+    }
+
+    connect(location: Server, callback_time: Function) {
         callback_time(new Date().getTime());
         this.socket = new WebSocket(`wss://${location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
@@ -85,10 +125,9 @@ class WireGuard {
                 query_type: "open"
             }));
 
-            callback_inform({
-                protocol: "wireguard",
+            this.setState({
                 connected: false,
-                connection: 2,
+                connection_type: 2,
                 message: "Publishing",
                 location: location,
                 server: location.id
@@ -102,10 +141,9 @@ class WireGuard {
             if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
                 const message: Verification = connection_notes.message as Verification;
 
-                callback_inform({
-                    protocol: "wireguard",
+                this.setState({
                     connected: false,
-                    connection: 2,
+                    connection_type: 2,
                     message: "Adding Peer",
                     location: location,
                     server: location.id
@@ -113,12 +151,12 @@ class WireGuard {
 
                 await this.addPeer(message.server_public_key, message.endpoint);
 
-                callback_inform({
-                    protocol: "wireguard",
+                this.setState({
                     connected: true,
-                    connection: 1,
+                    connection_type: 1,
                     location: location,
-                    server: location.id
+                    server: location.id,
+                    message: "Completed."
                 });
 
                 callback_time(new Date().getTime());
@@ -126,18 +164,48 @@ class WireGuard {
         })
     }
 
-    disconnect() {
+    async disconnect() {
+        this.socket.send(JSON.stringify({
+			query_type: "close"
+		}));
 
+        this.socket.addEventListener('message', (event) => {
+            const data = JSON.parse(event.data);
+            console.log(`Disconnect handler posted: ${data}`);
+
+            this.setState({
+                connected: false,
+                connection_type: 0,
+                location: null,
+                server: null,
+                message: "Disconnected."
+            });
+        })
     }
 
-    addPeer(public_key: string, endpoint: string) {
-        this.state.connected.endpoint = endpoint;
-        // ... 
+    async uninstallService() {
+        //... remove_windows_service
+        await invoke('remove_windows_service'); 
     }
 
-    removePeer() {
-        
+    resumeConnection() {
+        //... 
+    }
+
+    async addPeer(public_key: string, endpoint: string) {
+        // this.state.connected.endpoint = endpoint;
+
+        await invoke('add_peer', {
+            publicKey: public_key,
+            endpoint: endpoint
+        }); 
+    }
+
+    async removePeer(public_key: string) {
+        await invoke('remove_peer', {
+            publicKey: public_key
+        }); 
     }
 }
 
-export const reseda = new WireGuard("", {} as Session);
+export default WireGuard;
