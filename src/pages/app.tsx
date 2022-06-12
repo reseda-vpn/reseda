@@ -19,8 +19,8 @@ const Home: NextPage = () => {
         setSession(sesh);
 
         publicIp.v4().then(e => {
-			setIP(e);
-		});
+            setIP(e);
+        });
 
         if(typeof navigator !== 'undefined') {
             (async () => {
