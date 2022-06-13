@@ -241,24 +241,27 @@ class WireGuard {
             const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0];
 
             if(!this?.user?.id || !this?.config?.keys?.public_key || !conn_ip) return;
-            this.socket = new WebSocket(`wss://10.8.2.1:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+            this.registry.forEach(e => {
+                if(e.hostname == conn_ip) {
+                    this.setState({
+                        connected: true,
+                        connection_type: 1,
+                        location: e,
+                        server: e.id,
+                        message: "Connected."
+                    });
+                }
+            })
+
+            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
             this.socket.addEventListener('message', async (connection) => {
-                const connection_notes: Incoming = JSON.parse(connection.data);
+                const connection_notes = JSON.parse(connection.data);
                 console.log(connection_notes);
 
-                if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
-                    this.registry.forEach(e => {
-                        if(e.hostname == conn_ip) {
-                            this.setState({
-                                connected: true,
-                                connection_type: 1,
-                                location: e,
-                                server: e.id,
-                                message: "Connected."
-                            });
-                        }
-                    })
+                if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
+                    this.usage.down = connection_notes.message?.down;
+                    this.usage.up = connection_notes.message?.up;
                 }
             })
         });
