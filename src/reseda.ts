@@ -194,24 +194,36 @@ class WireGuard {
     }
 
     async disconnect() {
-        this.socket.send(JSON.stringify({
-			query_type: "close"
-		}));
+        if(this.socket.CLOSED || this.socket.CLOSING) {
+            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
-        this.socket.addEventListener('message', (event) => {
-            const data = JSON.parse(event.data);
-            console.log(`Disconnect handler posted: ${data}`);
+            this.socket.addEventListener('open', () => {
+                this.socket.send(JSON.stringify({
+                    query_type: "close"
+                }));
 
-            this.removePeer()
+                this.socket.addEventListener('message', (event) => {
+                    const data = JSON.parse(event.data);
+                    console.log(`Disconnect handler posted:`, data);
 
-            this.setState({
-                connected: false,
-                connection_type: 0,
-                location: null,
-                server: null,
-                message: "Disconnected."
+                    if(data?.message?.includes("Removed")) {
+                        this.removePeer()
+        
+                        this.setState({
+                            connected: false,
+                            connection_type: 0,
+                            location: null,
+                            server: null,
+                            message: "Disconnected."
+                        });
+                    }
+                })
             });
-        })
+        }else {
+            this.socket.send(JSON.stringify({
+                query_type: "close"
+            }));
+        }
     }
 
     async uninstallService() {
@@ -219,29 +231,37 @@ class WireGuard {
     }
 
     resumeConnection() {
-        const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0];
+        getConfigObjectFromFile({ filePath: this.state.path }).then((e) => {
+            const config = new WgConfig({ 
+                filePath: this.state.path,
+                ...e
+            });
 
-        if(!this?.user?.id || !this?.config?.keys?.public_key || !conn_ip) return;
-        this.socket = new WebSocket(`wss://${conn_ip}:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+            this.config.wg = config;
+            const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0];
 
-        this.socket.addEventListener('message', async (connection) => {
-            const connection_notes: Incoming = JSON.parse(connection.data);
-            console.log(connection_notes);
+            if(!this?.user?.id || !this?.config?.keys?.public_key || !conn_ip) return;
+            this.socket = new WebSocket(`wss://10.8.2.1:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
-            if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
-                this.registry.forEach(e => {
-                    if(e.hostname == conn_ip) {
-                        this.setState({
-                            connected: true,
-                            connection_type: 1,
-                            location: e,
-                            server: e.id,
-                            message: "Connected."
-                        });
-                    }
-                })
-            }
-        })
+            this.socket.addEventListener('message', async (connection) => {
+                const connection_notes: Incoming = JSON.parse(connection.data);
+                console.log(connection_notes);
+
+                if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
+                    this.registry.forEach(e => {
+                        if(e.hostname == conn_ip) {
+                            this.setState({
+                                connected: true,
+                                connection_type: 1,
+                                location: e,
+                                server: e.id,
+                                message: "Connected."
+                            });
+                        }
+                    })
+                }
+            })
+        });
     }
 
     async addPeer(public_key: string, endpoint: string, subdomain: string, callback_time: Function) {
@@ -259,7 +279,7 @@ class WireGuard {
 			endpoint: endpoint
 		});
 
-        this.config.wg.wgInterface.address = [`192.168.${subdomain}/24`];
+        this.config.wg.wgInterface.address = [`10.8.${subdomain}/24`];
 
         await this.config.wg.writeToFile(this.state.path).then(e => {
 			console.log("Written!")
@@ -280,6 +300,10 @@ class WireGuard {
         });
 
         this.scrapeConfig();
+
+        await this.config.wg.writeToFile(this.state.path).then(e => {
+			console.log("Written!")
+		})
 
         this.down(() => {
             this.setState({
