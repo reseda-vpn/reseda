@@ -1,9 +1,9 @@
 import styles from '../styles/Home.module.css'
-import WireGuard from '@root/reseda'
+import WireGuard, { getSize } from '@root/reseda'
 import Button from "./un-ui/button"
 import moment from 'moment'
 
-import { Link, Loader } from 'react-feather'
+import { ArrowDown, ArrowUp, Link, Loader, Upload } from 'react-feather'
 import { useEffect, useState } from 'react'
 import type { NextPage } from 'next'
 import { useDate } from './useDate'
@@ -188,10 +188,10 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                                         return <p>Not Connected</p>
                                     case 1:
                                         return (
-                                            <div>
+                                            <div className="flex flex-col">
                                                 <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ configuration.state.connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{configuration.state.connection?.location?.id}</i>  </p>
                                                 <h2 className="font-mono font-bold text-base">{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
-                                                <p style={{ opacity: 0.6 }} className={styles.mono}>{configuration.state.connection?.location?.hostname}</p>
+                                                {/* <p style={{ opacity: 0.6 }} className={styles.mono}>{configuration.state.connection?.location?.hostname}</p> */}
                                                 {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
                                             </div>
                                         )
@@ -199,7 +199,7 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                                         return <p>{ configuration.state.connection?.message ?? "Connecting..." }</p>
                                     case 3:
                                         return (
-                                            <div>
+                                            <div className="flex flex-col">
                                                 <p>Connection Failed</p>
                                                 <p style={{ opacity: 0.6, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }} className={styles.mono}>{btoa(configuration.config.wg.toString())}</p>
                                             </div>
@@ -214,9 +214,39 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                             })()
                         }
 
-                        
+                        {
+                            (() => {
+                                switch(configuration.state.connection?.connection_type) {
+                                    case 0:
+                                        return <></>;
+                                    case 1:
+                                        return (
+                                            <div className="flex flex-row items-center gap-4">
+                                                <div className="flex flex-row gap-2">
+                                                    <p className="font-mono">{ getSize(configuration?.usage?.up) }</p>
+                                                    <ArrowUp />
+                                                </div>
+
+                                                <div className="flex flex-row gap-2">
+                                                    <ArrowDown />
+                                                    <p className="font-mono">{ getSize(configuration?.usage?.down) }</p>
+                                                </div>
+                                            </div>
+                                        )
+
+                                    case 2:
+                                        return <></>;
+                                    case 3:
+                                        return <></>;
+                                    case 4:
+                                        return <></>;
+                                    case 5:
+                                        return <></>;
+                                }
+                            })()
+                        }
                     </div>
-                    
+
                     {
                         (() => {
                             switch(configuration.state.connection?.connection_type) {

@@ -290,7 +290,23 @@ class WireGuard {
 
         await this.up(() => {
             callback_time(new Date().getTime());
+            this.listenForUpdates();
         })
+    }
+
+    listenForUpdates() {
+        this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+
+        this.socket.addEventListener('open', () => {
+            this.socket.addEventListener('message', (event) => {
+                const connection_notes = JSON.parse(event.data);
+
+                if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
+                    this.usage.down = connection_notes.message?.down;
+                    this.usage.up = connection_notes.message?.up;
+                }
+            })
+        });
     }
 
     async removePeer() {
@@ -339,4 +355,17 @@ class WireGuard {
     }
 }
 
+function getSize(size) {
+    var sizes = [' Bytes', ' KB', ' MB', ' GB', 
+                 ' TB', ' PB', ' EB', ' ZB', ' YB'];
+    
+    for (var i = 1; i < sizes.length; i++) {
+        if (size < Math.pow(1024, i)) 
+          return (Math.round((size / Math.pow(
+            1024, i - 1)) * 100) / 100) + sizes[i - 1];
+    }
+    return size;
+}
+
 export default WireGuard;
+export { getSize };
