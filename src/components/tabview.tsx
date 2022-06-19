@@ -16,7 +16,6 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
 		<div className={styles.resedaContentCenter}>
             <div>
                 <h4>{tab.toUpperCase()}</h4>
-
                 {
                     (() => {
                         switch(tab) {
@@ -191,8 +190,6 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                                             <div className="flex flex-col">
                                                 <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ configuration.state.connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{configuration.state.connection?.location?.id}</i>  </p>
                                                 <h2 className="font-mono font-bold text-base">{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
-                                                {/* <p style={{ opacity: 0.6 }} className={styles.mono}>{configuration.state.connection?.location?.hostname}</p> */}
-                                                {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
                                             </div>
                                         )
                                     case 2:
