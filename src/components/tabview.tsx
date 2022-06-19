@@ -1,87 +1,42 @@
-import moment from 'moment';
-import type { NextPage } from 'next'
-import { useEffect, useState } from 'react'
-import { connect, disconnect, disconnect_pure, ResedaConnection, resumeConnection } from '../reseda-api';
 import styles from '../styles/Home.module.css'
+import WireGuard, { getSize } from '@root/reseda'
 import Button from "./un-ui/button"
-import { CornerDownRight, Link, Loader } from 'react-feather';
-import { useDate } from './useDate';
-import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import bgImage from "../public/images/reseda_bg.svg"
+import moment from 'moment'
 
-export type Server = {
-    id: string,
-    serverUp: string,
-    location: string,
-    country: string,
-    virtual: boolean,
-    hostname: string,
-    flag: string
-};
+import { ArrowDown, ArrowUp, Link, Loader, Upload } from 'react-feather'
+import { useEffect, useState } from 'react'
+import type { NextPage } from 'next'
+import { useDate } from './useDate'
 
-const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settings", connection: ResedaConnection }> = ({ connectionCallback, tab, connection }) => {
-    const [ serverRegistry, setServerRegistry ] = useState<Server[]>();
-    const [ fetching, setFetching ] = useState<boolean>(true);
+const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" }> = ({ configuration, tab }) => {
     const [ connectionTime, setConnectionTime ] = useState(null);
     const { today } = useDate();
 
-    const [ session, setSession ] = useState(null);
-    const [fp, setFP] = useState(null);
-    // const session = useSession();
-
-    useEffect(() => {
-        if(typeof navigator !== 'undefined') {
-            (async () => {
-                const { appDir } = await import('@tauri-apps/api/path');
-                setFP(await appDir() + "lib\\wg0.conf");
-            })();
-        }
-
-        const sess = JSON.parse(localStorage.getItem("reseda.safeguard"));
-        setSession(sess);
-
-        fetch('https://reseda.app/api/server/list', {
-            method: "GET",
-            redirect: 'follow'
-        })
-            .then(async e => {
-                const json = await e.json();
-                setServerRegistry(json);
-                setFetching(false);
-                resumeConnection(connectionCallback, setConnectionTime, json, sess, fp);
-            })
-            .catch(e => {
-                console.log(e)
-            })
-    }, []);
-
-	return (
+	return configuration ? (
 		<div className={styles.resedaContentCenter}>
             <div>
                 <h4>{tab.toUpperCase()}</h4>
-
                 {
                     (() => {
                         switch(tab) {
                             case "servers":
                                 return (
-                                    serverRegistry?.length > 0
-                                    ? serverRegistry?.map(e => {
+                                    configuration.getRegistry()?.length > 0
+                                    ? configuration.getRegistry()?.map(e => {
                                         return (
                                             <div 
-                                            key={e.id}
-                                            className={connection?.server == e.id && connection.connected ? `bg-gray-900 ${styles.resedaServerConnected}` : (connection?.server == e.id && !connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
-                                            onClick={() => {
-                                                if(connection?.server == e.id) return;
+                                                key={e.id}
+                                                className={configuration.state.connection.server == e.id && configuration.state.connection.connected ? `bg-gray-900 ${styles.resedaServerConnected}` : (configuration.state.connection.server == e.id && !configuration.state.connection.connected) ? styles.resedaServerConnecting : styles.resedaServer}
+                                                onClick={() => {
+                                                    if(configuration.state.connection.server == e.id) return;
 
-                                                if(connection?.connected) {
-                                                    disconnect(connection, connectionCallback, session, fp).then(() => {
-                                                        connect(e, setConnectionTime, connectionCallback, session, fp)
-                                                    })
-                                                }else {
-                                                    connect(e, setConnectionTime, connectionCallback, session, fp)
-                                                }
+                                                    if(configuration.state.connection.connected) {
+                                                        configuration.disconnect().then(() => {
+                                                            configuration.connect(e, setConnectionTime)
+                                                        })
+                                                    }else {
+                                                        configuration.connect(e, setConnectionTime)
+                                                    }
                                             }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: "center", gap: ".6rem" }}>
                                                     <span style={{ height: '22px' }} className={`twa twa-${e.flag}`}></span>
@@ -90,7 +45,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                 
                                                 <p className={styles.mono}>{e.hostname}</p>
                                                 {
-                                                    connection?.server == e.id && connection.connection == 1 ?
+                                                    configuration.state.connection.server == e.id && configuration.state.connection.connection_type == 1 ?
                                                         <div className='flex flex-row items-center gap-4'>
                                                             <p className={styles.mono}>Connected</p>
                                                             <Link size={16}></Link>
@@ -105,7 +60,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                             </div>
                                         )
                                     }) : (
-                                        fetching ? 
+                                        configuration.state.fetching ? 
                                             <div className={styles.loadingContent}>
                                                 <Loader />
                                             </div>
@@ -126,9 +81,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                         </div>
 
                                         <div style={{ backgroundColor: 'transparent', justifyContent: 'space-around' }}>
-                                            <Button className="text-black" onClick={() => { disconnect_pure(connection, connectionCallback, session, fp)} }>Uninstall Service</Button>
+                                            <Button className="text-black" onClick={() => { configuration.uninstallService()} }>Uninstall Service</Button>
 
-                                            <Button className="text-black" onClick={() => { disconnect(connection, connectionCallback, session, fp)} }>Force Disconnect</Button>
+                                            <Button className="text-black" onClick={() => { configuration.disconnect()} }>Force Disconnect</Button>
                                         </div>
                                     </div>
                                 )
@@ -148,7 +103,7 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                         <div>
                             {
                                 (() => {
-                                    switch(connection?.connection) {
+                                    switch(configuration.state.connection.connection_type) {
                                         case 0:
                                             return (
                                                 <span style={{ animation: 'none'  }}>
@@ -165,8 +120,8 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                                                     <span className={styles.connectedToServerInner}>
                                                         <span style={{ backgroundSize: '400%', animationDuration: '10s' }} >
                                                             {
-                                                                connection.location ?
-                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))', height: '150px', width: '150px' }} className={`twa twa-${connection.location.flag}`}></span>
+                                                                configuration.state.connection.location ?
+                                                                <span style={{  filter: 'drop-shadow( 0px 0px 6px rgba(18, 24, 41, .5))', height: '150px', width: '150px' }} className={`twa twa-${configuration.state.connection?.location?.flag}`}></span>
                                                                 :
                                                                 "R"
                                                             }
@@ -227,25 +182,23 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
 
                         {
                             (() => {
-                                switch(connection?.connection) {
+                                switch(configuration.state.connection?.connection_type) {
                                     case 0:
                                         return <p>Not Connected</p>
                                     case 1:
                                         return (
-                                            <div>
-                                                <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{connection?.location?.id}</i>  </p>
+                                            <div className="flex flex-col">
+                                                <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ configuration.state.connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{configuration.state.connection?.location?.id}</i>  </p>
                                                 <h2 className="font-mono font-bold text-base">{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
-                                                <p style={{ opacity: 0.6 }} className={styles.mono}>{connection?.location?.hostname}</p>
-                                                {/* <p style={{ opacity: 0.2 }} className={styles.mono}>{connection?.server}</p> */}
                                             </div>
                                         )
                                     case 2:
-                                        return <p>{ connection?.message ?? "Connecting..." }</p>
+                                        return <p>{ configuration.state.connection?.message ?? "Connecting..." }</p>
                                     case 3:
                                         return (
-                                            <div>
+                                            <div className="flex flex-col">
                                                 <p>Connection Failed</p>
-                                                <p style={{ opacity: 0.6, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }} className={styles.mono}>{btoa(connection.as_string)}</p>
+                                                <p style={{ opacity: 0.6, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }} className={styles.mono}>{btoa(configuration.config.wg.toString())}</p>
                                             </div>
                                         )
                                     case 4:
@@ -258,35 +211,65 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                             })()
                         }
 
-                        
+                        {
+                            (() => {
+                                switch(configuration.state.connection?.connection_type) {
+                                    case 0:
+                                        return <></>;
+                                    case 1:
+                                        return (
+                                            <div className="flex flex-row items-center gap-4">
+                                                <div className="flex flex-row gap-2">
+                                                    <p className="font-mono">{ getSize(configuration?.usage?.up) }</p>
+                                                    <ArrowUp />
+                                                </div>
+
+                                                <div className="flex flex-row gap-2">
+                                                    <ArrowDown />
+                                                    <p className="font-mono">{ getSize(configuration?.usage?.down) }</p>
+                                                </div>
+                                            </div>
+                                        )
+
+                                    case 2:
+                                        return <></>;
+                                    case 3:
+                                        return <></>;
+                                    case 4:
+                                        return <></>;
+                                    case 5:
+                                        return <></>;
+                                }
+                            })()
+                        }
                     </div>
-                    
+
                     {
                         (() => {
-                            switch(connection?.connection) {
+                            switch(configuration.state.connection?.connection_type) {
                                 case 0:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session, fp);
+                                            configuration.disconnect();
                                         }}>Connect to {"Singapore"}</Button>
                                     )
                                 case 1:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session, fp);
+                                            configuration.disconnect();
                                         }}>Disconnect</Button>
                                     )
                                 case 2:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }} icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session, fp);
+                                            configuration.disconnect();
                                         }}>Cancel</Button>
                                     )
                                 case 3:
                                     return (
                                         <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }} icon={false} onClick={() => {
-                                            disconnect(connection, connectionCallback, session, fp).then(e => {
-                                                if(e?.location?.id) connect(connection.location, setConnectionTime, connectionCallback, session, fp);
+                                            configuration.disconnect().then(e => {
+                                                if(configuration.state.connection?.location?.id) configuration.connect(configuration.state.connection.location, setConnectionTime);
                                                 else return;
                                             })
                                         }}>Retry</Button>
@@ -299,7 +282,9 @@ const TabView: NextPage<{ connectionCallback: Function, tab: "servers" | "settin
                 </div>
             </div>
         </div>
-	)
+	) : <div>
+        <p>loading...</p>
+    </div>
 }
 
 export default TabView
