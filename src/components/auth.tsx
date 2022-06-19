@@ -1,7 +1,6 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import TabView from '@components/tabview'
-import { connect, disconnect, ResedaConnection } from '@root/reseda-api'
 import styles from '@styles/Home.module.css'
 import { platform } from 'os'
 import ip from "ip"
@@ -9,24 +8,6 @@ import PlatformControls from '../components/platform_controls'
 import Button from './un-ui/button'
 import Input from './un-ui/input'
 import { AlertCircle, Check } from 'react-feather'
-
-const fetcher = (url, token) =>
-  fetch(url, {
-    method: 'GET',
-    headers: new Headers({ 'Content-Type': 'application/json', token }),
-    credentials: 'same-origin',
-  }).then((res) => res.json())
-
-type Packet = {
-	id: number,
-	author: string,
-	server: string,
-	client_pub_key: string,
-	svr_pub_key: string,
-	client_number: number,
-	awaiting: boolean,
-	server_endpoint: string
-}
 
 const Auth: NextPage = () => {
 	const [ authState, setAuthState ] = useState('auth-login');
@@ -41,14 +22,6 @@ const Auth: NextPage = () => {
         setAuthError(null);
     }, [authState])
 
-	useEffect(() => {
-		// const session = supabase.auth.session()
-
-		// fetcher('/api/getUser', session?.access_token ?? "x").then(e => {
-		// 	console.log(e);
-		// });
-	}, []);
-
 	return (
 		<div className={styles.container}>
 			{
@@ -58,19 +31,11 @@ const Auth: NextPage = () => {
 						Reseda VPN
 					</div>
 
-					<PlatformControls 
-						// onClose={() => remote.getCurrentWindow().close()}
-						// onMinimize={() => remote.getCurrentWindow().minimize()}	
-						// onMaximize={() => {
-						// 	maximized == "maximized" ? remote.getCurrentWindow().unmaximize() : remote.getCurrentWindow().maximize();
-						//  	setMaximized(maximized == "maximized" ? "unmaximized" : "maximized")
-						// }}
-					/>
+					<PlatformControls />
 				</div>
 				:
 				<></>
 			}
-			
 
 			<div className={styles.resedaAuth}>
 				<div>
@@ -107,17 +72,6 @@ const Auth: NextPage = () => {
 										}
 
 										<div>
-											{/* <Button title={"Login"} onClick={(out, callback) => {
-												// supabase.auth.signIn({
-												// 	email: authInputState.email,
-												// 	password: authInputState.password,
-												// }).then(e => {
-												// 	if(e.error) setAuthError(e.error.message)
-												// 	else setAuthError(null)
-
-												// 	callback();
-												// })
-											}}>Login</Button> */}
 											<p>Don't have an account? <a href="#" onClick={() => setAuthState('auth-signup')}>Sign Up</a></p> 
 										</div>
 									</div>
@@ -142,39 +96,6 @@ const Auth: NextPage = () => {
 										}
 
 										<div>
-											{/* <Button title={"Sign Up"} onClick={async (out, callback) => {
-												if(authInputState.email && authInputState.password && authInputState.username) {
-													const usr = await supabase.auth.signUp({
-														email: authInputState.email,
-														password: authInputState.password,
-													}).then(u => {
-														console.log(u.error)
-														if(u.error)  {
-															setAuthError(u.error?.message)
-
-															return;
-														}
-														else setAuthError(null)
-
-														supabase
-															.from('users')
-															.insert([
-																{
-																	id: u.user.id,
-																	username: authInputState.username
-																}
-															])
-															.then(e => {
-																console.log(e);
-																setAuthState('auth-email');
-
-																callback();
-															});
-													}).catch(e => {
-														console.error(e)
-													})
-												}   
-											}}>Sign Up</Button> */}
 											<p>Already have an account? <a href="#" onClick={() => setAuthState('auth-login')}>Log in</a></p> 
 										</div>
 									</div>
@@ -198,7 +119,7 @@ const Auth: NextPage = () => {
 										</div>
 
 										<div>
-											<p>Havent recieved an email? <a href="#" onClick={() => setAuthState('auth-login')}>Re-send</a></p> 
+											<p>Haven{'\''}t received an email? <a href="#" onClick={() => setAuthState('auth-login')}>Re-send</a></p> 
 										</div>
 									</div>
 								}

@@ -5,13 +5,15 @@ export const useDate = () => {
     const [today, setDate] = useState(new Date()); // Save the current date to be able to trigger an update
   
     useEffect(() => {
-        const timer = setInterval(() => { // Creates an interval which will update the current data every minute
-        // This will trigger a rerender every component that uses the useDate hook.
-        setDate(new Date());
-      }, 50);
-      return () => {
-        clearInterval(timer); // Return a function to clear the timer so that it will stop being called on unmount
-      }
+        const timer = setInterval(() => { 
+            // Creates an interval which will update the current data every minute
+          	// This will trigger a rerender every component that uses the useDate hook.
+          	setDate(new Date());
+        }, 50);
+
+		return () => {
+			clearInterval(timer); // Return a function to clear the timer so that it will stop being called on unmount
+		}
     }, []);
   
     const day = today.toLocaleDateString(locale, { weekday: 'long' });
@@ -23,9 +25,9 @@ export const useDate = () => {
     const time = today.toLocaleTimeString(locale, { hour: 'numeric', hour12: true, minute: 'numeric' });
   
     return {
-      date,
-      time,
-      wish,
-      today
+		date,
+		time,
+		wish,
+		today
     };
-  };
+};

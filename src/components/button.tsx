@@ -13,17 +13,11 @@ const WindowButton = ({
   const width = platform === 'win32' ? '100%' : '20px';
   const height = platform === 'win32' ? '100%' : '20px';
   return (
-    <div
-    //   className={styles.Control}
-    >
+    <div>
       <div
         style={{
           width,
           height,
-          // color: config.color,
-          // background: config.background,
-          // borderRadius: controls.borderRadius,
-          // border: controls.border
         }}
         onClick={onClick}
         onMouseOver={() => { config = close ?  controls.close.hover! : controls.normal.hover! }}
