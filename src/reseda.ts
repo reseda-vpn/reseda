@@ -108,8 +108,6 @@ class WireGuard {
     }
 
     async generate_keys() {
-        console.log(this.config.wg);
-
         const privkey: string = this.config.wg.wgInterface.privateKey;
 
         const puckey: string = await invoke('generate_public_key', {
@@ -146,14 +144,11 @@ class WireGuard {
 
     bounceWs(fn: Function, force: boolean = false) {
         if(this.socket && this.socket.readyState == this.socket.OPEN && !force) {
-            console.log("Ran Plain");
             fn();
         }else if(this.socket && this.socket.readyState == this.socket.OPEN) {
-            console.log("Running Restart");
             this.socket.close();
 
             this.socket.addEventListener('close', () => {
-                console.log("Entered Closed Websocket State, starting a new websocket.");
                 this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
                 this.socket.addEventListener('open', () => {
@@ -161,8 +156,6 @@ class WireGuard {
                 })
             })
         }else {
-            console.log("Ran Init");
-
             this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
             this.socket.addEventListener('open', () => {
@@ -196,8 +189,7 @@ class WireGuard {
 
             this.socket.addEventListener('message', async (connection) => {
                 const connection_notes: Incoming = JSON.parse(connection.data);
-                console.log(connection_notes);
-    
+
                 if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
                     const message: Verification = connection_notes.message as Verification;
     
@@ -277,7 +269,6 @@ class WireGuard {
             this.bounceWs(() => {
                 this.socket.addEventListener('message', async (connection) => {
                     const connection_notes = JSON.parse(connection.data);
-                    console.log(connection_notes);
     
                     if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
                         this.usage.down = connection_notes.message?.down;
@@ -289,13 +280,6 @@ class WireGuard {
     }
 
     async addPeer(public_key: string, endpoint: string, subdomain: string, callback_time: Function) {
-        console.log(`Adding ${public_key} ${endpoint} @ ${subdomain}`);
-        console.log({
-			publicKey: public_key,
-			allowedIps: [ "0.0.0.0/0" ],
-			endpoint: endpoint
-		});
-
         // this.state.connected.endpoint = endpoint;
         this.config.wg.addPeer({
 			publicKey: public_key,
@@ -305,9 +289,7 @@ class WireGuard {
 
         this.config.wg.wgInterface.address = [`10.8.${subdomain}/24`];
 
-        await this.config.wg.writeToFile(this.state.path).then(e => {
-			console.log("Written!")
-		})
+        await this.config.wg.writeToFile(this.state.path);
 
         await this.up(() => {
             callback_time(new Date().getTime());
@@ -339,9 +321,7 @@ class WireGuard {
 
         this.scrapeConfig();
 
-        await this.config.wg.writeToFile(this.state.path).then(e => {
-			console.log("Written!")
-		})
+        await this.config.wg.writeToFile(this.state.path);
 
         await this.down(() => {
             this.setState({
@@ -356,7 +336,6 @@ class WireGuard {
 
     async up(cb: Function) {
         await invoke('start_wireguard_tunnel').then(e => {
-            console.log(e);
             cb();
         })
     }

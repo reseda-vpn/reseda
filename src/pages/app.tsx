@@ -39,8 +39,6 @@ const Home: NextPage = () => {
                         _config.setFetching(false);
                         _config.resumeConnection();
 
-                        console.log(_config);
-
                         setConfig(_config);
                     })
                     .catch(e => {
