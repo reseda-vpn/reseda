@@ -1,8 +1,6 @@
-import path from 'path'
 import { Session } from 'next-auth';
 import { WgConfig, getConfigObjectFromFile } from './lib/wg-tools/src/index';
 import { invoke } from '@tauri-apps/api/tauri'
-import { ok } from 'assert';
 
 export type Server = {
     id: string,
@@ -65,6 +63,7 @@ class WireGuard {
     socket: WebSocket;
     user: Session;
     usage: Usage;
+    location: Server;
 
     constructor(file_path: string, user: Session) {
         this.user = user;
@@ -145,11 +144,44 @@ class WireGuard {
         this.state.connection = state;
     }
 
+    bounceWs(fn: Function, force: boolean = false) {
+        if(this.socket && this.socket.readyState == this.socket.OPEN && !force) {
+            console.log("Ran Plain");
+            fn();
+        }else if(this.socket && this.socket.readyState == this.socket.OPEN) {
+            console.log("Running Restart");
+            this.socket.close();
+
+            this.socket.addEventListener('close', () => {
+                console.log("Entered Closed Websocket State, starting a new websocket.");
+                this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+
+                this.socket.addEventListener('open', () => {
+                    fn();
+                })
+            })
+        }else {
+            console.log("Ran Init");
+
+            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+
+            this.socket.addEventListener('open', () => {
+                fn();
+            })
+        }
+    }
+
     connect(location: Server, callback_time: Function) {
         callback_time(new Date().getTime());
-        this.socket = new WebSocket(`wss://${location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+        this.setState({
+            connected: false,
+            connection_type: 2,
+            message: "Instigating",
+            location: location,
+            server: location.id
+        });
 
-        this.socket.addEventListener('open', () => {
+        this.bounceWs(() => {
             this.socket.send(JSON.stringify({
                 query_type: "open"
             }));
@@ -161,69 +193,58 @@ class WireGuard {
                 location: location,
                 server: location.id
             });
-        });
 
-        this.socket.addEventListener('message', async (connection) => {
-            const connection_notes: Incoming = JSON.parse(connection.data);
-            console.log(connection_notes);
-
-            if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
-                const message: Verification = connection_notes.message as Verification;
-
-                this.setState({
-                    connected: false,
-                    connection_type: 2,
-                    message: "Adding Peer",
-                    location: location,
-                    server: location.id
-                });
-
-                await this.addPeer(message.server_public_key, message.endpoint, message.subdomain, callback_time);
-
-                this.setState({
-                    connected: true,
-                    connection_type: 1,
-                    location: location,
-                    server: location.id,
-                    message: "Completed."
-                });
-
-                callback_time(new Date().getTime());
-            }
-        })
+            this.socket.addEventListener('message', async (connection) => {
+                const connection_notes: Incoming = JSON.parse(connection.data);
+                console.log(connection_notes);
+    
+                if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
+                    const message: Verification = connection_notes.message as Verification;
+    
+                    this.setState({
+                        connected: false,
+                        connection_type: 2,
+                        message: "Adding Peer",
+                        location: location,
+                        server: location.id
+                    });
+    
+                    this.socket.close();
+    
+                    await this.addPeer(message.server_public_key, message.endpoint, message.subdomain, callback_time);
+    
+                    this.setState({
+                        connected: true,
+                        connection_type: 1,
+                        location: location,
+                        server: location.id,
+                        message: "Completed."
+                    });
+    
+                    callback_time(new Date().getTime());
+                }
+            })
+        }, true)
     }
 
     async disconnect() {
-        if(this.socket.CLOSED || this.socket.CLOSING) {
-            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
-
-            this.socket.addEventListener('open', () => {
-                this.socket.send(JSON.stringify({
-                    query_type: "close"
-                }));
-
-                this.socket.addEventListener('message', (event) => {
-                    const data = JSON.parse(event.data);
-                    console.log(`Disconnect handler posted:`, data);
-
-                    if(data?.message?.includes("Removed")) {
-                        this.removePeer()
-        
-                        this.setState({
-                            connected: false,
-                            connection_type: 0,
-                            location: null,
-                            server: null,
-                            message: "Disconnected."
-                        });
-                    }
-                })
-            });
-        }else {
+        this.bounceWs(async () => {
             this.socket.send(JSON.stringify({
                 query_type: "close"
             }));
-        }
+
+            setTimeout(async () => {
+                await this.removePeer()
+
+                this.setState({
+                    connected: false,
+                    connection_type: 0,
+                    location: null,
+                    server: null,
+                    message: "Disconnected."
+                });
+            }, 15);
+        })
     }
 
     async uninstallService() {
@@ -253,16 +274,16 @@ class WireGuard {
                 }
             })
 
-            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
-
-            this.socket.addEventListener('message', async (connection) => {
-                const connection_notes = JSON.parse(connection.data);
-                console.log(connection_notes);
-
-                if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
-                    this.usage.down = connection_notes.message?.down;
-                    this.usage.up = connection_notes.message?.up;
-                }
+            this.bounceWs(() => {
+                this.socket.addEventListener('message', async (connection) => {
+                    const connection_notes = JSON.parse(connection.data);
+                    console.log(connection_notes);
+    
+                    if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
+                        this.usage.down = connection_notes.message?.down;
+                        this.usage.up = connection_notes.message?.up;
+                    }
+                })
             })
         });
     }
@@ -295,9 +316,7 @@ class WireGuard {
     }
 
     listenForUpdates() {
-        this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
-
-        this.socket.addEventListener('open', () => {
+        this.bounceWs(() => {
             this.socket.addEventListener('message', (event) => {
                 const connection_notes = JSON.parse(event.data);
 
@@ -306,15 +325,15 @@ class WireGuard {
                     this.usage.up = connection_notes.message?.up;
                 }
             })
-        });
+        })
     }
 
     async removePeer() {
         this.setState({
             connected: false,
             connection_type: 4,
-            location: null,
-            server: null,
+            location: this.state.connection.location,
+            server: this.state.connection.location.id,
             message: "Disconnecting..."
         });
 
@@ -324,12 +343,12 @@ class WireGuard {
 			console.log("Written!")
 		})
 
-        this.down(() => {
+        await this.down(() => {
             this.setState({
                 connected: false,
                 connection_type: 0,
-                location: null,
-                server: null,
+                location: this.state.connection.location,
+                server: this.state.connection.location.id,
                 message: "Disconnected."
             });
         });

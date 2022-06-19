@@ -18,9 +18,9 @@ const Home: NextPage = () => {
         const sesh = JSON.parse(localStorage.getItem("reseda.safeguard"));
         setSession(sesh);
 
-        publicIp.v4().then(e => {
-            setIP(e);
-        });
+        // publicIp.v4().then(e => {
+        //     setIP(e);
+        // });
 
         if(typeof navigator !== 'undefined') {
             (async () => {
