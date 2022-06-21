@@ -43,8 +43,10 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                                                     <p>{ e.country }</p>
                                                 </div>
                                                 
-                                                <p className={styles.mono}>{e.hostname}</p>
-                                                {
+                                                <div></div>
+                                                <div></div>
+                                                {/* <p className={styles.mono}>{e.hostname}</p> */}
+                                                {/* {
                                                     configuration.state.connection.server == e.id && configuration.state.connection.connection_type == 1 ?
                                                         <div className='flex flex-row items-center gap-4'>
                                                             <p className={styles.mono}>Connected</p>
@@ -54,7 +56,7 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                                                         <div className={styles.mono}>
                                                             Running for { moment.duration(new Date().getTime() - new Date(e.serverUp).getTime()).humanize() }
                                                         </div>
-                                                }
+                                                } */}
                                                 
                                                 
                                             </div>
@@ -188,7 +190,7 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                                     case 1:
                                         return (
                                             <div className="flex flex-col">
-                                                <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ configuration.state.connection?.location?.country } <i className={styles.mono} style={{ opacity: 0.6 }}>{configuration.state.connection?.location?.id}</i>  </p>
+                                                <p style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>{ configuration.state.connection?.location?.country }</p>
                                                 <h2 className="font-mono font-bold text-base">{connectionTime > 0 ? moment.utc(moment(today.getTime()).diff(moment(connectionTime))).format("HH:mm:ss") : "..."}</h2>
                                             </div>
                                         )
@@ -249,9 +251,9 @@ const TabView: NextPage<{ configuration: WireGuard, tab: "servers" | "settings" 
                             switch(configuration.state.connection?.connection_type) {
                                 case 0:
                                     return (
-                                        <Button style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
+                                        <Button loaderOnly style={{ flexGrow: 0, height: 'fit-content', width: '100%', backgroundColor: '#fff', padding: '.4rem 1rem', color: "#000", fontWeight: '600', fontFamily: "GT Walsheim Pro" }}  icon={false} onClick={() => {
                                             configuration.disconnect();
-                                        }}>Connect to {"Singapore"}</Button>
+                                        }}></Button>
                                     )
                                 case 1:
                                     return (
