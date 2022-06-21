@@ -203,7 +203,7 @@ class WireGuard {
     
                     this.socket.close();
     
-                    await this.addPeer(message.server_public_key, message.endpoint, message.subdomain, callback_time);
+                    await this.addPeer(location, message.server_public_key, message.subdomain, callback_time);
     
                     this.setState({
                         connected: true,
@@ -251,11 +251,11 @@ class WireGuard {
             });
 
             this.config.wg = config;
-            const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0];
+            const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0]?.split(".")?.[0];
 
             if(!this?.user?.id || !this?.config?.keys?.public_key || !conn_ip) return;
             this.registry.forEach(e => {
-                if(e.hostname == conn_ip) {
+                if(e.id == conn_ip) {
                     this.setState({
                         connected: true,
                         connection_type: 1,
@@ -279,12 +279,12 @@ class WireGuard {
         });
     }
 
-    async addPeer(public_key: string, endpoint: string, subdomain: string, callback_time: Function) {
+    async addPeer(location: Server, public_key: string, subdomain: string, callback_time: Function) {
         // this.state.connected.endpoint = endpoint;
         this.config.wg.addPeer({
 			publicKey: public_key,
 			allowedIps: [ "0.0.0.0/0" ],
-			endpoint: endpoint
+			endpoint: `${location.id}.dns.reseda.app:51820`
 		});
 
         this.config.wg.wgInterface.address = [`10.8.${subdomain}/24`];
