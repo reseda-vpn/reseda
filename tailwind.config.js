@@ -9,7 +9,8 @@ module.exports = {
             sans: ["Public Sans", "DM Sans", "Roboto", "sans-serif"],
             serif: ["DM Serif", "serif"],
             altSans: ["GT Walsheim Pro"],
-            mono: ["DM Mono"]
+            mono: ["DM Mono"],
+            colfax: ["colfax"]
         },
         extend: {},
     },

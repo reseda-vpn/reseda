@@ -95,16 +95,16 @@ class WireGuard {
             down: 0
         };
 
-        getConfigObjectFromFile({ filePath: file_path }).then((e) => {
-            const config = new WgConfig({ 
-                filePath: file_path,
-                ...e
-            });
+        // getConfigObjectFromFile({ filePath: file_path }).then((e) => {
+        //     const config = new WgConfig({ 
+        //         filePath: file_path,
+        //         ...e
+        //     });
 
-            this.config.wg = config;
-            this.scrapeConfig();
-            this.generate_keys();
-        });
+        //     this.config.wg = config;
+        //     this.scrapeConfig();
+        //     this.generate_keys();
+        // });
     }
 
     async generate_keys() {
@@ -243,18 +243,33 @@ class WireGuard {
         await invoke('remove_windows_service'); 
     }
 
-    resumeConnection() {
+    resumeConnection(callback: Function) {
         getConfigObjectFromFile({ filePath: this.state.path }).then((e) => {
             const config = new WgConfig({ 
                 filePath: this.state.path,
                 ...e
             });
 
+            console.log(config);
+
             this.config.wg = config;
             const conn_ip = this.config.wg.peers?.[0]?.endpoint?.split(":")?.[0]?.split(".")?.[0];
 
-            if(!this?.user?.id || !this?.config?.keys?.public_key || !conn_ip) return;
+            if(!this?.user?.id || !conn_ip) {
+                console.log(conn_ip, this?.user?.id)
+                callback(this);
+                return;
+            }
+
             this.registry.forEach(e => {
+                console.log(e.id == conn_ip, {
+                    connected: true,
+                    connection_type: 1,
+                    location: e,
+                    server: e.id,
+                    message: "Connected."
+                });
+
                 if(e.id == conn_ip) {
                     this.setState({
                         connected: true,
@@ -264,7 +279,9 @@ class WireGuard {
                         message: "Connected."
                     });
                 }
-            })
+            });
+
+            callback(this);
 
             this.bounceWs(() => {
                 this.socket.addEventListener('message', async (connection) => {

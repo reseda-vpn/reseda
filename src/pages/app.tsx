@@ -5,28 +5,23 @@ import publicIp from "public-ip"
 
 import { useEffect, useState } from 'react'
 import type { NextPage } from 'next'
+import Loader from '@components/un-ui/loader'
+import { Check } from 'react-feather'
 
 const Home: NextPage = () => {
     const [ session, setSession ] = useState(null);
     const [ config, setConfig ] = useState<WireGuard>(null);
 
     const [ currentTab, setCurrentTab ] = useState<"servers" | "settings">("servers");
-	const [ ip, setIP ] = useState(null); 
-    const [ filePath, setFilePath ] = useState(null);
+    const [ time, setTime ] = useState(null); 
 
     useEffect(() => {
         const sesh = JSON.parse(localStorage.getItem("reseda.safeguard"));
         setSession(sesh);
 
-        // publicIp.v4().then(e => {
-        //     setIP(e);
-        // });
-
         if(typeof navigator !== 'undefined') {
             (async () => {
                 const { appDir } = await import('@tauri-apps/api/path');
-                setFilePath(await appDir() + "lib\\wg0.conf");
-
                 const _config = new WireGuard(await appDir() + "lib\\wg0.conf", sesh)
                 
                 fetch('https://reseda.app/api/server/list', {
@@ -35,11 +30,12 @@ const Home: NextPage = () => {
                 })
                     .then(async e => {
                         const json = await e.json();
+
                         _config.setRegistry(json);
                         _config.setFetching(false);
-                        _config.resumeConnection();
-
-                        setConfig(_config);
+                        _config.resumeConnection((config: WireGuard) => {
+                            setConfig(config);
+                        });
                     })
                     .catch(e => {
                         console.log(e)
@@ -49,40 +45,140 @@ const Home: NextPage = () => {
     }, [])
 
 	return (
-            <div className={styles.container}>                
-                <div className={styles.resedaCenter}>
-                    <div className={styles.resedaHeader}>
-                        <div>
-                            <div className={`font-bold uppercase relative after:content-['ALPHA'] text-slate-800 after:text-black after:absolute after:b-0 after:-right-10 after:-bottom-1 after:text-xs after:bg-clip-text after:bg-violet-600 select-none ${styles.reseda}`}>Reseda</div>
-                        </div>
+        <div className="flex flex-col flex-1 h-screen bg-black text-white">
+            <div className="flex flex-col h-56">
+                {/* Idk whats gonna go here... */}
+            </div>
 
-                        <div>
-                            <div className={styles.resedaTabBar}>
-                                <div onClick={() => setCurrentTab("servers")}>Servers</div>
-                                <div onClick={() => setCurrentTab("settings")}>Settings</div>
+            <div className="flex flex-col gap-2 px-2 flex-1">
+                {
+                    (() => {
+                        switch(config?.state?.connection?.connection_type) {
+                            case 0: 
+                                return (
+                                    <div>   
+                                        { JSON.stringify(config?.state?.connection) }
+                                    </div>
+                                )
+                            case 1:
+                                return (
+                                    <div 
+                                        className="rounded-lg bg-slate-700 flex flex-row items-center gap-4 px-4 py-3"
+                                        >
+                                        <div className="flex flex-row items-center aspect-square rounded-full bg-blue-500 p-1">
+                                            <Check color={"#fff"} height={22}></Check>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <h1 className="font-mono">{config?.state?.connection?.location?.country} <b className="font-normal font-mono opacity-60">#{config?.state?.connection?.location?.id}</b></h1>
+                                            <p className="opacity-50">IP Address: {config?.state?.connection?.location?.hostname}</p>
+                                        </div>
+                                    </div>
+                                )
+                            case 2: 
+                                return (
+                                    <div className="rounded-lg bg-slate-700 flex flex-row items-center gap-4 px-4 py-3">
+                                        <div className="flex flex-row items-center aspect-square rounded-full bg-blue-500 justify-center p-1">
+                                            <Loader color={"#fff"} height={22}></Loader>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <h1 className="font-mono">Connecting</h1>
+                                            <p className="opacity-50">...</p>
+                                        </div>
+                                    </div>
+                                )
+                            case 3: 
+                                return (
+                                    <div className="rounded-lg bg-red-300 flex flex-row items-center gap-4 px-4 py-3">
+                                        <div className="flex flex-row items-center aspect-square rounded-full bg-blue-500 justify-center p-1">
+                                            <Loader color={"#fff"} height={22}></Loader>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <h1 className="font-mono">Connecting</h1>
+                                            <p className="opacity-50">...</p>
+                                        </div>
+                                    </div>
+                                )
+                            case 4: 
+                                return (
+                                    <div className="rounded-lg bg-slate-700 flex flex-row items-center gap-4 px-4 py-3">
+                                        <div className="flex flex-row items-center aspect-square rounded-full bg-blue-500 justify-center p-1">
+                                            <Loader color={"#fff"} height={22}></Loader>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <h1 className="font-mono">Disconnecting</h1>
+                                            <p className="opacity-50">...</p>
+                                        </div>
+                                    </div>
+                                )
+                            case 5: 
+                                return (
+                                    <div className="rounded-lg bg-slate-700 flex flex-row items-center gap-4 px-4 py-3">
+                                        <div className="flex flex-row items-center aspect-square rounded-full bg-blue-500 justify-center p-1">
+                                            <Loader color={"#fff"} height={22}></Loader>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <h1 className="font-mono">Finalizing</h1>
+                                            <p className="opacity-50">...</p>
+                                        </div>
+                                    </div>
+                                )
+                            default:
+                                return (
+                                    <div>   
+                                        { JSON.stringify(config?.state?.connection) }
+                                    </div>
+                                )
+                        }
+                    })()
+                }
+                
+                <div className="rounded-t-lg flex flex-col gap-4 bg-white flex-1 p-2">
+                    {
+                        config?.state?.connection?.connected ?
+                        <div className="flex flex-row items-center">
+                            <div className="flex flex-1">
+                                {/* Graph for Down Information */}
+                            </div>
+                            <div className="flex flex-1">
+                                {/* Graph for Up Information */}
                             </div>
                         </div>
-                    </div>
+                        :
+                        <div className="p-2 flex flex-col gap-2">
+                            {
+                                config?.registry?.map(e => 
+                                    <div 
+                                        key={`server-${e.id}`}
+                                        className="flex flex-row justify-between items-center p-2 rounded-lg bg-[#f2f2f3] text-slate-700 font-semibold font-sans"
+                                        onClick={() => {
+                                            config.connect(e, setTime)
+                                        }}
+                                    >
+                                        <div className="flex flex-row items-center gap-2">
+                                            <span style={{ height: '22px' }} className={`twa-lg twa-${e.flag}`}></span>
+                                            <p>{ e.country }</p>
+                                        </div>
 
-                    <div className={styles.resedaBody}>
-                        {/* Body */}
-                        <TabView configuration={config} tab={currentTab} />
-                    </div>
-                </div>
-
-                <div className="h-16 flex flex-row justify-between w-full bg-gray-900 items-center gap-4 px-4 py-4 text-xs m-0 text-slate-200 select-none">
-                    <div className="flex-1 flex flex-row items-center gap-4 w-full">
-                        <div className={config?.state.connection ? styles.connected : styles.disconnected}>
-                            <h4 className=" font-sans font-extrabold" style={{ fontSize: '0.9rem' }}>{config?.state.connection.connection_type == 1 ? "CONNECTED" : config?.state.connection.connection_type == 2 ? "CONNECTING" : "DISCONNECTED"}</h4>
+                                        <div>...</div>
+                                    </div>
+                                )
+                            }
                         </div>
-                        
-                        <p>{config?.state.connection.location?.country ?? ""}</p>
-                        <h6 className="font-mono opacity-40">{config?.state.connection?.server ?? ip }</h6>
-                    </div>
+                    }
 
-                    <div className="w-fit opacity-80" style={{ fontSize: '0.88rem' }}> { session?.email } </div>
+                    <div className="flex flex-row items-center">
+                        <p>Reseda FREE</p>
+                        <p>{config?.user?.user?.email}</p>
+                    </div>
                 </div>
             </div>
+
+        </div>
     )
 }
 
