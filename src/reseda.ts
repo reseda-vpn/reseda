@@ -284,7 +284,7 @@ class WireGuard {
             callback(this);
 
             this.bounceWs(() => {
-                this.socket.addEventListener('message', async (connection) => {
+                this.socket.addEventListener('message', (connection) => {
                     const connection_notes = JSON.parse(connection.data);
     
                     if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
@@ -301,7 +301,7 @@ class WireGuard {
         this.config.wg.addPeer({
 			publicKey: public_key,
 			allowedIps: [ "0.0.0.0/0" ],
-			endpoint: `${location.id}.dns.reseda.app:51820`
+			endpoint: `${location.id}.dns.reseda.app:8443`
 		});
 
         this.config.wg.wgInterface.address = [`10.8.${subdomain}/24`];
