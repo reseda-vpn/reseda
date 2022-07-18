@@ -1,6 +1,7 @@
 import { Session } from 'next-auth';
 import { WgConfig, getConfigObjectFromFile } from './lib/wg-tools/src/index';
 import { invoke } from '@tauri-apps/api/tauri'
+import { Component, useState } from 'react';
 
 export type Server = {
     id: string,
@@ -62,10 +63,14 @@ class WireGuard {
     };
     socket: WebSocket;
     user: Session;
-    usage: Usage;
+    usage: Usage[];
+    setUsage: Function;
     location: Server;
 
-    constructor(file_path: string, user: Session) {
+    constructor(props) {
+        // super(props);
+        let { file_path, user } = props;
+
         this.user = user;
 
         this.state = {
@@ -90,21 +95,31 @@ class WireGuard {
             })
         };
 
-        this.usage = {
+        this.usage = [{
             up: 0,
             down: 0
-        };
+        }];
 
-        // getConfigObjectFromFile({ filePath: file_path }).then((e) => {
-        //     const config = new WgConfig({ 
-        //         filePath: file_path,
-        //         ...e
-        //     });
+        getConfigObjectFromFile({ filePath: file_path }).then((e) => {
+            const config = new WgConfig({ 
+                filePath: file_path,
+                ...e
+            });
 
-        //     this.config.wg = config;
-        //     this.scrapeConfig();
-        //     this.generate_keys();
-        // });
+            this.config.wg = config;
+            this.scrapeConfig();
+            this.generate_keys();
+        });
+
+        console.log(this);
+    }
+
+    render() {
+        return (
+            <div>
+                
+            </div>
+        )
     }
 
     async generate_keys() {
@@ -149,14 +164,14 @@ class WireGuard {
             this.socket.close();
 
             this.socket.addEventListener('close', () => {
-                this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+                this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/ws?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
                 this.socket.addEventListener('open', () => {
                     fn();
                 })
             })
         }else {
-            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
+            this.socket = new WebSocket(`wss://${this.state.connection.location.id}.reseda.app:443/ws?author=${this.user.id}&public_key=${this.config.keys.public_key}`);
 
             this.socket.addEventListener('open', () => {
                 fn();
@@ -219,8 +234,8 @@ class WireGuard {
         }, true)
     }
 
-    async disconnect() {
-        this.bounceWs(async () => {
+    disconnect() {
+        this.bounceWs(() => {
             this.socket.send(JSON.stringify({
                 query_type: "close"
             }));
@@ -288,8 +303,10 @@ class WireGuard {
                     const connection_notes = JSON.parse(connection.data);
     
                     if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
-                        this.usage.down = connection_notes.message?.down;
-                        this.usage.up = connection_notes.message?.up;
+                        this.usage.push({
+                            up: connection_notes.message?.up,
+                            down: connection_notes.message?.down
+                        });
                     }
                 })
             })
@@ -320,8 +337,10 @@ class WireGuard {
                 const connection_notes = JSON.parse(event.data);
 
                 if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
-                    this.usage.down = connection_notes.message?.down;
-                    this.usage.up = connection_notes.message?.up;
+                    this.usage.push({
+                        up: connection_notes.message?.up,
+                        down: connection_notes.message?.down
+                    });
                 }
             })
         })
@@ -371,10 +390,9 @@ class WireGuard {
 }
 
 function getSize(size) {
-    var sizes = [' Bytes', ' KB', ' MB', ' GB', 
-                 ' TB', ' PB', ' EB', ' ZB', ' YB'];
+    const sizes = [' Bytes', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB'];
     
-    for (var i = 1; i < sizes.length; i++) {
+    for (let i = 1; i < sizes.length; i++) {
         if (size < Math.pow(1024, i)) 
           return (Math.round((size / Math.pow(
             1024, i - 1)) * 100) / 100) + sizes[i - 1];
