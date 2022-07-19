@@ -605,6 +605,49 @@
   z-index: 50;
 }
 
+.fancyGradient {
+  /* background: radial-gradient(circle, rgba(240,193,241,1) 0%, rgba(236,199,86,1) 20%, rgba(227,165,235,1) 80%, rgba(228,207,147,1) 100%); */
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, #61dd5a 37%, rgba(103,201,88,1) 37.2%, rgba(97,221,90,1) 54%, rgba(103,201,88,1) 54.2%, rgba(97,221,90,1) 73%, rgba(103,201,88,1) 73.2%, rgba(97,221,90,1) 89%);;
+
+  background-position: calc(0px) calc(2px);
+  background-size: 100% 204%;
+}
+
+.fancyGradientGrey {
+  background: radial-gradient(circle, rgba(255,255,255,0.5245448521205357) 0%, rgba(205,220,255,0.18841039833902307) 37%, rgba(170,172,255,0.1716036756499475) 37.2%, rgba(205,225,255,0.2164216028208158) 54%, rgba(170,172,255,0.19681375968356096) 54.2%, rgba(205,225,255,0.19121151878720233) 73%, rgba(170,172,255,0.23322832550989148) 73.2%, rgba(205,225,255,0.18000703699448528) 89%);;
+  background-position: calc(0px) calc(2px);
+  background-size: 100% 204%;
+}
+
+.fancyGradientRed {
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, #ffcdcd82 37%, rgba(255,170,170,0.5525560566023284) 37.2%, rgba(255,205,205,0.4881302862942052) 54%, rgba(255,170,170,0.5133403703278187) 54.2%, rgba(255,205,205,0.5161414907759979) 73%, rgba(255,170,170,0.5525560566023284) 73.2%, rgba(255,205,205,0.5749650201877626) 89%);
+  background-position: calc(0px) calc(2px);
+  background-size: 100% 204%;
+
+  animation: expand 3s ease-in-out infinite; 
+}
+
+.fancyGradientGreen {
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, #61dd5a71 37%,rgba(103, 201, 88, 0.505) 37.2%, rgba(97, 221, 90, 0.451) 54%, rgba(103, 201, 88, 0.495) 54.2%, rgba(97, 221, 90, 0.489) 73%, rgba(103, 201, 88, 0.489) 73.2%, rgba(97, 221, 90, 0.505) 89%);
+  background-position: calc(0px) calc(2px);
+  background-size: 100% 204%;
+
+  animation: expand 3s ease-in-out infinite; 
+}
+
+@keyframes expand {
+  0% { 
+    background-size: 100% 204%; 
+  }
+  50% { 
+    background-size: 120% 208%; 
+    background-position-x: -35px;
+  }
+  100% { 
+    background-size: 100% 204%; 
+  }
+}
+
 .resedaFancyConnection > div > span > span > div {
   height: 200px;
   width: 120px;
@@ -706,7 +749,7 @@
   z-index: 0;
 }
 
-.resedaAuth .circleCenter {
+.resedaAuth, .circleCenter {
   border: 2px solid rgba(255, 255, 255, 0.247);
   height: 150px;
   width: 150px;
