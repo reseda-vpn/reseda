@@ -241,7 +241,7 @@ fn main() {
 				write_text_file(
 					&apath,
 					(&"wg0.conf").to_string(), 
-					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
+					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 8443\nPrivateKey = {}", private_key)
 				);
 
 				let mut perms = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()))?.permissions();

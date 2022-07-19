@@ -64,6 +64,18 @@ body {
   src: url('../public/fonts/dm-mono/DMMono-Regular.ttf');
 }
 
+@font-face {
+  font-family: "colfax";
+  font-weight: 500;
+  src: url('../public/fonts/colfax/ColfaxAIRegular.woff2');
+}
+
+@font-face {
+  font-family: "colfax";
+  font-weight: 600;
+  src: url('../public/fonts/colfax/ColfaxAIBold.woff2');
+}
+
 a {
   color: inherit;
   text-decoration: none;
