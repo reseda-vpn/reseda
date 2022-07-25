@@ -3,6 +3,7 @@
   windows_subsystem = "windows"
 )]
 
+use std::os::unix::prelude::PermissionsExt;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
@@ -162,10 +163,10 @@ fn generate_public_key(private_key: String) -> String {
 }
 
 #[tauri::command]
-fn generate_private_key() -> String {
+fn generate_private_key(path: &str) -> String {
 	println!("Generating Private Key... ");
 
-	let exec_process = Command::new("lib/wg.exe")
+	let exec_process = Command::new(format!("lib/wg.exe"))
 		.arg("genkey")
 		.stdin(Stdio::piped())
 		.stdout(Stdio::piped())
@@ -235,7 +236,11 @@ fn main() {
 			println!("{:?}", exists_);
 			
 			if !exists_ {
-				let private_key = generate_private_key();
+				let mut perms = fs::metadata(format!("lib/wg.exe"))?.permissions();
+				perms.set_mode(0o1411);
+				fs::set_permissions(format!("lib/wg.exe"), perms)?;
+
+				let private_key = generate_private_key("");
 				println!("{:?}", private_key);
 
 				write_text_file(
@@ -291,6 +296,22 @@ fn main() {
 
 					stop_wireguard_tunnel();
 				}else {
+					println!("Alternate Setup Route");
+
+					let execution_perms = Command::new("chmod")
+						.arg("a+x")
+						.arg(format!("{}\\lib\\wg.exe", &apath.display()))
+						.status();
+
+					match execution_perms {
+						Ok(ok) => {
+							println!("Success in changing execution permissions for WG.EXE {:?}", ok)
+						},
+						Err(err) => {
+							println!("Error in changing permissions of WG.EXE: {:?}", err)
+						}
+					};
+
 					println!("Exec.OS is not currently a supported operating system.");
 				}
 			}else {
