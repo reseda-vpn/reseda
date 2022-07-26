@@ -17,12 +17,14 @@ interface FindPartInStringOptions {
  * return value = undefined
  */
 const findPartInString = ({ string, part }: FindPartInStringOptions) => {
+  console.log("FINDING PART IN STRING", string);
+
   const parts = string.split('\n')
   const wantedParts = parts.filter(x => x.includes(part))
 
   if (!wantedParts.length) return undefined
   const values = wantedParts
-    .map(x => x.match(/((?<==).)(.+$)/gm)?.[0]?.trim())
+    .map(x => x.match(/((?==).)(.+$)/gm)?.[0]?.trim())
     .filter(x => x !== undefined) as string[]
 
   if (!values.length) return undefined
@@ -31,6 +33,8 @@ const findPartInString = ({ string, part }: FindPartInStringOptions) => {
 
 /** Generate a string version of the WgConfig suitable for saving to a Wireguard Config file (wg0.conf) */
 export const generateConfigString = (conf: WgConfigObject) => {
+  console.log(conf);
+
   const s: string[] = []
   const { wgInterface, peers } = conf
   const { address, privateKey, listenPort, name, dns, mtu, table, preUp, postUp, preDown, postDown } = wgInterface
@@ -71,6 +75,8 @@ export const generateConfigString = (conf: WgConfigObject) => {
  * If a peer in the peers array is invalid, it will throw an error
  */
 export const parseConfigString = (configString: string) => {
+  console.log("PARSING CONFIGURATION STRING", configString);
+
   const interFaceReg = /\[Interface\][^\[]*/gm
   const peerReg = /\[Peer\][^\[]*/gm
 

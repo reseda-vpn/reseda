@@ -26,7 +26,8 @@ export default function Home({ providers }) {
     const [ authSuccess, setAuthSuccess ] = useState<"logged_out" | "logged_in" | "login_failure">("logged_out");
 
 	useEffect(() => {
-        if(JSON.parse(localStorage.getItem("reseda.safeguard"))?.email) router.push('./app');
+        let data = localStorage.getItem("reseda.safeguard");
+        if(data && JSON.parse(data)?.email) router.push('./app');
         
         // Create your instance
         const gradient = new Gradient()
@@ -35,7 +36,7 @@ export default function Home({ providers }) {
 
         //@ts-expect-error
         gradient.initGradient('#gradient-canvas')
-	}, []);
+	}, [router]);
 
     const signIn = async (provider?) => {
         setAwaitingReply(true);
@@ -52,11 +53,13 @@ export default function Home({ providers }) {
                 method: 'POST'
             });
 
+            console.log(res);
+
             setAwaitingReply(false);
             const information = await res.text();
             localStorage.setItem("reseda.safeguard", information);
 
-            if(res.type == "error") {
+            if(res.type == "error" || res.type == "cors") {
                 console.log(res);
                 setAuthSuccess("login_failure");
                 setAuthFailure("Account does not exist, try signing up!");
