@@ -19,6 +19,8 @@ interface Options {
  */
 export const writeConfig = async (opts: Options) => {
   try {
+	console.log("Writing Configuration");
+	
 	const { filePath, config } = opts
 	// await makeSureDirExists(dir)
 	const configString = typeof config === 'string' ? config : generateConfigString(config);

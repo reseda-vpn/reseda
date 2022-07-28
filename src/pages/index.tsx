@@ -48,7 +48,7 @@ export default function Home({ providers }) {
             // });
             alert('Unable to access '+provider);
         else {
-            const res = await fetch('https://reseda.app/api/rauth/login/', {
+            const res = await fetch('https://reseda.app/api/rauth/login', {
                 body: JSON.stringify(authInformation),
                 headers: {
                     "Content-Type": "application/json",
@@ -63,8 +63,6 @@ export default function Home({ providers }) {
             const information = await res.text();
             localStorage.setItem("reseda.safeguard", information);
             console.log("INFORMATION:", information);
-
-            return;
 
             if(res.type == "error" || res.type == "cors") {
                 console.log(res);

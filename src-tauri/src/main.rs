@@ -116,7 +116,7 @@ fn remove_peer(public_key: String) -> String {
 fn read_text_file(path: PathBuf, file_name: String) -> String  {
 	println!("Reading script from file.. {}", file_name);
 
-	let contents = fs::read_to_string(format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()))
+	let contents = fs::read_to_string(format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()))
         .expect("Something went wrong reading the file");
 
 	println!("Read script {} successfully.", file_name);
@@ -125,7 +125,7 @@ fn read_text_file(path: PathBuf, file_name: String) -> String  {
 }
 
 fn write_text_file(path: &PathBuf, file_name: String, text: String) {
-	println!("Writing script to file.. {}\n\n{}", format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()), text);
+	println!("Writing script to file.. {}\n\n{}", format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text);
 
 	match fs::write(format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text) {
 		Result::Err(_) => {

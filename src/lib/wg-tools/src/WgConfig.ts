@@ -43,6 +43,7 @@ export class WgConfig implements WgConfigObject {
 
   /** Return a string akin to a WireGuard config file from this WgConfig object */
   toString() {
+    console.log("Converting Structure to STRING")
     return generateConfigString(this)
   }
 

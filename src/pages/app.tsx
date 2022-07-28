@@ -23,7 +23,7 @@ const Home: NextPage = () => {
             (async () => {
                 const { appDir } = await import('@tauri-apps/api/path');
 
-                setConfig({ file_path: await appDir() + "lib\\wg0.conf", user: session })
+                setConfig({ file_path: await appDir() + "lib/wg0.conf", user: session })
             })();
         }
     }, [])

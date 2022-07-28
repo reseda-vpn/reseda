@@ -76,6 +76,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         super(props);
         let { file_path, user } = props;
 
+        console.log("Constructing Wireguard Object")
+
         this.user = user;
 
         this.state = {
@@ -375,6 +377,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
     connect(location: Server, callback_time: Function) {
         callback_time(new Date().getTime());
+        console.log(this.config.keys);
+        
         this.setState({
             ...this.state,
             connection: {
@@ -468,6 +472,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     resumeConnection() {
+        console.log("Resuming Connection...");
+
         getConfigObjectFromFile({ filePath: this.state.path }).then((e) => {
             const config = new WgConfig({ 
                 filePath: this.state.path,
