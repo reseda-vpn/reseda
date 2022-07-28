@@ -53,7 +53,7 @@ export default function Home({ providers }) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                mode: "no-cors",
+                mode: "cors",
                 method: 'POST'
             });
 
