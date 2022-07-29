@@ -24,7 +24,7 @@ const findPartInString = ({ string, part }: FindPartInStringOptions) => {
 
   if (!wantedParts.length) return undefined
   const values = wantedParts
-    .map(x => x.match(/((?==).)(.+$)/gm)?.[0]?.trim())
+    .map(x => x.match(/((?==).)(.+$)/gm)?.[0]?.replace("=","").trim())
     .filter(x => x !== undefined) as string[]
 
   if (!values.length) return undefined
@@ -33,8 +33,6 @@ const findPartInString = ({ string, part }: FindPartInStringOptions) => {
 
 /** Generate a string version of the WgConfig suitable for saving to a Wireguard Config file (wg0.conf) */
 export const generateConfigString = (conf: WgConfigObject) => {
-  console.log(conf);
-
   const s: string[] = []
   const { wgInterface, peers } = conf
   const { address, privateKey, listenPort, name, dns, mtu, table, preUp, postUp, preDown, postDown } = wgInterface

@@ -22,7 +22,11 @@ export const getConfigStringFromFile = async (opts: Options) => {
 export const getConfigObjectFromFile = async (opts: Options) => {
   const file = fs.readTextFile(`${opts.filePath}`)
     .then(e => {
-      const obj = parseConfigString(e)
+      console.log("Getting Config From File")
+
+      const obj = parseConfigString(e);
+
+      console.log(obj);
       return obj;
     });
   

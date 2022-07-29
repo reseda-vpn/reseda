@@ -110,6 +110,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         console.log("Loading configuration from file: ", file_path);
 
         getConfigObjectFromFile({ filePath: file_path }).then((e) => {
+            console.log("Retrieved Configuration from file, ", e);
+
             const config = new WgConfig({ 
                 filePath: file_path,
                 ...e
@@ -126,6 +128,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         })
             .then(async e => {
                 const json = await e.json();
+
+                console.log("Fetched List, Attempting Resume.")
 
                 this.setRegistry(json);
                 this.setFetching(false);
@@ -312,9 +316,14 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     async generate_keys() {
         const privkey: string = this.config.wg.wgInterface.privateKey;
 
+        let utf8Encode = new TextEncoder();
+        console.log(privkey)
+
         const puckey: string = await invoke('generate_public_key', {
             privateKey: privkey
         }); 
+
+        console.log(puckey);
 
         this.config.keys.public_key  = puckey.toString().substring(0, puckey.indexOf('=')+1);
         this.config.keys.private_key = privkey;
@@ -613,13 +622,13 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     async up(cb: Function) {
-        await invoke('start_wireguard_tunnel').then(e => {
+        await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
             cb();
         })
     }
     
     async down(cb: Function) {
-        await invoke('stop_wireguard_tunnel').then(e => {
+        await invoke('stop_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
             cb();
         })
     }

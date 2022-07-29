@@ -3,6 +3,7 @@
   windows_subsystem = "windows"
 )]
 
+use std::array::TryFromSliceError;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
@@ -43,7 +44,7 @@ fn is_wireguard_up() -> String {
 
 
 #[tauri::command]
-fn start_wireguard_tunnel() -> String {
+fn start_wireguard_tunnel(path: String) -> String {
 	println!("Starting Tunnel... ");
 
 	// Switch based on target operating sys.
@@ -56,7 +57,7 @@ fn start_wireguard_tunnel() -> String {
 
 	} else {
 		Command::new("wg-quick")
-			.arg("up ./lib/wg0.conf")
+			.arg(format!("up {}/lib/wg0.conf", path))
 			.output()
 			.expect("Failed to start wireguard!");
 	};
@@ -66,7 +67,7 @@ fn start_wireguard_tunnel() -> String {
 }
 
 #[tauri::command]
-fn stop_wireguard_tunnel() -> String {
+fn stop_wireguard_tunnel(path: String) -> String {
 	println!("Stopping Tunnel... ");
 
 	// Switch based on target operating sys.
@@ -78,7 +79,7 @@ fn stop_wireguard_tunnel() -> String {
 			.expect("Failed to stop wireguard!")
 	} else {
 		Command::new("wg-quick")
-			.arg("down ./lib/wg0.conf")
+			.arg(format!("down {}/lib/wg0.conf", path))
 			.output()
 			.expect("Failed to stop wireguard!")
 	};
@@ -142,11 +143,34 @@ fn log_to_console(content: String) {
 	println!("[INFO]: {}", content);
 }
 
+fn slice_to_array_32<T>(slice: &[T]) -> Result<&[T; 32], &str> {
+    if slice.len() == 32 {
+        let ptr = slice.as_ptr() as *const [T; 32];
+        unsafe {Ok(&*ptr)}
+    } else {
+        Err("err")
+    }
+}
+
 #[tauri::command]
-fn generate_public_key(private_key: [u8; 32]) -> String {
+fn generate_public_key(private_key: String) -> String {
 	println!("Generating Public Key... ");
 
-	let public = PublicKey::from(private_key);
+	let code = match base64::decode(private_key) {
+		Ok(c) => c,
+		Err(_) => return "Error1".to_string(),
+	};
+
+	// println!("{:?} @ {}", private_key.as_bytes(), private_key.as_bytes().len());
+
+	let key = match slice_to_array_32(code.as_slice()) {
+		Ok(a) => a.to_owned(),
+		Err(_) => return "Error".to_string(),
+	};
+
+	println!("KEY: {:?}", key);
+
+	let public = PublicKey::from(key);
    	base64::encode(public.as_bytes())
 }
 
@@ -272,7 +296,7 @@ fn main() {
 						}
 					};
 
-					stop_wireguard_tunnel();
+					stop_wireguard_tunnel(&apath);
 				}else {
 					println!("Alternate Setup Route");
 
