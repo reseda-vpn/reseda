@@ -2,7 +2,7 @@
   "private": true,
   "name": "reseda",
   "description": "Virtual Private Network",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "unrealg",
   "main": "app/background.js",
   "scripts": {
