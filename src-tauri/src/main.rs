@@ -168,9 +168,14 @@ fn generate_public_key(private_key: String) -> String {
 		Err(_) => return "Error".to_string(),
 	};
 
-	println!("KEY: {:?}", key);
+	let priv_key = StaticSecret::from(key);
 
-	let public = PublicKey::from(key);
+	// println!("KEY: {:?}", key);
+
+	let public = PublicKey::from(&priv_key);
+
+	println!("KEY: {:?}", public);
+
    	base64::encode(public.as_bytes())
 }
 
@@ -296,7 +301,7 @@ fn main() {
 						}
 					};
 
-					stop_wireguard_tunnel(&apath);
+					stop_wireguard_tunnel(apath.display().to_string());
 				}else {
 					println!("Alternate Setup Route");
 
