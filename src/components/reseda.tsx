@@ -76,6 +76,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         super(props);
         let { file_path, user } = props;
 
+        console.log("Constructing Wireguard Object")
+
         this.user = user;
 
         this.state = {
@@ -105,7 +107,11 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             })
         };
 
+        console.log("Loading configuration from file: ", file_path);
+
         getConfigObjectFromFile({ filePath: file_path }).then((e) => {
+            console.log("Retrieved Configuration from file, ", e);
+
             const config = new WgConfig({ 
                 filePath: file_path,
                 ...e
@@ -122,6 +128,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         })
             .then(async e => {
                 const json = await e.json();
+
+                console.log("Fetched List, Attempting Resume.")
 
                 this.setRegistry(json);
                 this.setFetching(false);
@@ -140,7 +148,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 <svg height="0" width="0">
                     <defs>
                         <clipPath id="clipPathURL">
-                            <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" strokeLinecap="round" strokeLinejoin="round"/>
                         </clipPath>
                     </defs>
                 </svg>
@@ -169,14 +177,14 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                     switch(this.state.connection.connection_type) {
                                         case 0:
                                             return (
-                                                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#131414" strokeWidth={2} xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
-                                                    <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#131414" strokeWidth={2} xmlns="http://www.w3.org/2000/svg" shapeRendering="geometricPrecision">
+                                                    <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
                                             )
                                         case 1:
                                             return (
-                                                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#131414" strokeWidth={2} xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
-                                                    <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#131414" strokeWidth={2} xmlns="http://www.w3.org/2000/svg" shapeRendering="geometricPrecision">
+                                                    <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
                                             )
                                         case 2:
@@ -190,8 +198,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                             )
                                         default:
                                             return (
-                                                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#131414" strokeWidth={2} xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
-                                                    <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#131414" strokeWidth={2} xmlns="http://www.w3.org/2000/svg" shape-Rendering="geometricPrecision">
+                                                    <path d="M12.0001 2V12M18.3601 6.64C19.6185 7.89879 20.4754 9.50244 20.8224 11.2482C21.1694 12.9939 20.991 14.8034 20.3098 16.4478C19.6285 18.0921 18.4749 19.4976 16.9949 20.4864C15.515 21.4752 13.775 22.0029 11.9951 22.0029C10.2152 22.0029 8.47527 21.4752 6.99529 20.4864C5.51532 19.4976 4.36176 18.0921 3.68049 16.4478C2.99921 14.8034 2.82081 12.9939 3.16784 11.2482C3.51487 9.50244 4.37174 7.89879 5.63012 6.64" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
                                             )
                                     }
@@ -308,9 +316,14 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     async generate_keys() {
         const privkey: string = this.config.wg.wgInterface.privateKey;
 
+        let utf8Encode = new TextEncoder();
+        console.log(privkey)
+
         const puckey: string = await invoke('generate_public_key', {
             privateKey: privkey
         }); 
+
+        console.log(puckey);
 
         this.config.keys.public_key  = puckey.toString().substring(0, puckey.indexOf('=')+1);
         this.config.keys.private_key = privkey;
@@ -321,7 +334,10 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     setPath(path: string) {
-        this.state.path = path;
+        this.setState({
+            ...this.state,
+            path: path
+        });
     }
 
     getRegistry() {
@@ -336,7 +352,10 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     setFetching(fetching: boolean) {
-        this.state.fetching = fetching;
+        this.setState({
+            ...this.state,
+            fetching
+        })
     }
 
     // setState(state: State) {
@@ -367,6 +386,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
     connect(location: Server, callback_time: Function) {
         callback_time(new Date().getTime());
+        console.log(this.config.keys);
+        
         this.setState({
             ...this.state,
             connection: {
@@ -460,6 +481,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     resumeConnection() {
+        console.log("Resuming Connection...");
+
         getConfigObjectFromFile({ filePath: this.state.path }).then((e) => {
             const config = new WgConfig({ 
                 filePath: this.state.path,
@@ -599,13 +622,13 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     async up(cb: Function) {
-        await invoke('start_wireguard_tunnel').then(e => {
+        await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
             cb();
         })
     }
     
     async down(cb: Function) {
-        await invoke('stop_wireguard_tunnel').then(e => {
+        await invoke('stop_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
             cb();
         })
     }

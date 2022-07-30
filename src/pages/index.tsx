@@ -26,7 +26,8 @@ export default function Home({ providers }) {
     const [ authSuccess, setAuthSuccess ] = useState<"logged_out" | "logged_in" | "login_failure">("logged_out");
 
 	useEffect(() => {
-        if(JSON.parse(localStorage.getItem("reseda.safeguard"))?.email) router.push('./app');
+        let data = localStorage.getItem("reseda.safeguard");
+        if(data && JSON.parse(data)?.email) router.push('./app');
         
         // Create your instance
         const gradient = new Gradient()
@@ -35,7 +36,7 @@ export default function Home({ providers }) {
 
         //@ts-expect-error
         gradient.initGradient('#gradient-canvas')
-	}, []);
+	}, [router]);
 
     const signIn = async (provider?) => {
         setAwaitingReply(true);
@@ -48,15 +49,22 @@ export default function Home({ providers }) {
             alert('Unable to access '+provider);
         else {
             const res = await fetch('https://reseda.app/api/rauth/login', {
-                body:  JSON.stringify({ ...authInformation }),
+                body: JSON.stringify(authInformation),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                mode: "cors",
                 method: 'POST'
             });
+
+            console.log("Returned", await res);
 
             setAwaitingReply(false);
             const information = await res.text();
             localStorage.setItem("reseda.safeguard", information);
+            console.log("INFORMATION:", information);
 
-            if(res.type == "error") {
+            if(res.type == "error" || res.type == "cors") {
                 console.log(res);
                 setAuthSuccess("login_failure");
                 setAuthFailure("Account does not exist, try signing up!");

@@ -43,6 +43,7 @@ export class WgConfig implements WgConfigObject {
 
   /** Return a string akin to a WireGuard config file from this WgConfig object */
   toString() {
+    console.log("Converting Structure to STRING")
     return generateConfigString(this)
   }
 
@@ -53,6 +54,7 @@ export class WgConfig implements WgConfigObject {
 
   /** Parse a WireGuard config file in the form of a string into this WgConfig object */
   parse(configAsString: string) {
+    console.log("Parsin'");
     const parsedObj = parseConfigString(configAsString)
     Object.assign(this, parsedObj)
   }
