@@ -3,10 +3,15 @@
   windows_subsystem = "windows"
 )]
 
+use std::array::TryFromSliceError;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
 use std::io::{Write};
+
+use base64;
+use rand_core::OsRng;
+use x25519_dalek::{PublicKey, StaticSecret};
 
 #[tauri::command]
 fn is_wireguard_up() -> String {
@@ -39,7 +44,7 @@ fn is_wireguard_up() -> String {
 
 
 #[tauri::command]
-fn start_wireguard_tunnel() -> String {
+fn start_wireguard_tunnel(path: String) -> String {
 	println!("Starting Tunnel... ");
 
 	// Switch based on target operating sys.
@@ -52,7 +57,7 @@ fn start_wireguard_tunnel() -> String {
 
 	} else {
 		Command::new("wg-quick")
-			.arg("up ./lib/wg0.conf")
+			.arg(format!("up {}/lib/wg0.conf", path))
 			.output()
 			.expect("Failed to start wireguard!");
 	};
@@ -62,7 +67,7 @@ fn start_wireguard_tunnel() -> String {
 }
 
 #[tauri::command]
-fn stop_wireguard_tunnel() -> String {
+fn stop_wireguard_tunnel(path: String) -> String {
 	println!("Stopping Tunnel... ");
 
 	// Switch based on target operating sys.
@@ -74,7 +79,7 @@ fn stop_wireguard_tunnel() -> String {
 			.expect("Failed to stop wireguard!")
 	} else {
 		Command::new("wg-quick")
-			.arg("down ./lib/wg0.conf")
+			.arg(format!("down {}/lib/wg0.conf", path))
 			.output()
 			.expect("Failed to stop wireguard!")
 	};
@@ -112,7 +117,7 @@ fn remove_peer(public_key: String) -> String {
 fn read_text_file(path: PathBuf, file_name: String) -> String  {
 	println!("Reading script from file.. {}", file_name);
 
-	let contents = fs::read_to_string(format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()))
+	let contents = fs::read_to_string(format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()))
         .expect("Something went wrong reading the file");
 
 	println!("Read script {} successfully.", file_name);
@@ -121,9 +126,9 @@ fn read_text_file(path: PathBuf, file_name: String) -> String  {
 }
 
 fn write_text_file(path: &PathBuf, file_name: String, text: String) {
-	println!("Writing script to file.. {}\n\n{}", format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()), text);
+	println!("Writing script to file.. {}\n\n{}", format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text);
 
-	match fs::write(format!("{}\\lib\\{}", &path.display(), file_name.to_owned().clone()), text) {
+	match fs::write(format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text) {
 		Result::Err(_) => {
 			println!("Unable to write!");
 		},
@@ -138,44 +143,48 @@ fn log_to_console(content: String) {
 	println!("[INFO]: {}", content);
 }
 
+fn slice_to_array_32<T>(slice: &[T]) -> Result<&[T; 32], &str> {
+    if slice.len() == 32 {
+        let ptr = slice.as_ptr() as *const [T; 32];
+        unsafe {Ok(&*ptr)}
+    } else {
+        Err("err")
+    }
+}
+
 #[tauri::command]
 fn generate_public_key(private_key: String) -> String {
 	println!("Generating Public Key... ");
 
-	let mut exec_process = Command::new("lib/wg.exe")
-		.arg("pubkey")
-		.stdin(Stdio::piped())
-		.stdout(Stdio::piped())
-		.spawn()
-		.unwrap();
-		// .expect("failed to execute process");
+	let code = match base64::decode(private_key) {
+		Ok(c) => c,
+		Err(_) => return "Error1".to_string(),
+	};
 
-	let mut stdin = exec_process.stdin.take().expect("Failed to open stdin");
-	std::thread::spawn(move || {
-		stdin.write_all(private_key.as_bytes()).expect("Failed to write to stdin");
-	});
+	// println!("{:?} @ {}", private_key.as_bytes(), private_key.as_bytes().len());
 
-	println!("Generated Private Key.");
+	let key = match slice_to_array_32(code.as_slice()) {
+		Ok(a) => a.to_owned(),
+		Err(_) => return "Error".to_string(),
+	};
 
-	let output = exec_process.wait_with_output().expect("Failed to read stdout");
-	String::from_utf8(output.stdout.to_vec()).unwrap()
+	let priv_key = StaticSecret::from(key);
+
+	// println!("KEY: {:?}", key);
+
+	let public = PublicKey::from(&priv_key);
+
+	println!("KEY: {:?}", public);
+
+   	base64::encode(public.as_bytes())
 }
 
 #[tauri::command]
 fn generate_private_key() -> String {
 	println!("Generating Private Key... ");
 
-	let exec_process = Command::new("lib/wg.exe")
-		.arg("genkey")
-		.stdin(Stdio::piped())
-		.stdout(Stdio::piped())
-		.spawn()
-		.unwrap();
-
-	println!("Generated Private Key.");
-
-	let output = exec_process.wait_with_output().expect("Failed to read stdout");
-	String::from_utf8(output.stdout.to_vec()).unwrap()
+	let private = StaticSecret::new(&mut OsRng);
+	base64::encode(private.to_bytes())
 }
 
 #[tauri::command]
@@ -221,40 +230,43 @@ fn main() {
 		.setup(| _app | {
 			let rpath = _app.path_resolver().resource_dir().expect("Unable to access resources directory.");
 			let apath = _app.path_resolver().app_dir().expect("Unable to access app directory...");
-			let wireguard_config_path_exists = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()));
+			let wireguard_config_path_exists = fs::metadata(format!("{}/lib/wg0.conf", &apath.display()));
 
-			fs::create_dir_all(apath.clone().join("lib"))?;
-
-			println!("Dir: {}", format!("{}\\lib\\wg0.conf", &apath.display()));
+			println!("Dir: {}", format!("{}/lib/wg0.conf", &apath.display()));
 
 			let exists_ = match wireguard_config_path_exists {
-				Ok(_inner) => true,
+				Ok(inner) => {
+					println!("File Is File? {:?}", inner);
+					true
+				},
 				Err(ref _e) => false 
 			};
 
 			println!("{:?}", exists_);
 			
 			if !exists_ {
+				fs::create_dir_all(apath.clone().join("lib"))?;
+
 				let private_key = generate_private_key();
 				println!("{:?}", private_key);
 
 				write_text_file(
 					&apath,
 					(&"wg0.conf").to_string(), 
-					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 51820\nPrivateKey = {}", private_key)
+					format!("[Interface]\nAddress = 10.0.0.0/24\nDNS = 1.1.1.1\nListenPort = 8443\nPrivateKey = {}", private_key)
 				);
 
-				let mut perms = fs::metadata(format!("{}\\lib\\wg0.conf", &apath.display()))?.permissions();
+				let mut perms = fs::metadata(format!("{}/lib/wg0.conf", &apath.display()))?.permissions();
 				perms.set_readonly(false);
-				fs::set_permissions(format!("{}\\lib\\wg0.conf", &apath.display()), perms)?;
+				fs::set_permissions(format!("{}/lib/wg0.conf", &apath.display()), perms)?;
 
 				write_text_file(
 					&apath,
-					(&".first_time").to_string(), 
-					"YES".to_string()
+					(&"reseda.first_time").to_string(), 
+					format!("Yes!")
 				);
 
-				let in_path = format!("{}\\lib\\wg0.conf", &apath.display());
+				let in_path = format!("{}/lib/wg0.conf", &apath.display());
 
 				if cfg!(target_os = "windows") {
 					println!("Performing first time setup on WINDOWS");
@@ -289,8 +301,24 @@ fn main() {
 						}
 					};
 
-					stop_wireguard_tunnel();
+					stop_wireguard_tunnel(apath.display().to_string());
 				}else {
+					println!("Alternate Setup Route");
+
+					// let execution_perms = Command::new("chmod")
+					// 	.arg("a+x")
+					// 	.arg(format!("{}\\lib\\wg.exe", &apath.display()))
+					// 	.status();
+
+					// match execution_perms {
+					// 	Ok(ok) => {
+					// 		println!("Success in changing execution permissions for WG.EXE {:?}", ok)
+					// 	},
+					// 	Err(err) => {
+					// 		println!("Error in changing permissions of WG.EXE: {:?}", err)
+					// 	}
+					// };
+
 					println!("Exec.OS is not currently a supported operating system.");
 				}
 			}else {
