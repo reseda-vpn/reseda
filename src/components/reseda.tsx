@@ -163,7 +163,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                         // }}
                         >
                         <span 
-                            className="w-28 h-28 -mb-14 absolute bottom-0 rounded-full bg-white shadow-md flex justify-center items-center text-6xl font-bold"
+                            className="w-28 h-28 -mb-14 absolute bottom-0 rounded-full bg-white shadow-md flex justify-center items-center text-6xl font-bold hover:cursor-pointer"
                             onClick={(e) => {
                                 if(this.state.connection.connected) {
                                     this.disconnect();
@@ -284,8 +284,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                         <div 
                                             key={`server-${e.id}`}
                                             className=" 
-                                            rounded-lg overflow-hidden p-2 border bg-gray-200/60 hover:bg-gray-200 hover:text-gray-900 border-gray-300/60 shadow-lg shadow-transparent hover:shadow-gray-100/80 transition-shadow duration-450 ease-in-out flex flex-col justify-between min-h-72
-                                            text-slate-700 font-sans cursor-pointer
+                                            rounded-lg overflow-hidden p-2 border hover:text-gray-900 border-[#eceded] shadow-lg hover:shadow-gray-100/80 transition-shadow duration-450 ease-in-out flex flex-col justify-between min-h-72 text-slate-700 font-sans cursor-pointer
                                             "
                                             onClick={() => {
                                                 this.connect(e, () => {})
