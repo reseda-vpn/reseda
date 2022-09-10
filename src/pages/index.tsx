@@ -61,17 +61,17 @@ export default function Home({ providers }) {
 
             setAwaitingReply(false);
             const information = await res.text();
-            localStorage.setItem("reseda.safeguard", information);
             console.log("INFORMATION:", information);
 
-            if(res.type == "error" || res.type == "cors") {
-                console.log(res);
+            if(res.status != 201) {
                 setAuthSuccess("login_failure");
                 setAuthFailure("Account does not exist, try signing up!");
             }else {
                 setAuthSuccess("logged_in");
                 setAuthFailure("");
 
+                localStorage.setItem("reseda.safeguard", information);
+                
                 //@ts-expect-error
                 if(window.__TAURI_METADATA__) {
                     router.replace('./app');

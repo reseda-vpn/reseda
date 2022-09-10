@@ -7,6 +7,7 @@ import UsageGraph from '@components/usage_graph';
 import styles from '../styles/Home.module.css'
 import { register } from '@tauri-apps/api/globalShortcut';
 import Loader from './un-ui/loader';
+import { useRouter } from 'next/dist/client/router';
 
 export type Server = {
     id: string,
@@ -302,9 +303,16 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                             </div>
                         }
 
-                        <div className="flex flex-row items-center">
+                        <div className="flex flex-row items-center justify-between">
                             <p>Reseda FREE</p>
                             <p>{this?.user?.user?.email}</p>
+
+                            <div onClick={() => { 
+                                localStorage.removeItem("reseda.safeguard");
+                                window.location.href = "/";
+                            }}>
+                                Sign Out
+                            </div>
                         </div>
                     </div>
                 </div>
