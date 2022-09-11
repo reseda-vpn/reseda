@@ -209,7 +209,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                             
                         </span>
 
-                        <p className="text-lg font-bold text-black font-altsans">
+                        <div className="text-lg font-bold text-black font-altsans">
                             {
                                 (() => {
                                     switch(this?.state?.connection?.connection_type) {
@@ -253,7 +253,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                     }
                                 })()
                             }
-                        </p>
+                        </div>
                     </div>
                     <div className="h-16"></div>
                 </div>
