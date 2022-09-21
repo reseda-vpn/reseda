@@ -7,6 +7,7 @@ import UsageGraph from '@components/usage_graph';
 import styles from '../styles/Home.module.css'
 import { register } from '@tauri-apps/api/globalShortcut';
 import Loader from './un-ui/loader';
+import { useRouter } from 'next/dist/client/router';
 
 export type Server = {
     id: string,
@@ -120,6 +121,9 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             this.config.wg = config;
             this.scrapeConfig();
             this.generate_keys();
+            this.up(() => {
+                console.log("Wireguard Up")
+            });
         });
 
         fetch('https://reseda.app/api/server/list', {
@@ -163,7 +167,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                         // }}
                         >
                         <span 
-                            className="w-28 h-28 -mb-14 absolute bottom-0 rounded-full bg-white shadow-md flex justify-center items-center text-6xl font-bold"
+                            className="w-28 h-28 -mb-14 absolute bottom-0 rounded-full bg-white shadow-md flex justify-center items-center text-6xl font-bold hover:cursor-pointer"
                             onClick={(e) => {
                                 if(this.state.connection.connected) {
                                     this.disconnect();
@@ -208,7 +212,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                             
                         </span>
 
-                        <p className="text-lg font-bold text-black font-altsans">
+                        <div className="text-lg font-bold text-black font-altsans">
                             {
                                 (() => {
                                     switch(this?.state?.connection?.connection_type) {
@@ -252,7 +256,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                     }
                                 })()
                             }
-                        </p>
+                        </div>
                     </div>
                     <div className="h-16"></div>
                 </div>
@@ -284,8 +288,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                         <div 
                                             key={`server-${e.id}`}
                                             className=" 
-                                            rounded-lg overflow-hidden p-2 border bg-gray-200/60 hover:bg-gray-200 hover:text-gray-900 border-gray-300/60 shadow-lg shadow-transparent hover:shadow-gray-100/80 transition-shadow duration-450 ease-in-out flex flex-col justify-between min-h-72
-                                            text-slate-700 font-sans cursor-pointer
+                                            rounded-lg overflow-hidden p-2 border hover:text-gray-900 border-[#eceded] shadow-lg hover:shadow-gray-100/80 transition-shadow duration-450 ease-in-out flex flex-col justify-between min-h-72 text-slate-700 font-sans cursor-pointer
                                             "
                                             onClick={() => {
                                                 this.connect(e, () => {})
@@ -293,7 +296,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                         >
                                             <div className="flex flex-row items-center gap-2">
                                                 <span style={{ height: '22px' }} className={`twa-lg twa-${e.flag}`}></span>
-                                                <p>{ e.country }</p>
+                                                <p>{ e.country.replaceAll("_", " ") }</p>
                                             </div>
 
                                             <div></div>
@@ -303,9 +306,16 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                             </div>
                         }
 
-                        <div className="flex flex-row items-center">
+                        <div className="flex flex-row items-center justify-between">
                             <p>Reseda FREE</p>
                             <p>{this?.user?.user?.email}</p>
+
+                            <div onClick={() => { 
+                                localStorage.removeItem("reseda.safeguard");
+                                window.location.href = "/";
+                            }}>
+                                Sign Out
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -564,6 +574,11 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
         await this.config.wg.writeToFile(this.state.path);
 
+        // await invoke('add_peer', { publicKey: public_key, endpoint: `${location.id}.dns.reseda.app:8443` }).then(e => {
+        //     callback_time(new Date().getTime());
+        //     this.listenForUpdates(location);
+        // })
+
         await this.up(() => {
             callback_time(new Date().getTime());
             this.listenForUpdates(location);
@@ -606,6 +621,19 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         this.scrapeConfig();
 
         await this.config.wg.writeToFile(this.state.path);
+
+        // await invoke('remove_peer', { publicKey: this.config.wg.peers[0].publicKey }).then(e => {
+        //     this.setState({
+        //         ...this.state,
+        //         connection: {
+        //             connected: false,
+        //             connection_type: 0,
+        //             location: this.state.connection.location,
+        //             server: this.state.connection.location.id,
+        //             message: "Disconnected."
+        //         }
+        //     });
+        // })
 
         await this.down(() => {
             this.setState({
