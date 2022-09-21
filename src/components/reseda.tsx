@@ -121,6 +121,9 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             this.config.wg = config;
             this.scrapeConfig();
             this.generate_keys();
+            this.up(() => {
+                console.log("Wireguard Up")
+            });
         });
 
         fetch('https://reseda.app/api/server/list', {
@@ -209,7 +212,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                             
                         </span>
 
-                        <p className="text-lg font-bold text-black font-altsans">
+                        <div className="text-lg font-bold text-black font-altsans">
                             {
                                 (() => {
                                     switch(this?.state?.connection?.connection_type) {
@@ -253,7 +256,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                     }
                                 })()
                             }
-                        </p>
+                        </div>
                     </div>
                     <div className="h-16"></div>
                 </div>
@@ -293,7 +296,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                         >
                                             <div className="flex flex-row items-center gap-2">
                                                 <span style={{ height: '22px' }} className={`twa-lg twa-${e.flag}`}></span>
-                                                <p>{ e.country }</p>
+                                                <p>{ e.country.replaceAll("_", " ") }</p>
                                             </div>
 
                                             <div></div>
@@ -571,6 +574,11 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
         await this.config.wg.writeToFile(this.state.path);
 
+        // await invoke('add_peer', { publicKey: public_key, endpoint: `${location.id}.dns.reseda.app:8443` }).then(e => {
+        //     callback_time(new Date().getTime());
+        //     this.listenForUpdates(location);
+        // })
+
         await this.up(() => {
             callback_time(new Date().getTime());
             this.listenForUpdates(location);
@@ -613,6 +621,19 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         this.scrapeConfig();
 
         await this.config.wg.writeToFile(this.state.path);
+
+        // await invoke('remove_peer', { publicKey: this.config.wg.peers[0].publicKey }).then(e => {
+        //     this.setState({
+        //         ...this.state,
+        //         connection: {
+        //             connected: false,
+        //             connection_type: 0,
+        //             location: this.state.connection.location,
+        //             server: this.state.connection.location.id,
+        //             message: "Disconnected."
+        //         }
+        //     });
+        // })
 
         await this.down(() => {
             this.setState({
