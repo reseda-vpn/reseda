@@ -3,11 +3,11 @@
   windows_subsystem = "windows"
 )]
 
-use std::array::TryFromSliceError;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
 use std::io::{Write};
+use std::thread;
 
 use base64;
 use rand_core::OsRng;
@@ -37,7 +37,7 @@ fn is_wireguard_up() -> String {
 			.expect("Failed to read stdout")
 	};
 
-	println!("Status Check:: Wireguard is {}", String::from_utf8(output.stdout.to_vec()).unwrap());
+	// println!("Status Check:: Wireguard is {}", String::from_utf8(output.stdout.to_vec()).unwrap());
 
 	String::from_utf8(output.stdout.to_vec()).unwrap()
 }
@@ -49,17 +49,20 @@ fn start_wireguard_tunnel(path: String) -> String {
 
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
-		Command::new("net")
+		// thread::spawn(|| {
+			Command::new("net")
 			.arg("start")
 			.arg("WireGuardTunnel$wg0")
 			.output()
 			.expect("Failed to start wireguard!");
-
+		// })
 	} else {
-		Command::new("wg-quick")
-			.arg(format!("up {}/lib/wg0.conf", path))
-			.output()
-			.expect("Failed to start wireguard!");
+		// thread::spawn(move || {
+			Command::new("wg-quick")
+				.arg(format!("up {}/lib/wg0.conf", path))
+				.output()
+				.expect("Failed to start wireguard!");
+		// })
 	};
 
 	println!("Started Tunnel: {:?}", output);
@@ -223,10 +226,23 @@ fn remove_windows_service() -> Result<String, &'static str> {
 	Ok(output)
 }
 
+#[tauri::command]
+fn verify_installation() -> bool {
+	let wireguard_installed = match Command::new("wg").output() {
+		Ok(_) => true,
+		Err(error) => {
+			println!("{:?}", error);
+			false
+		},
+	};
+
+	wireguard_installed
+}
+
 fn main() {
 	// Then Build TAURI.
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![generate_private_key, add_peer, remove_peer, start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
+		.invoke_handler(tauri::generate_handler![verify_installation, generate_private_key, add_peer, remove_peer, start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
 		.setup(| _app | {
 			let rpath = _app.path_resolver().resource_dir().expect("Unable to access resources directory.");
 			let apath = _app.path_resolver().app_dir().expect("Unable to access app directory...");
@@ -235,10 +251,7 @@ fn main() {
 			println!("Dir: {}", format!("{}/lib/wg0.conf", &apath.display()));
 
 			let exists_ = match wireguard_config_path_exists {
-				Ok(inner) => {
-					println!("File Is File? {:?}", inner);
-					true
-				},
+				Ok(_inner) => true,
 				Err(ref _e) => false 
 			};
 
@@ -248,7 +261,6 @@ fn main() {
 				fs::create_dir_all(apath.clone().join("lib"))?;
 
 				let private_key = generate_private_key();
-				println!("{:?}", private_key);
 
 				write_text_file(
 					&apath,

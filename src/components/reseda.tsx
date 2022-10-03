@@ -59,7 +59,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         path: string,
         fetching: boolean,
         usage: Usage[],
-        registry: Server[]
+        registry: Server[],
+        installed: boolean
     };
     config: {
         keys: {
@@ -77,11 +78,18 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         super(props);
         let { file_path, user } = props;
 
-        console.log("Constructing Wireguard Object")
+        console.log("Constructing Wireguard Object");
+
+        
+
+        // Check if wireguard is installed,
+        // Check if there are any problems with setup, i.e. wireguard is on when meant to be off...
+        // Add loading UI so the user knows what is happening, i.e. disconnecting messages, reconnecting messages, ...
 
         this.user = user;
 
         this.state = {
+            installed: false,
             connection: {
                 location: null,
                 connected: false,
@@ -107,6 +115,10 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 filePath: file_path
             })
         };
+
+        invoke('verify_installation').then((e: boolean) => {
+            this.state.installed = e;
+        })
 
         console.log("Loading configuration from file: ", file_path);
 
@@ -223,12 +235,15 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                                         case 1:
                                             return (
                                                 <div className="flex flex-col items-center">
-                                                    <h1 className="font-mono">{this?.state?.connection?.location?.country}</h1>
+                                                    <h1 className="font-mono">{this?.state?.connection?.location?.country.replaceAll("_", " ")}</h1>
                                                         <p className="font-normal font-mono opacity-60 text-sm">
                                                         {
                                                             this?.state?.connection?.location?.id?.split("-").filter((e,i) => {
                                                                 return i <= 1
-                                                            }).join("-")
+                                                            }).map(e => {
+                                                                const k = e[0].toUpperCase();
+                                                                return k + e.substring(1, e.length)
+                                                            }).join(" ")
                                                         }
                                                     </p>
                                                 </div>
@@ -650,9 +665,21 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     async up(cb: Function) {
-        await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
-            cb();
-        })
+        let k = await invoke('is_wireguard_up').then(e => {
+            return `${e}`;
+        });
+
+        if(k.includes('RUNNING')) {
+            await this.down(async () => {
+                await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
+                    cb();
+                })
+            });
+        }else {
+            await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
+                cb();
+            })
+        }
     }
     
     async down(cb: Function) {
