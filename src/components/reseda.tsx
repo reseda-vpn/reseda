@@ -138,9 +138,10 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             this.config.wg = config;
             this.scrapeConfig();
             this.generate_keys();
-            this.up(() => {
-                console.log("Wireguard Up")
-            });
+
+            // this.up(() => {
+            //     console.log("Wireguard Up")
+            // });
         });
 
         fetch('https://reseda.app/api/server/list', {
