@@ -54,6 +54,18 @@ type Usage = {
     down: number
 }
 
+type UsageLog = { 
+    connEnd: string 
+    connStart: string
+
+    down: string
+    up: string
+
+    id: string
+    serverId: string
+    userId: string
+}
+
 class WireGuard extends Component<{ file_path: string, user: any }> {
     state: {
         connection: State,
@@ -64,7 +76,9 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         installed: boolean,
         has: {
             has_exceeded_usage: boolean
-        }
+        },
+        tier: "FREE" | "SUPPORTER" | "PRO" | "BASIC",
+        usage_history: UsageLog[]
     };
     config: {
         keys: {
@@ -108,7 +122,9 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             registry: [],
             has: {
                 has_exceeded_usage: false
-            }
+            },
+            tier: null,
+            usage_history: null
         };
 
         this.config = {
@@ -156,6 +172,42 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 this.setRegistry(json);
                 this.setFetching(false);
                 this.resumeConnection();
+            })
+            .catch(e => {
+                console.log(e)
+            })
+
+        fetch(`https://reseda.app/api/user/tier/${this.user.id}`, {
+            method: "GET",
+            redirect: 'follow'
+        })
+            .then(async e => {
+                const json = await e.text();
+                console.log("Tier:", json);
+
+                this.setState({
+                    ...this.state,
+                    tier: json
+                });
+            })
+            .catch(e => {
+                console.log(e)
+            })
+        
+        fetch(`https://reseda.app/api/user/usage/this-month/${this.user.id}`, {
+            method: "GET",
+            redirect: 'follow'
+        })
+            .then(async e => {
+                const json = await e.json();
+                console.log("Usage: ", json);
+
+                this.setState({
+                    ...this.state,
+                    usage_history: json
+                });
+
+                this.determineLimits();
             })
             .catch(e => {
                 console.log(e)
@@ -368,6 +420,18 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
         this.config.keys.public_key  = puckey.toString().substring(0, puckey.indexOf('=')+1);
         this.config.keys.private_key = privkey;
+    }
+
+    determineLimits() {
+        let totalDown = 0
+        let totalUp = 0;
+
+        this.state.usage_history.map(e => {
+            totalDown += parseInt(e.down);
+            totalUp += parseInt(e.up);
+        });
+
+        console.log(totalDown, totalUp);
     }
 
     setUser(user: Session) {
