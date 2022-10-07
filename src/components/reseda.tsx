@@ -8,6 +8,7 @@ import styles from '../styles/Home.module.css'
 import { register } from '@tauri-apps/api/globalShortcut';
 import Loader from './un-ui/loader';
 import { useRouter } from 'next/dist/client/router';
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/api/notification';
 
 export type Server = {
     id: string,
@@ -53,6 +54,18 @@ type Usage = {
     down: number
 }
 
+type UsageLog = { 
+    connEnd: string 
+    connStart: string
+
+    down: string
+    up: string
+
+    id: string
+    serverId: string
+    userId: string
+}
+
 class WireGuard extends Component<{ file_path: string, user: any }> {
     state: {
         connection: State,
@@ -60,7 +73,12 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         fetching: boolean,
         usage: Usage[],
         registry: Server[],
-        installed: boolean
+        installed: boolean,
+        has: {
+            has_exceeded_usage: boolean
+        },
+        tier: "FREE" | "SUPPORTER" | "PRO" | "BASIC",
+        usage_history: UsageLog[]
     };
     config: {
         keys: {
@@ -79,8 +97,6 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         let { file_path, user } = props;
 
         console.log("Constructing Wireguard Object");
-
-        
 
         // Check if wireguard is installed,
         // Check if there are any problems with setup, i.e. wireguard is on when meant to be off...
@@ -103,7 +119,12 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 up: 0,
                 down: 0
             }],
-            registry: []
+            registry: [],
+            has: {
+                has_exceeded_usage: false
+            },
+            tier: null,
+            usage_history: null
         };
 
         this.config = {
@@ -118,7 +139,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
         invoke('verify_installation').then((e: boolean) => {
             this.state.installed = e;
-        })
+        });
 
         console.log("Loading configuration from file: ", file_path);
 
@@ -133,9 +154,10 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             this.config.wg = config;
             this.scrapeConfig();
             this.generate_keys();
-            this.up(() => {
-                console.log("Wireguard Up")
-            });
+
+            // this.up(() => {
+            //     console.log("Wireguard Up")
+            // });
         });
 
         fetch('https://reseda.app/api/server/list', {
@@ -150,6 +172,42 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 this.setRegistry(json);
                 this.setFetching(false);
                 this.resumeConnection();
+            })
+            .catch(e => {
+                console.log(e)
+            })
+
+        fetch(`https://reseda.app/api/user/tier/${this.user.id}`, {
+            method: "GET",
+            redirect: 'follow'
+        })
+            .then(async e => {
+                const json = await e.text();
+                console.log("Tier:", json);
+
+                this.setState({
+                    ...this.state,
+                    tier: json
+                });
+            })
+            .catch(e => {
+                console.log(e)
+            })
+        
+        fetch(`https://reseda.app/api/user/usage/this-month/${this.user.id}`, {
+            method: "GET",
+            redirect: 'follow'
+        })
+            .then(async e => {
+                const json = await e.json();
+                console.log("Usage: ", json);
+
+                this.setState({
+                    ...this.state,
+                    usage_history: json
+                });
+
+                this.determineLimits();
             })
             .catch(e => {
                 console.log(e)
@@ -180,9 +238,9 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                         >
                         <span 
                             className="w-28 h-28 -mb-14 absolute bottom-0 rounded-full bg-white shadow-md flex justify-center items-center text-6xl font-bold hover:cursor-pointer"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                                 if(this.state.connection.connected) {
-                                    this.disconnect();
+                                    await this.disconnect();
                                 }else {
                                     this.connect(this.getRegistry()[0], () => {});
                                 }
@@ -279,6 +337,16 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 <div className="flex flex-col gap-2 flex-1 p-2">                
                     <div className="flex flex-col gap-4 text-slate-800 flex-1 p-2">
                         {
+                            this?.state?.has?.has_exceeded_usage ? 
+                            <div>
+                                <h1>You have exceeded your monthly allocated usage for your free tier.</h1>
+                                <p>To unlock unlimited data options, click <a href="https://reseda.app/billing/plan">here</a></p>
+                            </div>
+                            :
+                            <></>
+                        }
+
+                        {
                             this?.state?.connection?.connected ?
                             <div className="p-1 flex flex-col gap-2 flex-1 h-full">
                                 <div className="flex flex-row items-baseline flex-1">
@@ -352,6 +420,18 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
         this.config.keys.public_key  = puckey.toString().substring(0, puckey.indexOf('=')+1);
         this.config.keys.private_key = privkey;
+    }
+
+    determineLimits() {
+        let totalDown = 0
+        let totalUp = 0;
+
+        this.state.usage_history.map(e => {
+            totalDown += parseInt(e.down);
+            totalUp += parseInt(e.up);
+        });
+
+        console.log(totalDown, totalUp);
     }
 
     setUser(user: Session) {
@@ -478,27 +558,27 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         }, location, true)
     }
 
-    disconnect() {
-        this.bounceWs(() => {
-            this.socket.send(JSON.stringify({
-                query_type: "close"
-            }));
+    async disconnect() {
+        await this.removePeer()
 
-            setTimeout(async () => {
-                await this.removePeer()
+        setTimeout(async () => {
+            this.bounceWs(() => {
+                this.socket.send(JSON.stringify({
+                    query_type: "close"
+                }));
+            }, this.state.connection.location)
 
-                this.setState({
-                    ...this.state,
-                    connection: {
-                        connected: false,
-                        connection_type: 0,
-                        location: null,
-                        server: null,
-                        message: "Disconnected."
-                    }
-                });
-            }, 15);
-        }, this.state.connection.location)
+            this.setState({
+                ...this.state,
+                connection: {
+                    connected: false,
+                    connection_type: 0,
+                    location: null,
+                    server: null,
+                    message: "Disconnected."
+                }
+            });
+        }, 1000);
     }
 
     async uninstallService() {
@@ -602,7 +682,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
     listenForUpdates(location: Server) {
         this.bounceWs(() => {
-            this.socket.addEventListener('message', (event) => {
+            this.socket.addEventListener('message', async (event) => {
                 const connection_notes = JSON.parse(event.data);
 
                 if(connection_notes.type == "update" && connection_notes.message?.up && connection_notes.message?.down) {
@@ -616,6 +696,30 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                             }
                         ]
                     });
+                }
+                
+                if(connection_notes.type == "error" && connection_notes.message == "UDC-EU") {
+                    await this.disconnect();
+
+                    this.setState({
+                        ...this.state,
+                        has: {
+                            has_exceeded_usage: true
+                        }
+                    });
+
+                    let permissionGranted = await isPermissionGranted();
+                    if (!permissionGranted) {
+                        const permission = await requestPermission();
+                        permissionGranted = permission === 'granted';
+                    }
+
+                    if (permissionGranted) {
+                        sendNotification({
+                            title: "Reseda",
+                            body: "Usage limit met"
+                        });
+                    }
                 }
             })
         }, location)
