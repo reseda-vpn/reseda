@@ -6,8 +6,8 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
-use std::io::{Write};
-use std::thread;
+
+mod tunnel;
 
 use base64;
 use rand_core::OsRng;
