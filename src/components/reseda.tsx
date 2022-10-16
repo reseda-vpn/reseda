@@ -524,14 +524,17 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             });
 
             console.time("evt-listener->get-message");
+            console.time("evt-listener->get-right-message");
 
             this.socket.addEventListener('message', async (connection) => {
-                console.timeEnd("evt-listener->get-message");
-                console.time("get-message->add-peer");
-
                 const connection_notes: Incoming = JSON.parse(connection.data);
+                console.log(connection_notes);
+                
+                console.timeEnd("evt-listener->get-message");
 
                 if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
+                    console.timeEnd("evt-listener->get-right-message");
+                    console.time("get-message->add-peer");
                     const message: Verification = connection_notes.message as Verification;
 
                     this.setState({
