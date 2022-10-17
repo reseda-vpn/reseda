@@ -615,6 +615,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
             if(!this?.user?.id || !conn_ip) {
                 console.log(conn_ip, this?.user?.id)
+                this.down(() => {});
                 return;
             }
 
@@ -667,7 +668,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 }, loc)
             }else {
                 console.log("UNABLE TO INSTIGATE RESUME", loc, this.state.registry)
-            }
+                this.down(() => {});
+            }   
         });
     }
 
