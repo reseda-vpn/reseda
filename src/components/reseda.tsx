@@ -431,6 +431,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             totalUp += parseInt(e.up);
         });
 
+        return {totalDown, totalUp};
+
         console.log(totalDown, totalUp);
     }
 
@@ -490,6 +492,25 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     connect(location: Server, callback_time: Function) {
+        // If user has exceeded limits, do not allow them to connect.
+        if(this.state.tier == "FREE" || this.state.tier == "SUPPORTER") {
+            const limits = this.determineLimits();
+
+            if(this.state.tier == "FREE") {
+                const limit = 5000000000;
+
+                if(limits.totalDown >= limit || limits.totalUp >= limit) {
+                    return;
+                }
+            }else {
+                const limit = 50000000000;
+
+                if(limits.totalDown >= limit || limits.totalUp >= limit) {
+                    return;
+                }
+            }
+        }
+
         console.time("start->sendws");
         callback_time(new Date().getTime());
         console.log(this.config.keys);
