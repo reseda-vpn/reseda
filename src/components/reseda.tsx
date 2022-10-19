@@ -390,7 +390,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                         }
 
                         <div className="flex flex-row items-center justify-between">
-                            <p>Reseda FREE</p>
+                            <p>Reseda {this?.state?.tier}</p>
                             <p>{this?.user?.user?.email}</p>
 
                             <div onClick={() => { 
@@ -430,6 +430,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             totalDown += parseInt(e.down);
             totalUp += parseInt(e.up);
         });
+
+        return {totalDown, totalUp};
 
         console.log(totalDown, totalUp);
     }
@@ -490,6 +492,26 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     connect(location: Server, callback_time: Function) {
+        // If user has exceeded limits, do not allow them to connect.
+        if(this.state.tier == "FREE" || this.state.tier == "SUPPORTER") {
+            const limits = this.determineLimits();
+
+            if(this.state.tier == "FREE") {
+                const limit = 5000000000;
+
+                if(limits.totalDown >= limit || limits.totalUp >= limit) {
+                    return;
+                }
+            }else {
+                const limit = 50000000000;
+
+                if(limits.totalDown >= limit || limits.totalUp >= limit) {
+                    return;
+                }
+            }
+        }
+
+        console.time("start->sendws");
         callback_time(new Date().getTime());
         console.log(this.config.keys);
         
@@ -509,6 +531,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 query_type: "open"
             }));
 
+            console.timeEnd("start->sendws");
+
             this.setState({
                 ...this.state,
                 connection: {
@@ -520,10 +544,18 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 }
             });
 
+            console.time("evt-listener->get-message");
+            console.time("evt-listener->get-right-message");
+
             this.socket.addEventListener('message', async (connection) => {
                 const connection_notes: Incoming = JSON.parse(connection.data);
+                console.log(connection_notes);
+                
+                console.timeEnd("evt-listener->get-message");
 
                 if(connection_notes.type == "message" && typeof connection_notes.message == "object") {
+                    console.timeEnd("evt-listener->get-right-message");
+                    console.time("get-message->add-peer");
                     const message: Verification = connection_notes.message as Verification;
 
                     this.setState({
@@ -538,7 +570,9 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                     });
     
                     this.socket.close();
-    
+                    
+                    console.timeEnd("get-message->add-peer");
+                    console.time("add-peer->finish");
                     await this.addPeer(location, message.server_public_key, message.subdomain, callback_time);
                     
                     this.setState({
@@ -553,6 +587,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                     });
     
                     callback_time(new Date().getTime());
+                    console.timeEnd("add-peer->finish");
                 }
             })
         }, location, true)
@@ -601,6 +636,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
             if(!this?.user?.id || !conn_ip) {
                 console.log(conn_ip, this?.user?.id)
+                this.down(() => {});
                 return;
             }
 
@@ -653,7 +689,8 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 }, loc)
             }else {
                 console.log("UNABLE TO INSTIGATE RESUME", loc, this.state.registry)
-            }
+                this.down(() => {});
+            }   
         });
     }
 
@@ -769,9 +806,11 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
 
     async up(cb: Function) {
+        console.time("up: checking wg");
         let k = await invoke('is_wireguard_up').then(e => {
             return `${e}`;
         });
+        console.timeEnd("up: checking wg");
 
         if(k.includes('RUNNING')) {
             await this.down(async () => {
@@ -787,9 +826,12 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     }
     
     async down(cb: Function) {
+        console.time("down: stopping wg");
         await invoke('stop_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
             cb();
         })
+        console.timeEnd("down: stopping wg");
+
     }
 
     scrapeConfig() {
