@@ -6,12 +6,14 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
+use tauri::{SystemTray, SystemTrayEvent, Manager};
 
 mod tunnel;
 
 use base64;
 use rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
+use tauri::{CustomMenuItem, SystemTrayMenu, SystemTrayMenuItem};
 
 #[tauri::command]
 fn is_wireguard_up() -> String {
@@ -240,6 +242,18 @@ fn verify_installation() -> bool {
 }
 
 fn main() {
+	let quit = CustomMenuItem::new("quit".to_string(), "Quit");
+	let hide = CustomMenuItem::new("hide".to_string(), "Hide");
+	let show = CustomMenuItem::new("show".to_string(), "Show");
+	let tray_menu = SystemTrayMenu::new()
+		.add_item(quit)
+		.add_native_item(SystemTrayMenuItem::Separator)
+		.add_item(hide)
+		.add_native_item(SystemTrayMenuItem::Separator)
+		.add_item(show);
+
+	let system_tray = SystemTray::new().with_menu(tray_menu);
+
 	// Then Build TAURI.
 	tauri::Builder::default()
 		.invoke_handler(tauri::generate_handler![verify_installation, generate_private_key, add_peer, remove_peer, start_wireguard_tunnel, stop_wireguard_tunnel, generate_public_key, is_wireguard_up, remove_windows_service, log_to_console])
@@ -339,6 +353,61 @@ fn main() {
 
 			Ok(())
 		})
-		.run(tauri::generate_context!())
+		.system_tray(system_tray)
+		.on_system_tray_event(|app, event| match event {
+			SystemTrayEvent::LeftClick {
+			  position: _,
+			  size: _,
+			  ..
+			} => {
+			  println!("system tray received a left click");
+			}
+			SystemTrayEvent::RightClick {
+			  position: _,
+			  size: _,
+			  ..
+			} => {
+			  println!("system tray received a right click");
+			}
+			SystemTrayEvent::DoubleClick {
+			  position: _,
+			  size: _,
+			  ..
+			} => {
+			  println!("system tray received a double click");
+			}
+			SystemTrayEvent::MenuItemClick { id, .. } => {
+			  match id.as_str() {
+				"quit" => {
+				  	// std::process::exit(0);
+				}
+				"hide" => {
+				  	// let window = app.get_window("main").unwrap();
+				  	// window.hide().unwrap();
+				}
+				"show" => {
+					// let window = app.get_window("main").unwrap();
+				  	// window.show().unwrap();
+				}
+				_ => {}
+			  }
+			}
+			_ => {}
+		  })
+		.on_window_event(| event | match event.event() {
+			tauri::WindowEvent::CloseRequested { 
+				api, .. 
+			} => {
+				match event.window().hide() {
+					Ok(_) => println!("Closed application."),
+					Err(err) => println!("Error in closing application: {}", err),
+				}
+
+                api.prevent_close();
+			}
+			_ => {}
+		})
+		.build(tauri::generate_context!())
 		.expect("error while running tauri application");
+		// tauri::generate_context!()
 }
