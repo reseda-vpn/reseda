@@ -244,13 +244,10 @@ fn verify_installation() -> bool {
 fn main() {
 	let quit = CustomMenuItem::new("quit".to_string(), "Quit");
 	let hide = CustomMenuItem::new("hide".to_string(), "Hide");
-	let show = CustomMenuItem::new("show".to_string(), "Show");
 	let tray_menu = SystemTrayMenu::new()
 		.add_item(quit)
 		.add_native_item(SystemTrayMenuItem::Separator)
-		.add_item(hide)
-		.add_native_item(SystemTrayMenuItem::Separator)
-		.add_item(show);
+		.add_item(hide);
 
 	let system_tray = SystemTray::new().with_menu(tray_menu);
 
@@ -354,7 +351,7 @@ fn main() {
 			Ok(())
 		})
 		.system_tray(system_tray)
-		.on_system_tray_event(|app, event| match event {
+		.on_system_tray_event(| app, event | match event {
 			SystemTrayEvent::LeftClick {
 			  position: _,
 			  size: _,
@@ -367,30 +364,35 @@ fn main() {
 			  size: _,
 			  ..
 			} => {
-			  println!("system tray received a right click");
+			 	println!("system tray received a right click");
 			}
 			SystemTrayEvent::DoubleClick {
 			  position: _,
 			  size: _,
 			  ..
 			} => {
-			  println!("system tray received a double click");
+			  	println!("system tray received a double click");
 			}
 			SystemTrayEvent::MenuItemClick { id, .. } => {
-			  match id.as_str() {
-				"quit" => {
-				  	// std::process::exit(0);
-				}
-				"hide" => {
-				  	// let window = app.get_window("main").unwrap();
-				  	// window.hide().unwrap();
-				}
-				"show" => {
-					// let window = app.get_window("main").unwrap();
-				  	// window.show().unwrap();
-				}
-				_ => {}
-			  }
+				let item_handle = app.tray_handle().get_item(&id);
+
+				match id.as_str() {
+					"quit" => {
+						std::process::exit(0);
+					}
+					"hide" => {
+						let window = app.get_window("main").unwrap();
+
+						if(window.is_visible().unwrap()) {
+							window.hide().unwrap();
+							item_handle.set_title("Show").unwrap();
+						}else {
+							window.show().unwrap();
+							item_handle.set_title("Hide").unwrap();
+						}
+					}
+					_ => {}
+			  	}
 			}
 			_ => {}
 		  })
@@ -399,7 +401,12 @@ fn main() {
 				api, .. 
 			} => {
 				match event.window().hide() {
-					Ok(_) => println!("Closed application."),
+					Ok(_) => { 
+						println!("Closed application.");
+					
+						let item_handle = event.window().app_handle().tray_handle().get_item(&"hide");
+						item_handle.set_title("Show").unwrap();
+					},
 					Err(err) => println!("Error in closing application: {}", err),
 				}
 
@@ -407,7 +414,9 @@ fn main() {
 			}
 			_ => {}
 		})
-		.build(tauri::generate_context!())
-		.expect("error while running tauri application");
+		.run(tauri::generate_context!())
+		.expect("error while running tauri application")
+		// .build(tauri::generate_context!())
+		// .expect("error while running tauri application");
 		// tauri::generate_context!()
 }
