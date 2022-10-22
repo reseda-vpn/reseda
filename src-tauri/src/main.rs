@@ -357,7 +357,11 @@ fn main() {
 			  size: _,
 			  ..
 			} => {
-			  println!("system tray received a left click");
+				let window = app.get_window("main").unwrap();
+				window.show().unwrap();
+
+				let item_handle = window.app_handle().tray_handle().get_item(&"hide");
+				item_handle.set_title("Hide").unwrap();
 			}
 			SystemTrayEvent::RightClick {
 			  position: _,
@@ -383,7 +387,7 @@ fn main() {
 					"hide" => {
 						let window = app.get_window("main").unwrap();
 
-						if(window.is_visible().unwrap()) {
+						if window.is_visible().unwrap() {
 							window.hide().unwrap();
 							item_handle.set_title("Show").unwrap();
 						}else {
