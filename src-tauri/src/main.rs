@@ -363,20 +363,6 @@ fn main() {
 				let item_handle = window.app_handle().tray_handle().get_item(&"hide");
 				item_handle.set_title("Hide").unwrap();
 			}
-			SystemTrayEvent::RightClick {
-			  position: _,
-			  size: _,
-			  ..
-			} => {
-			 	println!("system tray received a right click");
-			}
-			SystemTrayEvent::DoubleClick {
-			  position: _,
-			  size: _,
-			  ..
-			} => {
-			  	println!("system tray received a double click");
-			}
 			SystemTrayEvent::MenuItemClick { id, .. } => {
 				let item_handle = app.tray_handle().get_item(&id);
 
