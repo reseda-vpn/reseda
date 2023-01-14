@@ -182,7 +182,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
             redirect: 'follow'
         })
             .then(async e => {
-                const json = await e.text();
+                const json = (await e.text()).replaceAll("\"","");
                 console.log("Tier:", json);
 
                 this.setState({
