@@ -11,7 +11,7 @@ use tauri::{SystemTray, SystemTrayEvent, Manager};
 
 mod tunnel;
 
-use base64::{self, engine, alphabet, Engine};
+use base64::{self, Engine};
 use rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 use tauri::{CustomMenuItem, SystemTrayMenu, SystemTrayMenuItem};
@@ -151,9 +151,9 @@ fn slice_to_array_32<T>(slice: &[T]) -> Result<&[T; 32], &str> {
 fn generate_public_key(private_key: String) -> String {
 	println!("Generating Public Key... ");
 
-	let code = match engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD).decode(private_key) {
+	let code = match general_purpose::STANDARD.decode(private_key) {
 		Ok(c) => c,
-		Err(_) => return "Error1".to_string(),
+		Err(err) => return err.to_string(),
 	};
 
 	// println!("{:?} @ {}", private_key.as_bytes(), private_key.as_bytes().len());
@@ -171,7 +171,7 @@ fn generate_public_key(private_key: String) -> String {
 
 	println!("KEY: {:?}", public);
 
-	engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD).encode(public.as_bytes())
+	general_purpose::STANDARD.encode(public.as_bytes())
 }
 
 #[tauri::command]
@@ -179,7 +179,7 @@ fn generate_private_key() -> String {
 	println!("Generating Private Key... ");
 
 	let private = StaticSecret::new(&mut OsRng);
-	engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD).encode(private.to_bytes())
+	general_purpose::STANDARD.encode(private.to_bytes())
 }
 
 #[tauri::command]

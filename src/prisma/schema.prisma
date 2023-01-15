@@ -34,6 +34,7 @@ model Usage {
 
 model Server {
   id            String    @unique @db.VarChar(255)
+  ip            String    @default("0.0.0.0")
   serverUp      DateTime  @default(now())
   location      String    
   country       String    
@@ -61,12 +62,15 @@ model Account {
     session_state            String?
     oauth_token_secret       String?
     oauth_token              String?
-    lcs               String?   
-  maxUp             String    @default("5368709120")
-  maxDown           String    @default("5368709120")
-  tier              String    @default("FREE")
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    lcs                      String?   
+    billing_id               String @default("")
+    limit                    String @default("-1")
+    maxUp                    String @default("5368709120")
+    maxDown                  String @default("5368709120")
+    tier                     String @default("FREE")
+    user                     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     @@unique([provider, providerAccountId])
+    @@unique([userId])
 }
 
 model Session {

@@ -17,7 +17,8 @@ export type Server = {
     country: string,
     virtual: boolean,
     hostname: string,
-    flag: string
+    flag: string,
+    ip: string
 };
 
 type Incoming = {
@@ -699,7 +700,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         this.config.wg.addPeer({
 			publicKey: public_key,
 			allowedIps: [ "0.0.0.0/0" ],
-			endpoint: `${location.id}.dns.reseda.app:8443`
+			endpoint: location.ip // `${location.id}.dns.reseda.app:8443`
 		});
 
         this.config.wg.wgInterface.address = [`10.8.${subdomain}/24`];
@@ -813,10 +814,10 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         console.timeEnd("up: checking wg");
 
         await invoke('plugin:onetun|start_tunnel', { 
-            private_key: this.config.keys.private_key, 
-            register_ip: this.config.wg.peers[0].endpoint, 
-            endpoint_key: this.config.wg.peers[0].publicKey, 
-            endpoint_ip: this.config.wg.peers[0].endpoint 
+            privateKey: this.config.keys.private_key, 
+            registerIp: this.config.wg.peers[0].allowedIps[0], 
+            endpointKey: this.config.wg.peers[0].publicKey, 
+            endpointIp: this.config.wg.peers[0].endpoint 
         }).then(e => {
             console.log(e);
             cb();
@@ -837,9 +838,16 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
     
     async down(cb: Function) {
         console.time("down: stopping wg");
-        await invoke('stop_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
+
+        await invoke('plugin:onetun|stop_tunnel').then(e => {
+            console.log(e);
             cb();
         })
+
+        // await invoke('stop_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
+        //     cb();
+        // })
+
         console.timeEnd("down: stopping wg");
 
     }

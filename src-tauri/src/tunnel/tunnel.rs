@@ -60,6 +60,8 @@ async fn start_tunnel(private_key: String, register_ip: String, endpoint_key: St
 	let conf = generate_tun_config(&private_key, &register_ip, &endpoint_key, &endpoint_ip);
 	
 	let task = tauri::async_runtime::spawn(async {
+		println!("Spawning blocking thread");
+
 		spawn_blocking(move || {
 			spawn_tunnel_handler(conf)
 		});
