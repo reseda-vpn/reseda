@@ -404,6 +404,7 @@ fn main() {
 			}
 			_ => {}
 		})
+		.plugin(tunnel::init())
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application")
 		// .build(tauri::generate_context!())
