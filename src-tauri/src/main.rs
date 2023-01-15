@@ -6,11 +6,12 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
+use base64::engine::general_purpose;
 use tauri::{SystemTray, SystemTrayEvent, Manager};
 
 mod tunnel;
 
-use base64;
+use base64::{self, engine, alphabet, Engine};
 use rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 use tauri::{CustomMenuItem, SystemTrayMenu, SystemTrayMenuItem};
@@ -119,17 +120,6 @@ fn remove_peer(public_key: String) -> String {
 	"Yes".to_string()
 }
 
-fn read_text_file(path: PathBuf, file_name: String) -> String  {
-	println!("Reading script from file.. {}", file_name);
-
-	let contents = fs::read_to_string(format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()))
-        .expect("Something went wrong reading the file");
-
-	println!("Read script {} successfully.", file_name);
-	
-	return contents;
-}
-
 fn write_text_file(path: &PathBuf, file_name: String, text: String) {
 	println!("Writing script to file.. {}\n\n{}", format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text);
 
@@ -161,7 +151,7 @@ fn slice_to_array_32<T>(slice: &[T]) -> Result<&[T; 32], &str> {
 fn generate_public_key(private_key: String) -> String {
 	println!("Generating Public Key... ");
 
-	let code = match base64::decode(private_key) {
+	let code = match engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD).decode(private_key) {
 		Ok(c) => c,
 		Err(_) => return "Error1".to_string(),
 	};
@@ -181,7 +171,7 @@ fn generate_public_key(private_key: String) -> String {
 
 	println!("KEY: {:?}", public);
 
-   	base64::encode(public.as_bytes())
+	engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD).encode(public.as_bytes())
 }
 
 #[tauri::command]
@@ -189,7 +179,7 @@ fn generate_private_key() -> String {
 	println!("Generating Private Key... ");
 
 	let private = StaticSecret::new(&mut OsRng);
-	base64::encode(private.to_bytes())
+	engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD).encode(private.to_bytes())
 }
 
 #[tauri::command]

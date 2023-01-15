@@ -812,17 +812,27 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         });
         console.timeEnd("up: checking wg");
 
-        if(k.includes('RUNNING')) {
-            await this.down(async () => {
-                await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
-                    cb();
-                })
-            });
-        }else {
-            await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
-                cb();
-            })
-        }
+        await invoke('plugin:onetun|start_tunnel', { 
+            private_key: this.config.keys.private_key, 
+            register_ip: this.config.wg.peers[0].endpoint, 
+            endpoint_key: this.config.wg.peers[0].publicKey, 
+            endpoint_ip: this.config.wg.peers[0].endpoint 
+        }).then(e => {
+            console.log(e);
+            cb();
+        })
+
+        // if(k.includes('RUNNING')) {
+        //     await this.down(async () => {
+        //         await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
+        //             cb();
+        //         })
+        //     });
+        // }else {
+        //     await invoke('start_wireguard_tunnel', { path: this.config.wg.filePath }).then(e => {
+        //         cb();
+        //     })
+        // }
     }
     
     async down(cb: Function) {
