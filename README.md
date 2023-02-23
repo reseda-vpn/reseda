@@ -15,9 +15,9 @@ Upcomming Support:
 1. Head to [`https://reseda.app/download`](https://reseda.app/download)
 2. Download the latest version for your operating system
 3. Sign in with your reseda-account. 
-4. Enjoy your `free` vpn.
+4. Enjoy your `*free` vpn.
 
-> Note: The total bandwith is limited to 2TB per month of aggregate user usage subject to server growth and cost payments. Upon the introduction of paid tiers, this limit will be removed.
+> *Note: The total bandwith is limited to 2TB per month of aggregate user usage subject to server growth and cost payments. Upon the introduction of paid tiers, this limit will be removed.
 
 -------
 
