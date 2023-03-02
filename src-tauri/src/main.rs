@@ -57,9 +57,11 @@ fn start_wireguard_tunnel(path: String) -> String {
 			.expect("Failed to start wireguard!");
 		// })
 	} else {
+        println!("Putting up on: {}", path);
+
 		// thread::spawn(move || {
 			Command::new("wg-quick")
-				.arg(format!("up {}/lib/wg0.conf", path))
+				.arg(format!("up \"{}\"", path))
 				.output()
 				.expect("Failed to start wireguard!");
 		// })
@@ -73,6 +75,8 @@ fn start_wireguard_tunnel(path: String) -> String {
 fn stop_wireguard_tunnel(path: String) -> String {
 	println!("Stopping Tunnel... ");
 
+    println!("wg-quick down \"{}\"", path);
+
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
 		Command::new("net")
@@ -82,7 +86,7 @@ fn stop_wireguard_tunnel(path: String) -> String {
 			.expect("Failed to stop wireguard!")
 	} else {
 		Command::new("wg-quick")
-			.arg(format!("down {}/lib/wg0.conf", path))
+			.arg(format!("down \"{}\"", path))
 			.output()
 			.expect("Failed to stop wireguard!")
 	};

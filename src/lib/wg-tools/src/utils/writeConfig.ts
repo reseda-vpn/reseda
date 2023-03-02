@@ -27,11 +27,10 @@ export const writeConfig = async (opts: Options) => {
 
 	console.log(configString);
 
-	const write = fs.writeFile({
+	const write = await fs.writeFile({
 		contents: configString,
 		path: filePath
 	});
-
 
 	console.log("Written?", write, execPath);
 

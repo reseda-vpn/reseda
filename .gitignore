@@ -3,6 +3,8 @@ node_modules
 .next
 dist
 
+/.yarn
+
 /app
 app
 .env
