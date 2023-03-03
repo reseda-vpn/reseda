@@ -77,6 +77,9 @@ fn stop_wireguard_tunnel(path: String) -> String {
 
     println!("wg-quick down \"{}\"", path);
 
+    // try boringtun implementation for macos/linux?
+    // https://github.com/cloudflare/boringtun 
+
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
 		Command::new("net")
