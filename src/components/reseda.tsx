@@ -177,7 +177,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 console.log(e)
             })
 
-        fetch(`https://reseda.app/api/user/tier/${this.user.id}`, {
+        fetch(`https://reseda.app/next-api/user/tier/${this.user.id}`, {
             method: "GET",
             redirect: 'follow'
         })
@@ -194,7 +194,7 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
                 console.log(e)
             })
         
-        fetch(`https://reseda.app/api/user/usage/this-month/${this.user.id}`, {
+        fetch(`https://reseda.app/next-api/user/usage/this-month/${this.user.id}`, {
             method: "GET",
             redirect: 'follow'
         })

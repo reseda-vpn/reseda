@@ -6,6 +6,7 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::fs;
+use std::collections::HashMap;
 
 mod tunnel;
 
@@ -15,7 +16,7 @@ use x25519_dalek::{PublicKey, StaticSecret};
 
 #[tauri::command]
 fn is_wireguard_up() -> String {
-	println!("Starting Status Check... ");
+	println!("[task]: Starting Status Check... ");
 
 	let output = if cfg!(target_os = "windows") {
 		Command::new("sc")
@@ -45,7 +46,7 @@ fn is_wireguard_up() -> String {
 
 #[tauri::command]
 fn start_wireguard_tunnel(path: String) -> String {
-	println!("Starting Tunnel... ");
+	println!("[wg]: Starting Tunnel... ");
 
 	// Switch based on target operating sys.
 	let output = if cfg!(target_os = "windows") {
@@ -57,17 +58,29 @@ fn start_wireguard_tunnel(path: String) -> String {
 			.expect("Failed to start wireguard!");
 		// })
 	} else {
-        println!("Putting up on: {}", path);
+        println!("[wg]: Putting up on: {}", path);
 
-		// thread::spawn(move || {
-			Command::new("wg-quick")
-				.arg(format!("up \"{}\"", path))
-				.output()
-				.expect("Failed to start wireguard!");
-		// })
+        let mut env_map = HashMap::new();
+                env_map.insert("WG_QUICK_USERSPACE_IMPLEMENTATION", "boringtun-cli");
+                env_map.insert("WG_SUDO", "1");
+
+
+        // sudo WG_QUICK_USERSPACE_IMPLEMENTATION=boringtun-cli WG_SUDO=1 wg-quick up "/Users/benji/Library/Application Support/com.reseda.release/lib/wg0.conf"
+        Command::new("wg-quick")
+            .envs(env_map)
+			.arg(format!("up"))
+            .arg(format!("{}", path))
+			.output()
+			.expect("Failed to stop wireguard!");
+
+        //        runas::Command::new("wg-quick")
+//            .arg(format!("up"))
+//            .arg(format!("{}", path))
+//            .status()
+//            .expect("Failed to start wireguard!");
 	};
 
-	println!("Started Tunnel: {:?}", output);
+	println!("[wg]: Started Tunnel: {:?}", output);
 	return (&"Y").to_string();
 }
 
@@ -89,7 +102,8 @@ fn stop_wireguard_tunnel(path: String) -> String {
 			.expect("Failed to stop wireguard!")
 	} else {
 		Command::new("wg-quick")
-			.arg(format!("down \"{}\"", path))
+			.arg(format!("down"))
+            .arg(format!("{}", path))
 			.output()
 			.expect("Failed to stop wireguard!")
 	};
@@ -324,21 +338,63 @@ fn main() {
 				}else {
 					println!("Alternate Setup Route");
 
-					// let execution_perms = Command::new("chmod")
-					// 	.arg("a+x")
-					// 	.arg(format!("{}\\lib\\wg.exe", &apath.display()))
-					// 	.status();
+                    let which_wg = Command::new("brew")
+						.arg("install")
+						.arg("wireguard-tools")
+                        .output()
+                        .expect("Failed to which WG");
 
-					// match execution_perms {
-					// 	Ok(ok) => {
-					// 		println!("Success in changing execution permissions for WG.EXE {:?}", ok)
-					// 	},
-					// 	Err(err) => {
-					// 		println!("Error in changing permissions of WG.EXE: {:?}", err)
-					// 	}
-					// };
+                    let which_wg = Command::new("which")
+						.arg("wg")
+                        .output()
+                        .expect("Failed to which WG");
 
-					println!("Exec.OS is not currently a supported operating system.");
+
+                    let which_wg_quick = Command::new("which")
+						.arg("wg-quick")
+                        .output()
+                        .expect("Failed to which WG");
+
+                    let mut wg_loc = String::from_utf8(which_wg.stdout).unwrap();
+                    let mut wg_q_loc = String::from_utf8(which_wg_quick.stdout).unwrap();
+
+                    wg_loc.truncate(wg_loc.len() - 1);
+                    wg_q_loc.truncate(wg_loc.len() - 1);
+
+                    println!("WG is located at: {}", wg_loc);
+                    println!("WG-QUICK is located at: {}", wg_loc);
+
+                    // Check in valid locations.
+                    // ...
+
+//                    // Apply new permissions to files
+//                    let execution_perms_wg = runas::Command::new("chmod")
+//					 	.arg("a+x")
+//					 	.arg(format!("{}", wg_loc))
+//					 	.status();
+//
+//                    let execution_perms_wg_quick = runas::Command::new("chmod")
+//					 	.arg("a+x")
+//					 	.arg(format!("{}", wg_q_loc))
+//					 	.status();
+
+//                    match execution_perms_wg {
+//					 	Ok(ok) => {
+//					 		println!("Success in changing execution permissions for WG {:?}", ok);
+//
+//                             match execution_perms_wg_quick {
+//                                 Ok(ok) => {
+//                                     println!("Success in changing execution permissions for WG-QUICK {:?}", ok)
+//                                 },
+//                                 Err(err) => {
+//                                     println!("Error in changing permissions of WG-QUICK: {:?}", err)
+//                                 }
+//                             };
+//					 	},
+//					 	Err(err) => {
+//					 		println!("Error in changing permissions of WG: {:?}", err)
+//					 	}
+//                    };
 				}
 			}else {
 				println!("Configuration already exists, performing non-first time setups.");
