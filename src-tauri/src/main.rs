@@ -29,8 +29,8 @@ fn is_wireguard_up() -> String {
 			.expect("Failed to read stdout")
 			
 	} else {
-		Command::new("wg-quick")
-			.arg("up ./lib/wg0.conf")
+		Command::new("wg")
+			.arg("show")
 			.stdout(Stdio::piped())
 			.spawn()
 			.unwrap()
@@ -338,17 +338,39 @@ fn main() {
 				}else {
 					println!("Alternate Setup Route");
 
-                    let which_wg = Command::new("brew")
-						.arg("install")
-						.arg("wireguard-tools")
-                        .output()
-                        .expect("Failed to which WG");
+                    if cfg!(target_os = "darwin") {
+                        // MacOS
+                        let which_brew = Command::new("which")
+    						.arg("brew")
+                            .output()
+                            .expect("Failed to which BREW");
 
+                        let output = String::from_utf8(which_brew.stdout).unwrap();
+
+                        if output.contains("not found") {
+                            println!("User does not have homebrew");
+                        }else {
+                            // Requires brew - install wireguard.
+                            Command::new("brew")
+        						.arg("install")
+        						.arg("wireguard-tools")
+                                .output()
+                                .expect("Failed to which WG");
+                        }
+                    }else {
+                        // Ubuntu and Debian - Arch uses pacman
+                        Command::new("apt")
+        						.arg("install")
+        						.arg("wireguard")
+                                .output()
+                                .expect("Failed to which WG");
+                    }
+
+                    // Once wireguard is installed, do the following..
                     let which_wg = Command::new("which")
 						.arg("wg")
                         .output()
                         .expect("Failed to which WG");
-
 
                     let which_wg_quick = Command::new("which")
 						.arg("wg-quick")
@@ -367,14 +389,14 @@ fn main() {
                     // Check in valid locations.
                     // ...
 
-//                    // Apply new permissions to files
+                    // Apply new permissions to files
 //                    let execution_perms_wg = runas::Command::new("chmod")
-//					 	.arg("a+x")
+//					 	.arg("u+s")
 //					 	.arg(format!("{}", wg_loc))
 //					 	.status();
 //
 //                    let execution_perms_wg_quick = runas::Command::new("chmod")
-//					 	.arg("a+x")
+//					 	.arg("u+s")
 //					 	.arg(format!("{}", wg_q_loc))
 //					 	.status();
 
