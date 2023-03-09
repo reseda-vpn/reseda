@@ -82,8 +82,9 @@ fn start_wireguard_tunnel(path: String) -> String {
 //        ifconfig utun8 up
         // Finally,
 
-        Command::new("wg-quick")
+        Command::new("sudo")
             .envs(env_map)
+            .arg("wg-quick")
             .arg(format!("up"))
             .arg(format!("{}", path))
 			.output()
@@ -118,7 +119,8 @@ fn stop_wireguard_tunnel(path: String) -> String {
 //            .status()
 //            .expect("Failed to start wireguard.");
 
-        Command::new("wg-quick")
+        Command::new("sudo")
+            .arg("wg-quick")
 			.arg(format!("down"))
             .arg(format!("{}", path))
 			.output()
@@ -408,15 +410,15 @@ fn main() {
                     let mut wg_q_loc = String::from_utf8(which_wg_quick.stdout).unwrap();
 
                     wg_loc.truncate(wg_loc.len() - 1);
-                    wg_q_loc.truncate(wg_loc.len() - 1);
+                    wg_q_loc.truncate(wg_q_loc.len() - 1);
 
                     println!("WG is located at: {}", wg_loc);
-                    println!("WG-QUICK is located at: {}", wg_loc);
+                    println!("WG-QUICK is located at: {}", wg_q_loc);
 
                     write_text_file(
                         &apath,
                         format!("perms.sh"),
-                        format!("echo 'Defaults verifypw = any\neveryone ALL=(ALL)NOPASSWD:{wg_loc}' | sudo EDITOR='tee -a' visudo\necho 'everyone ALL=(ALL)NOPASSWD:{wg_q_loc}' | sudo EDITOR='tee -a' visudo")
+                        format!("echo 'Defaults verifypw = any\nALL ALL=(ALL)NOPASSWD:{wg_loc}' | sudo EDITOR='tee -a' visudo\necho 'ALL ALL=(ALL)NOPASSWD:{wg_q_loc}' | sudo EDITOR='tee -a' visudo")
                     );
 
                     let mut perms = fs::metadata(format!("{}/lib/perms.sh", &apath.display()))?.permissions();
