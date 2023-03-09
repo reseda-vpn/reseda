@@ -66,18 +66,28 @@ fn start_wireguard_tunnel(path: String) -> String {
 
 
         // sudo WG_QUICK_USERSPACE_IMPLEMENTATION=boringtun-cli WG_SUDO=1 wg-quick up "/Users/benji/Library/Application Support/com.reseda.release/lib/wg0.conf"
+//        runas::Command::new("wg-quick")
+//            .args(&["up", &path])
+//            .force_prompt(false)
+//            .gui(true)
+//            .status()
+//            .expect("Failed to start wireguard.");
+
+        // Idea:
+        // Spawn boring-tun process to create tunnel
+//        sudo boringtun-cli utun --disable-drop-privileges
+        // Then, on config change, run the following commands:
+//        wg setconf utun8 /dev/ fd/63
+//        ifconfig utun8 inet 10.8.2.5/24 10.8.2.5 alias
+//        ifconfig utun8 up
+        // Finally,
+
         Command::new("wg-quick")
             .envs(env_map)
-			.arg(format!("up"))
+            .arg(format!("up"))
             .arg(format!("{}", path))
 			.output()
-			.expect("Failed to stop wireguard!");
-
-        //        runas::Command::new("wg-quick")
-//            .arg(format!("up"))
-//            .arg(format!("{}", path))
-//            .status()
-//            .expect("Failed to start wireguard!");
+			.expect("Failed to start wireguard!");
 	};
 
 	println!("[wg]: Started Tunnel: {:?}", output);
@@ -99,13 +109,20 @@ fn stop_wireguard_tunnel(path: String) -> String {
 			.arg("stop")
 			.arg("WireGuardTunnel$wg0")
 			.output()
-			.expect("Failed to stop wireguard!")
+			.expect("Failed to stop wireguard!");
 	} else {
-		Command::new("wg-quick")
+//        runas::Command::new("wg-quick")
+//            .args(&["down", &path])
+//            .force_prompt(false)
+//            .gui(true)
+//            .status()
+//            .expect("Failed to start wireguard.");
+
+        Command::new("wg-quick")
 			.arg(format!("down"))
             .arg(format!("{}", path))
 			.output()
-			.expect("Failed to stop wireguard!")
+			.expect("Failed to stop wireguard!");
 	};
 
 	println!("Stopped Tunnel: {:?}", output);
@@ -116,9 +133,14 @@ fn stop_wireguard_tunnel(path: String) -> String {
 fn add_peer(public_key: String, endpoint: String) -> String {
 	println!("Adding Peer");
 
-	let output = Command::new("wg")
-		.args(["set", "wg0", "peer", &public_key, "allowed-ips", "0.0.0.0/0", "endpoint", &endpoint])
-		.output()
+//	let output = Command::new("wg")
+//		.args(["set", "utun3", "peer", &public_key, "allowed-ips", "0.0.0.0/0", "endpoint", &endpoint])
+//		.output()
+//		.expect("Failed to start wireguard!");
+
+    let output = runas::Command::new("wg")
+		.args(&["set", "utun3", "peer", &public_key, "allowed-ips", "0.0.0.0/0", "endpoint", &endpoint])
+		.status()
 		.expect("Failed to start wireguard!");
 
 	println!("{:?}", output);
@@ -130,9 +152,14 @@ fn add_peer(public_key: String, endpoint: String) -> String {
 fn remove_peer(public_key: String) -> String {
 	println!("Adding Peer");
 
-	Command::new("wg")
-		.args(["set", "wg0", "peer", &public_key, "remove"])
-		.output()
+//	Command::new("wg")
+//		.args(["set", "utun3", "peer", &public_key, "remove"])
+//		.output()
+//		.expect("Failed to start wireguard!");
+
+    runas::Command::new("wg")
+		.args(&["set", "utun3", "peer", &public_key, "remove"])
+		.status()
 		.expect("Failed to start wireguard!");
 
 	"Yes".to_string()
@@ -150,7 +177,7 @@ fn read_text_file(path: PathBuf, file_name: String) -> String  {
 }
 
 fn write_text_file(path: &PathBuf, file_name: String, text: String) {
-	println!("Writing script to file.. {}\n\n{}", format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text);
+//	println!("Writing script to file.. {}\n\n{}", format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text);
 
 	match fs::write(format!("{}/lib/{}", &path.display(), file_name.to_owned().clone()), text) {
 		Result::Err(_) => {
@@ -229,15 +256,15 @@ fn remove_windows_service() -> Result<String, &'static str> {
 		}
 	};
 
-	let ft_removal_success = match fs::remove_file("lib/.first_time") {
-		Ok(_) => true,
-		Err(e) => {
-			println!("Failed to remove first time marker (.first_time) when removing windows service. Err:\t{}", e);
-			false
-		}
-	};
+//	let ft_removal_success = match fs::remove_file("lib/.first_time") {
+//		Ok(_) => true,
+//		Err(e) => {
+//			println!("Failed to remove first time marker (.first_time) when removing windows service. Err:\t{}", e);
+//			false
+//		}
+//	};
 
-	if !conf_removal_success || !ft_removal_success {
+	if !conf_removal_success {
 		return Err("Unable to complete windows service removal, failed to remove indicator files.");
 	}
 
@@ -293,11 +320,11 @@ fn main() {
 				perms.set_readonly(false);
 				fs::set_permissions(format!("{}/lib/wg0.conf", &apath.display()), perms)?;
 
-				write_text_file(
-					&apath,
-					(&"reseda.first_time").to_string(), 
-					format!("Yes!")
-				);
+//				write_text_file(
+//					&apath,
+//					(&"reseda.first_time").to_string(),
+//					format!("Yes!")
+//				);
 
 				let in_path = format!("{}/lib/wg0.conf", &apath.display());
 
@@ -385,6 +412,29 @@ fn main() {
 
                     println!("WG is located at: {}", wg_loc);
                     println!("WG-QUICK is located at: {}", wg_loc);
+
+                    write_text_file(
+                        &apath,
+                        format!("perms.sh"),
+                        format!("echo 'Defaults verifypw = any\neveryone ALL=(ALL)NOPASSWD:{wg_loc}' | sudo EDITOR='tee -a' visudo\necho 'everyone ALL=(ALL)NOPASSWD:{wg_q_loc}' | sudo EDITOR='tee -a' visudo")
+                    );
+
+                    let mut perms = fs::metadata(format!("{}/lib/perms.sh", &apath.display()))?.permissions();
+                    perms.set_readonly(false);
+                    fs::set_permissions(format!("{}/lib/perms.sh", &apath.display()), perms)?;
+
+                    let perms = runas::Command::new(format!("sh"))
+                        .arg(format!("{}/lib/perms.sh", &apath.display()))
+                        .status()
+                        .expect("Unable to modify permissions for /opt/homebrew/bin/wg");
+
+//                    let perms_2 = runas::Command::new("echo")
+//                        .args(&["'everyone ALL=(ALL)NOPASSWD:/opt/homebrew/bin/wg-quick'", "|", "sudo EDITOR='tee -a'", "visudo"])
+//                        .show(true)
+//                        .status()
+//                        .expect("Unable to modify permissions for /opt/homebrew/bin/wg");
+
+                    println!("Updating permissions: {:?}", perms);
 
                     // Check in valid locations.
                     // ...

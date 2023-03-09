@@ -705,11 +705,11 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
         this.config.wg.wgInterface.address = [`10.8.${subdomain}/24`];
 
         await this.config.wg.writeToFile(this.state.path);
-
-        // await invoke('add_peer', { publicKey: public_key, endpoint: `${location.id}.dns.reseda.app:8443` }).then(e => {
-        //     callback_time(new Date().getTime());
-        //     this.listenForUpdates(location);
-        // })
+        // new
+//         await invoke('add_peer', { publicKey: public_key, endpoint: `${location.id}.dns.reseda.app:8443` }).then(e => {
+//             callback_time(new Date().getTime());
+//             this.listenForUpdates(location);
+//         })
 
         await this.up(() => {
             callback_time(new Date().getTime());
@@ -778,18 +778,19 @@ class WireGuard extends Component<{ file_path: string, user: any }> {
 
         await this.config.wg.writeToFile(this.state.path);
 
-        // await invoke('remove_peer', { publicKey: this.config.wg.peers[0].publicKey }).then(e => {
-        //     this.setState({
-        //         ...this.state,
-        //         connection: {
-        //             connected: false,
-        //             connection_type: 0,
-        //             location: this.state.connection.location,
-        //             server: this.state.connection.location.id,
-        //             message: "Disconnected."
-        //         }
-        //     });
-        // })
+        //new
+//         await invoke('remove_peer', { publicKey: this.config.wg.peers[0].publicKey }).then(e => {
+//             this.setState({
+//                 ...this.state,
+//                 connection: {
+//                     connected: false,
+//                     connection_type: 0,
+//                     location: this.state.connection.location,
+//                     server: this.state.connection.location.id,
+//                     message: "Disconnected."
+//                 }
+//             });
+//         })
 
         await this.down(() => {
             this.setState({

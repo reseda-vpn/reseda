@@ -5,6 +5,9 @@ dist
 
 /.yarn
 
+up.sh
+down.sh
+
 /app
 app
 .env
