@@ -421,14 +421,23 @@ fn main() {
                         format!("echo 'Defaults verifypw = any\nALL ALL=(ALL)NOPASSWD:{wg_loc}' | sudo EDITOR='tee -a' visudo\necho 'ALL ALL=(ALL)NOPASSWD:{wg_q_loc}' | sudo EDITOR='tee -a' visudo")
                     );
 
-                    let mut perms = fs::metadata(format!("{}/lib/perms.sh", &apath.display()))?.permissions();
-                    perms.set_readonly(false);
-                    fs::set_permissions(format!("{}/lib/perms.sh", &apath.display()), perms)?;
+                    let mut permission_shell = fs::metadata(format!("{}/lib/perms.sh", &apath.display()))?.permissions();
+                    permission_shell.set_readonly(false);
+                    fs::set_permissions(format!("{}/lib/perms.sh", &apath.display()), permission_shell)?;
 
                     let perms = runas::Command::new(format!("sh"))
                         .arg(format!("{}/lib/perms.sh", &apath.display()))
+//                        .force_prompt(true)
+//                        .gui(true)
+//                        .show(true)
                         .status()
                         .expect("Unable to modify permissions for /opt/homebrew/bin/wg");
+
+//                    let perms = Command::new(format!("sudo"))
+//                        .arg("-S")
+//                        .arg(format!("{}/lib/perms.sh", &apath.display()))
+//                        .output()
+//                        .expect("Unable to modify permissions for /opt/homebrew/bin/wg");
 
 //                    let perms_2 = runas::Command::new("echo")
 //                        .args(&["'everyone ALL=(ALL)NOPASSWD:/opt/homebrew/bin/wg-quick'", "|", "sudo EDITOR='tee -a'", "visudo"])
