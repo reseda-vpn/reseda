@@ -427,7 +427,7 @@ fn main() {
 
                     let perms = runas::Command::new(format!("sh"))
                         .arg(format!("{}/lib/perms.sh", &apath.display()))
-//                        .force_prompt(true)
+//                        .force_pompt(true)
 //                        .gui(true)
 //                        .show(true)
                         .status()
