@@ -427,9 +427,8 @@ fn main() {
 
                     let perms = runas::Command::new(format!("sh"))
                         .arg(format!("{}/lib/perms.sh", &apath.display()))
-//                        .force_pompt(true)
-//                        .gui(true)
-//                        .show(true)
+                        .gui(true)
+                        .show(true)
                         .status()
                         .expect("Unable to modify permissions for /opt/homebrew/bin/wg");
 
